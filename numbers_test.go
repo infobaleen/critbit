@@ -12,8 +12,8 @@ func (s UintSlice) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
 func (s UintSlice) Len() int           { return len(s) }
 func (s UintSlice) Less(i, j int) bool { return s[i] < s[j] }
 
-func TestCritbit(t *testing.T) {
-	const L = 100
+func TestBasic(t *testing.T) {
+	const L = 1000
 	var iRef = make([]int, L)
 	var uRef = make([]uint, L)
 	var iMap MapIntInt
@@ -52,15 +52,36 @@ func TestCritbit(t *testing.T) {
 			t.Fatal("Wrong unsigned key or value", r, i.Key, *i.Value)
 		}
 	}
-	if len(uRef) > 0 {
-		t.Fatal("Unsigned elements left")
+	if l := len(uRef); l > 0 {
+		t.Fatal(l, "unsigned elements left")
 	}
 	for i := iMap.Iterator(); i.Next(); iRef = iRef[1:] {
 		if r := iRef[0]; r != i.Key || r != *i.Value {
 			t.Fatal("Wrong signed key or value", r, i.Key, *i.Value)
 		}
 	}
-	if len(iRef) > 0 {
-		t.Fatal("Signed elements left")
+	if l := len(iRef); l > 0 {
+		t.Fatal(l, "Signed elements left")
+	}
+}
+
+func TestSeek(t *testing.T) {
+	var m MapUintUint
+	var uRef = UintSlice{0, 1, 4, 5, 7, 8}
+	for _, v := range uRef {
+		m.Set(v, v)
+	}
+	var it = m.Iterator()
+	for _, r := range uRef {
+		it.Seek(0)
+		it.Next()
+		if it.Found != true || it.Key != 0 || *it.Value != 0 {
+			t.Fatal("Wrong key or value", r, it.Found, it.Key, *it.Value)
+		}
+	}
+	it.Seek(2)
+	it.Next()
+	if it.Found != true || it.Key != 4 || *it.Value != 4 {
+		t.Fatal("Wrong key or value", 4, it.Found, it.Key, *it.Value)
 	}
 }
