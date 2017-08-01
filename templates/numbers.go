@@ -15,6 +15,7 @@ type MapKeyTypeValueType struct {
 	root   nodeMapKeyTypeValueType
 }
 
+// NewMapKeyTypeValueType returns a new map with keys of type KeyType and values of type ValueType
 func NewMapKeyTypeValueType() *MapKeyTypeValueType {
 	var r MapKeyTypeValueType
 	return &r
@@ -221,15 +222,15 @@ func (i *IterKeyTypeValueType) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterKeyTypeValueType) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterKeyTypeValueType) Prev() bool {
 	i.step(0)
 	return i.Found

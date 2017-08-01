@@ -12,6 +12,7 @@ type MapIntBool struct {
 	root   nodeMapintbool
 }
 
+// NewMapIntBool returns a new map with keys of type int and values of type bool
 func NewMapIntBool() *MapIntBool {
 	var r MapIntBool
 	return &r
@@ -218,15 +219,15 @@ func (i *IterIntBool) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterIntBool) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterIntBool) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -291,6 +292,7 @@ type MapIntByte struct {
 	root   nodeMapintbyte
 }
 
+// NewMapIntByte returns a new map with keys of type int and values of type byte
 func NewMapIntByte() *MapIntByte {
 	var r MapIntByte
 	return &r
@@ -497,15 +499,15 @@ func (i *IterIntByte) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterIntByte) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterIntByte) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -570,6 +572,7 @@ type MapIntComplex128 struct {
 	root   nodeMapintcomplex128
 }
 
+// NewMapIntComplex128 returns a new map with keys of type int and values of type complex128
 func NewMapIntComplex128() *MapIntComplex128 {
 	var r MapIntComplex128
 	return &r
@@ -776,15 +779,15 @@ func (i *IterIntComplex128) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterIntComplex128) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterIntComplex128) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -849,6 +852,7 @@ type MapIntComplex64 struct {
 	root   nodeMapintcomplex64
 }
 
+// NewMapIntComplex64 returns a new map with keys of type int and values of type complex64
 func NewMapIntComplex64() *MapIntComplex64 {
 	var r MapIntComplex64
 	return &r
@@ -1055,15 +1059,15 @@ func (i *IterIntComplex64) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterIntComplex64) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterIntComplex64) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -1128,6 +1132,7 @@ type MapIntError struct {
 	root   nodeMapinterror
 }
 
+// NewMapIntError returns a new map with keys of type int and values of type error
 func NewMapIntError() *MapIntError {
 	var r MapIntError
 	return &r
@@ -1334,15 +1339,15 @@ func (i *IterIntError) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterIntError) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterIntError) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -1407,6 +1412,7 @@ type MapIntFloat32 struct {
 	root   nodeMapintfloat32
 }
 
+// NewMapIntFloat32 returns a new map with keys of type int and values of type float32
 func NewMapIntFloat32() *MapIntFloat32 {
 	var r MapIntFloat32
 	return &r
@@ -1613,15 +1619,15 @@ func (i *IterIntFloat32) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterIntFloat32) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterIntFloat32) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -1686,6 +1692,7 @@ type MapIntFloat64 struct {
 	root   nodeMapintfloat64
 }
 
+// NewMapIntFloat64 returns a new map with keys of type int and values of type float64
 func NewMapIntFloat64() *MapIntFloat64 {
 	var r MapIntFloat64
 	return &r
@@ -1892,15 +1899,15 @@ func (i *IterIntFloat64) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterIntFloat64) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterIntFloat64) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -1965,6 +1972,7 @@ type MapIntInt struct {
 	root   nodeMapintint
 }
 
+// NewMapIntInt returns a new map with keys of type int and values of type int
 func NewMapIntInt() *MapIntInt {
 	var r MapIntInt
 	return &r
@@ -2171,15 +2179,15 @@ func (i *IterIntInt) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterIntInt) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterIntInt) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -2244,6 +2252,7 @@ type MapIntInt16 struct {
 	root   nodeMapintint16
 }
 
+// NewMapIntInt16 returns a new map with keys of type int and values of type int16
 func NewMapIntInt16() *MapIntInt16 {
 	var r MapIntInt16
 	return &r
@@ -2450,15 +2459,15 @@ func (i *IterIntInt16) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterIntInt16) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterIntInt16) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -2523,6 +2532,7 @@ type MapIntInt32 struct {
 	root   nodeMapintint32
 }
 
+// NewMapIntInt32 returns a new map with keys of type int and values of type int32
 func NewMapIntInt32() *MapIntInt32 {
 	var r MapIntInt32
 	return &r
@@ -2729,15 +2739,15 @@ func (i *IterIntInt32) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterIntInt32) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterIntInt32) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -2802,6 +2812,7 @@ type MapIntInt64 struct {
 	root   nodeMapintint64
 }
 
+// NewMapIntInt64 returns a new map with keys of type int and values of type int64
 func NewMapIntInt64() *MapIntInt64 {
 	var r MapIntInt64
 	return &r
@@ -3008,15 +3019,15 @@ func (i *IterIntInt64) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterIntInt64) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterIntInt64) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -3081,6 +3092,7 @@ type MapIntInt8 struct {
 	root   nodeMapintint8
 }
 
+// NewMapIntInt8 returns a new map with keys of type int and values of type int8
 func NewMapIntInt8() *MapIntInt8 {
 	var r MapIntInt8
 	return &r
@@ -3287,15 +3299,15 @@ func (i *IterIntInt8) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterIntInt8) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterIntInt8) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -3360,6 +3372,7 @@ type MapIntRune struct {
 	root   nodeMapintrune
 }
 
+// NewMapIntRune returns a new map with keys of type int and values of type rune
 func NewMapIntRune() *MapIntRune {
 	var r MapIntRune
 	return &r
@@ -3566,15 +3579,15 @@ func (i *IterIntRune) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterIntRune) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterIntRune) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -3639,6 +3652,7 @@ type MapIntString struct {
 	root   nodeMapintstring
 }
 
+// NewMapIntString returns a new map with keys of type int and values of type string
 func NewMapIntString() *MapIntString {
 	var r MapIntString
 	return &r
@@ -3845,15 +3859,15 @@ func (i *IterIntString) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterIntString) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterIntString) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -3918,6 +3932,7 @@ type MapIntUint struct {
 	root   nodeMapintuint
 }
 
+// NewMapIntUint returns a new map with keys of type int and values of type uint
 func NewMapIntUint() *MapIntUint {
 	var r MapIntUint
 	return &r
@@ -4124,15 +4139,15 @@ func (i *IterIntUint) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterIntUint) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterIntUint) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -4197,6 +4212,7 @@ type MapIntUint16 struct {
 	root   nodeMapintuint16
 }
 
+// NewMapIntUint16 returns a new map with keys of type int and values of type uint16
 func NewMapIntUint16() *MapIntUint16 {
 	var r MapIntUint16
 	return &r
@@ -4403,15 +4419,15 @@ func (i *IterIntUint16) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterIntUint16) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterIntUint16) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -4476,6 +4492,7 @@ type MapIntUint32 struct {
 	root   nodeMapintuint32
 }
 
+// NewMapIntUint32 returns a new map with keys of type int and values of type uint32
 func NewMapIntUint32() *MapIntUint32 {
 	var r MapIntUint32
 	return &r
@@ -4682,15 +4699,15 @@ func (i *IterIntUint32) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterIntUint32) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterIntUint32) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -4755,6 +4772,7 @@ type MapIntUint64 struct {
 	root   nodeMapintuint64
 }
 
+// NewMapIntUint64 returns a new map with keys of type int and values of type uint64
 func NewMapIntUint64() *MapIntUint64 {
 	var r MapIntUint64
 	return &r
@@ -4961,15 +4979,15 @@ func (i *IterIntUint64) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterIntUint64) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterIntUint64) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -5034,6 +5052,7 @@ type MapIntUint8 struct {
 	root   nodeMapintuint8
 }
 
+// NewMapIntUint8 returns a new map with keys of type int and values of type uint8
 func NewMapIntUint8() *MapIntUint8 {
 	var r MapIntUint8
 	return &r
@@ -5240,15 +5259,15 @@ func (i *IterIntUint8) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterIntUint8) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterIntUint8) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -5313,6 +5332,7 @@ type MapIntUintptr struct {
 	root   nodeMapintuintptr
 }
 
+// NewMapIntUintptr returns a new map with keys of type int and values of type uintptr
 func NewMapIntUintptr() *MapIntUintptr {
 	var r MapIntUintptr
 	return &r
@@ -5519,15 +5539,15 @@ func (i *IterIntUintptr) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterIntUintptr) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterIntUintptr) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -5592,6 +5612,7 @@ type MapInt64Bool struct {
 	root   nodeMapint64bool
 }
 
+// NewMapInt64Bool returns a new map with keys of type int64 and values of type bool
 func NewMapInt64Bool() *MapInt64Bool {
 	var r MapInt64Bool
 	return &r
@@ -5798,15 +5819,15 @@ func (i *IterInt64Bool) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt64Bool) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt64Bool) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -5871,6 +5892,7 @@ type MapInt64Byte struct {
 	root   nodeMapint64byte
 }
 
+// NewMapInt64Byte returns a new map with keys of type int64 and values of type byte
 func NewMapInt64Byte() *MapInt64Byte {
 	var r MapInt64Byte
 	return &r
@@ -6077,15 +6099,15 @@ func (i *IterInt64Byte) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt64Byte) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt64Byte) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -6150,6 +6172,7 @@ type MapInt64Complex128 struct {
 	root   nodeMapint64complex128
 }
 
+// NewMapInt64Complex128 returns a new map with keys of type int64 and values of type complex128
 func NewMapInt64Complex128() *MapInt64Complex128 {
 	var r MapInt64Complex128
 	return &r
@@ -6356,15 +6379,15 @@ func (i *IterInt64Complex128) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt64Complex128) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt64Complex128) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -6429,6 +6452,7 @@ type MapInt64Complex64 struct {
 	root   nodeMapint64complex64
 }
 
+// NewMapInt64Complex64 returns a new map with keys of type int64 and values of type complex64
 func NewMapInt64Complex64() *MapInt64Complex64 {
 	var r MapInt64Complex64
 	return &r
@@ -6635,15 +6659,15 @@ func (i *IterInt64Complex64) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt64Complex64) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt64Complex64) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -6708,6 +6732,7 @@ type MapInt64Error struct {
 	root   nodeMapint64error
 }
 
+// NewMapInt64Error returns a new map with keys of type int64 and values of type error
 func NewMapInt64Error() *MapInt64Error {
 	var r MapInt64Error
 	return &r
@@ -6914,15 +6939,15 @@ func (i *IterInt64Error) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt64Error) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt64Error) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -6987,6 +7012,7 @@ type MapInt64Float32 struct {
 	root   nodeMapint64float32
 }
 
+// NewMapInt64Float32 returns a new map with keys of type int64 and values of type float32
 func NewMapInt64Float32() *MapInt64Float32 {
 	var r MapInt64Float32
 	return &r
@@ -7193,15 +7219,15 @@ func (i *IterInt64Float32) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt64Float32) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt64Float32) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -7266,6 +7292,7 @@ type MapInt64Float64 struct {
 	root   nodeMapint64float64
 }
 
+// NewMapInt64Float64 returns a new map with keys of type int64 and values of type float64
 func NewMapInt64Float64() *MapInt64Float64 {
 	var r MapInt64Float64
 	return &r
@@ -7472,15 +7499,15 @@ func (i *IterInt64Float64) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt64Float64) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt64Float64) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -7545,6 +7572,7 @@ type MapInt64Int struct {
 	root   nodeMapint64int
 }
 
+// NewMapInt64Int returns a new map with keys of type int64 and values of type int
 func NewMapInt64Int() *MapInt64Int {
 	var r MapInt64Int
 	return &r
@@ -7751,15 +7779,15 @@ func (i *IterInt64Int) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt64Int) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt64Int) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -7824,6 +7852,7 @@ type MapInt64Int16 struct {
 	root   nodeMapint64int16
 }
 
+// NewMapInt64Int16 returns a new map with keys of type int64 and values of type int16
 func NewMapInt64Int16() *MapInt64Int16 {
 	var r MapInt64Int16
 	return &r
@@ -8030,15 +8059,15 @@ func (i *IterInt64Int16) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt64Int16) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt64Int16) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -8103,6 +8132,7 @@ type MapInt64Int32 struct {
 	root   nodeMapint64int32
 }
 
+// NewMapInt64Int32 returns a new map with keys of type int64 and values of type int32
 func NewMapInt64Int32() *MapInt64Int32 {
 	var r MapInt64Int32
 	return &r
@@ -8309,15 +8339,15 @@ func (i *IterInt64Int32) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt64Int32) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt64Int32) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -8382,6 +8412,7 @@ type MapInt64Int64 struct {
 	root   nodeMapint64int64
 }
 
+// NewMapInt64Int64 returns a new map with keys of type int64 and values of type int64
 func NewMapInt64Int64() *MapInt64Int64 {
 	var r MapInt64Int64
 	return &r
@@ -8588,15 +8619,15 @@ func (i *IterInt64Int64) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt64Int64) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt64Int64) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -8661,6 +8692,7 @@ type MapInt64Int8 struct {
 	root   nodeMapint64int8
 }
 
+// NewMapInt64Int8 returns a new map with keys of type int64 and values of type int8
 func NewMapInt64Int8() *MapInt64Int8 {
 	var r MapInt64Int8
 	return &r
@@ -8867,15 +8899,15 @@ func (i *IterInt64Int8) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt64Int8) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt64Int8) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -8940,6 +8972,7 @@ type MapInt64Rune struct {
 	root   nodeMapint64rune
 }
 
+// NewMapInt64Rune returns a new map with keys of type int64 and values of type rune
 func NewMapInt64Rune() *MapInt64Rune {
 	var r MapInt64Rune
 	return &r
@@ -9146,15 +9179,15 @@ func (i *IterInt64Rune) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt64Rune) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt64Rune) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -9219,6 +9252,7 @@ type MapInt64String struct {
 	root   nodeMapint64string
 }
 
+// NewMapInt64String returns a new map with keys of type int64 and values of type string
 func NewMapInt64String() *MapInt64String {
 	var r MapInt64String
 	return &r
@@ -9425,15 +9459,15 @@ func (i *IterInt64String) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt64String) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt64String) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -9498,6 +9532,7 @@ type MapInt64Uint struct {
 	root   nodeMapint64uint
 }
 
+// NewMapInt64Uint returns a new map with keys of type int64 and values of type uint
 func NewMapInt64Uint() *MapInt64Uint {
 	var r MapInt64Uint
 	return &r
@@ -9704,15 +9739,15 @@ func (i *IterInt64Uint) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt64Uint) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt64Uint) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -9777,6 +9812,7 @@ type MapInt64Uint16 struct {
 	root   nodeMapint64uint16
 }
 
+// NewMapInt64Uint16 returns a new map with keys of type int64 and values of type uint16
 func NewMapInt64Uint16() *MapInt64Uint16 {
 	var r MapInt64Uint16
 	return &r
@@ -9983,15 +10019,15 @@ func (i *IterInt64Uint16) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt64Uint16) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt64Uint16) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -10056,6 +10092,7 @@ type MapInt64Uint32 struct {
 	root   nodeMapint64uint32
 }
 
+// NewMapInt64Uint32 returns a new map with keys of type int64 and values of type uint32
 func NewMapInt64Uint32() *MapInt64Uint32 {
 	var r MapInt64Uint32
 	return &r
@@ -10262,15 +10299,15 @@ func (i *IterInt64Uint32) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt64Uint32) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt64Uint32) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -10335,6 +10372,7 @@ type MapInt64Uint64 struct {
 	root   nodeMapint64uint64
 }
 
+// NewMapInt64Uint64 returns a new map with keys of type int64 and values of type uint64
 func NewMapInt64Uint64() *MapInt64Uint64 {
 	var r MapInt64Uint64
 	return &r
@@ -10541,15 +10579,15 @@ func (i *IterInt64Uint64) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt64Uint64) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt64Uint64) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -10614,6 +10652,7 @@ type MapInt64Uint8 struct {
 	root   nodeMapint64uint8
 }
 
+// NewMapInt64Uint8 returns a new map with keys of type int64 and values of type uint8
 func NewMapInt64Uint8() *MapInt64Uint8 {
 	var r MapInt64Uint8
 	return &r
@@ -10820,15 +10859,15 @@ func (i *IterInt64Uint8) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt64Uint8) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt64Uint8) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -10893,6 +10932,7 @@ type MapInt64Uintptr struct {
 	root   nodeMapint64uintptr
 }
 
+// NewMapInt64Uintptr returns a new map with keys of type int64 and values of type uintptr
 func NewMapInt64Uintptr() *MapInt64Uintptr {
 	var r MapInt64Uintptr
 	return &r
@@ -11099,15 +11139,15 @@ func (i *IterInt64Uintptr) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt64Uintptr) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt64Uintptr) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -11172,6 +11212,7 @@ type MapInt32Bool struct {
 	root   nodeMapint32bool
 }
 
+// NewMapInt32Bool returns a new map with keys of type int32 and values of type bool
 func NewMapInt32Bool() *MapInt32Bool {
 	var r MapInt32Bool
 	return &r
@@ -11378,15 +11419,15 @@ func (i *IterInt32Bool) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt32Bool) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt32Bool) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -11451,6 +11492,7 @@ type MapInt32Byte struct {
 	root   nodeMapint32byte
 }
 
+// NewMapInt32Byte returns a new map with keys of type int32 and values of type byte
 func NewMapInt32Byte() *MapInt32Byte {
 	var r MapInt32Byte
 	return &r
@@ -11657,15 +11699,15 @@ func (i *IterInt32Byte) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt32Byte) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt32Byte) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -11730,6 +11772,7 @@ type MapInt32Complex128 struct {
 	root   nodeMapint32complex128
 }
 
+// NewMapInt32Complex128 returns a new map with keys of type int32 and values of type complex128
 func NewMapInt32Complex128() *MapInt32Complex128 {
 	var r MapInt32Complex128
 	return &r
@@ -11936,15 +11979,15 @@ func (i *IterInt32Complex128) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt32Complex128) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt32Complex128) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -12009,6 +12052,7 @@ type MapInt32Complex64 struct {
 	root   nodeMapint32complex64
 }
 
+// NewMapInt32Complex64 returns a new map with keys of type int32 and values of type complex64
 func NewMapInt32Complex64() *MapInt32Complex64 {
 	var r MapInt32Complex64
 	return &r
@@ -12215,15 +12259,15 @@ func (i *IterInt32Complex64) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt32Complex64) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt32Complex64) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -12288,6 +12332,7 @@ type MapInt32Error struct {
 	root   nodeMapint32error
 }
 
+// NewMapInt32Error returns a new map with keys of type int32 and values of type error
 func NewMapInt32Error() *MapInt32Error {
 	var r MapInt32Error
 	return &r
@@ -12494,15 +12539,15 @@ func (i *IterInt32Error) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt32Error) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt32Error) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -12567,6 +12612,7 @@ type MapInt32Float32 struct {
 	root   nodeMapint32float32
 }
 
+// NewMapInt32Float32 returns a new map with keys of type int32 and values of type float32
 func NewMapInt32Float32() *MapInt32Float32 {
 	var r MapInt32Float32
 	return &r
@@ -12773,15 +12819,15 @@ func (i *IterInt32Float32) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt32Float32) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt32Float32) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -12846,6 +12892,7 @@ type MapInt32Float64 struct {
 	root   nodeMapint32float64
 }
 
+// NewMapInt32Float64 returns a new map with keys of type int32 and values of type float64
 func NewMapInt32Float64() *MapInt32Float64 {
 	var r MapInt32Float64
 	return &r
@@ -13052,15 +13099,15 @@ func (i *IterInt32Float64) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt32Float64) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt32Float64) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -13125,6 +13172,7 @@ type MapInt32Int struct {
 	root   nodeMapint32int
 }
 
+// NewMapInt32Int returns a new map with keys of type int32 and values of type int
 func NewMapInt32Int() *MapInt32Int {
 	var r MapInt32Int
 	return &r
@@ -13331,15 +13379,15 @@ func (i *IterInt32Int) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt32Int) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt32Int) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -13404,6 +13452,7 @@ type MapInt32Int16 struct {
 	root   nodeMapint32int16
 }
 
+// NewMapInt32Int16 returns a new map with keys of type int32 and values of type int16
 func NewMapInt32Int16() *MapInt32Int16 {
 	var r MapInt32Int16
 	return &r
@@ -13610,15 +13659,15 @@ func (i *IterInt32Int16) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt32Int16) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt32Int16) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -13683,6 +13732,7 @@ type MapInt32Int32 struct {
 	root   nodeMapint32int32
 }
 
+// NewMapInt32Int32 returns a new map with keys of type int32 and values of type int32
 func NewMapInt32Int32() *MapInt32Int32 {
 	var r MapInt32Int32
 	return &r
@@ -13889,15 +13939,15 @@ func (i *IterInt32Int32) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt32Int32) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt32Int32) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -13962,6 +14012,7 @@ type MapInt32Int64 struct {
 	root   nodeMapint32int64
 }
 
+// NewMapInt32Int64 returns a new map with keys of type int32 and values of type int64
 func NewMapInt32Int64() *MapInt32Int64 {
 	var r MapInt32Int64
 	return &r
@@ -14168,15 +14219,15 @@ func (i *IterInt32Int64) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt32Int64) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt32Int64) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -14241,6 +14292,7 @@ type MapInt32Int8 struct {
 	root   nodeMapint32int8
 }
 
+// NewMapInt32Int8 returns a new map with keys of type int32 and values of type int8
 func NewMapInt32Int8() *MapInt32Int8 {
 	var r MapInt32Int8
 	return &r
@@ -14447,15 +14499,15 @@ func (i *IterInt32Int8) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt32Int8) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt32Int8) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -14520,6 +14572,7 @@ type MapInt32Rune struct {
 	root   nodeMapint32rune
 }
 
+// NewMapInt32Rune returns a new map with keys of type int32 and values of type rune
 func NewMapInt32Rune() *MapInt32Rune {
 	var r MapInt32Rune
 	return &r
@@ -14726,15 +14779,15 @@ func (i *IterInt32Rune) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt32Rune) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt32Rune) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -14799,6 +14852,7 @@ type MapInt32String struct {
 	root   nodeMapint32string
 }
 
+// NewMapInt32String returns a new map with keys of type int32 and values of type string
 func NewMapInt32String() *MapInt32String {
 	var r MapInt32String
 	return &r
@@ -15005,15 +15059,15 @@ func (i *IterInt32String) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt32String) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt32String) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -15078,6 +15132,7 @@ type MapInt32Uint struct {
 	root   nodeMapint32uint
 }
 
+// NewMapInt32Uint returns a new map with keys of type int32 and values of type uint
 func NewMapInt32Uint() *MapInt32Uint {
 	var r MapInt32Uint
 	return &r
@@ -15284,15 +15339,15 @@ func (i *IterInt32Uint) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt32Uint) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt32Uint) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -15357,6 +15412,7 @@ type MapInt32Uint16 struct {
 	root   nodeMapint32uint16
 }
 
+// NewMapInt32Uint16 returns a new map with keys of type int32 and values of type uint16
 func NewMapInt32Uint16() *MapInt32Uint16 {
 	var r MapInt32Uint16
 	return &r
@@ -15563,15 +15619,15 @@ func (i *IterInt32Uint16) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt32Uint16) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt32Uint16) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -15636,6 +15692,7 @@ type MapInt32Uint32 struct {
 	root   nodeMapint32uint32
 }
 
+// NewMapInt32Uint32 returns a new map with keys of type int32 and values of type uint32
 func NewMapInt32Uint32() *MapInt32Uint32 {
 	var r MapInt32Uint32
 	return &r
@@ -15842,15 +15899,15 @@ func (i *IterInt32Uint32) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt32Uint32) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt32Uint32) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -15915,6 +15972,7 @@ type MapInt32Uint64 struct {
 	root   nodeMapint32uint64
 }
 
+// NewMapInt32Uint64 returns a new map with keys of type int32 and values of type uint64
 func NewMapInt32Uint64() *MapInt32Uint64 {
 	var r MapInt32Uint64
 	return &r
@@ -16121,15 +16179,15 @@ func (i *IterInt32Uint64) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt32Uint64) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt32Uint64) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -16194,6 +16252,7 @@ type MapInt32Uint8 struct {
 	root   nodeMapint32uint8
 }
 
+// NewMapInt32Uint8 returns a new map with keys of type int32 and values of type uint8
 func NewMapInt32Uint8() *MapInt32Uint8 {
 	var r MapInt32Uint8
 	return &r
@@ -16400,15 +16459,15 @@ func (i *IterInt32Uint8) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt32Uint8) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt32Uint8) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -16473,6 +16532,7 @@ type MapInt32Uintptr struct {
 	root   nodeMapint32uintptr
 }
 
+// NewMapInt32Uintptr returns a new map with keys of type int32 and values of type uintptr
 func NewMapInt32Uintptr() *MapInt32Uintptr {
 	var r MapInt32Uintptr
 	return &r
@@ -16679,15 +16739,15 @@ func (i *IterInt32Uintptr) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt32Uintptr) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt32Uintptr) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -16752,6 +16812,7 @@ type MapInt16Bool struct {
 	root   nodeMapint16bool
 }
 
+// NewMapInt16Bool returns a new map with keys of type int16 and values of type bool
 func NewMapInt16Bool() *MapInt16Bool {
 	var r MapInt16Bool
 	return &r
@@ -16958,15 +17019,15 @@ func (i *IterInt16Bool) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt16Bool) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt16Bool) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -17031,6 +17092,7 @@ type MapInt16Byte struct {
 	root   nodeMapint16byte
 }
 
+// NewMapInt16Byte returns a new map with keys of type int16 and values of type byte
 func NewMapInt16Byte() *MapInt16Byte {
 	var r MapInt16Byte
 	return &r
@@ -17237,15 +17299,15 @@ func (i *IterInt16Byte) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt16Byte) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt16Byte) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -17310,6 +17372,7 @@ type MapInt16Complex128 struct {
 	root   nodeMapint16complex128
 }
 
+// NewMapInt16Complex128 returns a new map with keys of type int16 and values of type complex128
 func NewMapInt16Complex128() *MapInt16Complex128 {
 	var r MapInt16Complex128
 	return &r
@@ -17516,15 +17579,15 @@ func (i *IterInt16Complex128) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt16Complex128) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt16Complex128) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -17589,6 +17652,7 @@ type MapInt16Complex64 struct {
 	root   nodeMapint16complex64
 }
 
+// NewMapInt16Complex64 returns a new map with keys of type int16 and values of type complex64
 func NewMapInt16Complex64() *MapInt16Complex64 {
 	var r MapInt16Complex64
 	return &r
@@ -17795,15 +17859,15 @@ func (i *IterInt16Complex64) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt16Complex64) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt16Complex64) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -17868,6 +17932,7 @@ type MapInt16Error struct {
 	root   nodeMapint16error
 }
 
+// NewMapInt16Error returns a new map with keys of type int16 and values of type error
 func NewMapInt16Error() *MapInt16Error {
 	var r MapInt16Error
 	return &r
@@ -18074,15 +18139,15 @@ func (i *IterInt16Error) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt16Error) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt16Error) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -18147,6 +18212,7 @@ type MapInt16Float32 struct {
 	root   nodeMapint16float32
 }
 
+// NewMapInt16Float32 returns a new map with keys of type int16 and values of type float32
 func NewMapInt16Float32() *MapInt16Float32 {
 	var r MapInt16Float32
 	return &r
@@ -18353,15 +18419,15 @@ func (i *IterInt16Float32) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt16Float32) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt16Float32) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -18426,6 +18492,7 @@ type MapInt16Float64 struct {
 	root   nodeMapint16float64
 }
 
+// NewMapInt16Float64 returns a new map with keys of type int16 and values of type float64
 func NewMapInt16Float64() *MapInt16Float64 {
 	var r MapInt16Float64
 	return &r
@@ -18632,15 +18699,15 @@ func (i *IterInt16Float64) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt16Float64) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt16Float64) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -18705,6 +18772,7 @@ type MapInt16Int struct {
 	root   nodeMapint16int
 }
 
+// NewMapInt16Int returns a new map with keys of type int16 and values of type int
 func NewMapInt16Int() *MapInt16Int {
 	var r MapInt16Int
 	return &r
@@ -18911,15 +18979,15 @@ func (i *IterInt16Int) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt16Int) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt16Int) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -18984,6 +19052,7 @@ type MapInt16Int16 struct {
 	root   nodeMapint16int16
 }
 
+// NewMapInt16Int16 returns a new map with keys of type int16 and values of type int16
 func NewMapInt16Int16() *MapInt16Int16 {
 	var r MapInt16Int16
 	return &r
@@ -19190,15 +19259,15 @@ func (i *IterInt16Int16) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt16Int16) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt16Int16) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -19263,6 +19332,7 @@ type MapInt16Int32 struct {
 	root   nodeMapint16int32
 }
 
+// NewMapInt16Int32 returns a new map with keys of type int16 and values of type int32
 func NewMapInt16Int32() *MapInt16Int32 {
 	var r MapInt16Int32
 	return &r
@@ -19469,15 +19539,15 @@ func (i *IterInt16Int32) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt16Int32) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt16Int32) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -19542,6 +19612,7 @@ type MapInt16Int64 struct {
 	root   nodeMapint16int64
 }
 
+// NewMapInt16Int64 returns a new map with keys of type int16 and values of type int64
 func NewMapInt16Int64() *MapInt16Int64 {
 	var r MapInt16Int64
 	return &r
@@ -19748,15 +19819,15 @@ func (i *IterInt16Int64) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt16Int64) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt16Int64) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -19821,6 +19892,7 @@ type MapInt16Int8 struct {
 	root   nodeMapint16int8
 }
 
+// NewMapInt16Int8 returns a new map with keys of type int16 and values of type int8
 func NewMapInt16Int8() *MapInt16Int8 {
 	var r MapInt16Int8
 	return &r
@@ -20027,15 +20099,15 @@ func (i *IterInt16Int8) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt16Int8) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt16Int8) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -20100,6 +20172,7 @@ type MapInt16Rune struct {
 	root   nodeMapint16rune
 }
 
+// NewMapInt16Rune returns a new map with keys of type int16 and values of type rune
 func NewMapInt16Rune() *MapInt16Rune {
 	var r MapInt16Rune
 	return &r
@@ -20306,15 +20379,15 @@ func (i *IterInt16Rune) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt16Rune) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt16Rune) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -20379,6 +20452,7 @@ type MapInt16String struct {
 	root   nodeMapint16string
 }
 
+// NewMapInt16String returns a new map with keys of type int16 and values of type string
 func NewMapInt16String() *MapInt16String {
 	var r MapInt16String
 	return &r
@@ -20585,15 +20659,15 @@ func (i *IterInt16String) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt16String) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt16String) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -20658,6 +20732,7 @@ type MapInt16Uint struct {
 	root   nodeMapint16uint
 }
 
+// NewMapInt16Uint returns a new map with keys of type int16 and values of type uint
 func NewMapInt16Uint() *MapInt16Uint {
 	var r MapInt16Uint
 	return &r
@@ -20864,15 +20939,15 @@ func (i *IterInt16Uint) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt16Uint) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt16Uint) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -20937,6 +21012,7 @@ type MapInt16Uint16 struct {
 	root   nodeMapint16uint16
 }
 
+// NewMapInt16Uint16 returns a new map with keys of type int16 and values of type uint16
 func NewMapInt16Uint16() *MapInt16Uint16 {
 	var r MapInt16Uint16
 	return &r
@@ -21143,15 +21219,15 @@ func (i *IterInt16Uint16) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt16Uint16) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt16Uint16) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -21216,6 +21292,7 @@ type MapInt16Uint32 struct {
 	root   nodeMapint16uint32
 }
 
+// NewMapInt16Uint32 returns a new map with keys of type int16 and values of type uint32
 func NewMapInt16Uint32() *MapInt16Uint32 {
 	var r MapInt16Uint32
 	return &r
@@ -21422,15 +21499,15 @@ func (i *IterInt16Uint32) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt16Uint32) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt16Uint32) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -21495,6 +21572,7 @@ type MapInt16Uint64 struct {
 	root   nodeMapint16uint64
 }
 
+// NewMapInt16Uint64 returns a new map with keys of type int16 and values of type uint64
 func NewMapInt16Uint64() *MapInt16Uint64 {
 	var r MapInt16Uint64
 	return &r
@@ -21701,15 +21779,15 @@ func (i *IterInt16Uint64) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt16Uint64) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt16Uint64) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -21774,6 +21852,7 @@ type MapInt16Uint8 struct {
 	root   nodeMapint16uint8
 }
 
+// NewMapInt16Uint8 returns a new map with keys of type int16 and values of type uint8
 func NewMapInt16Uint8() *MapInt16Uint8 {
 	var r MapInt16Uint8
 	return &r
@@ -21980,15 +22059,15 @@ func (i *IterInt16Uint8) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt16Uint8) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt16Uint8) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -22053,6 +22132,7 @@ type MapInt16Uintptr struct {
 	root   nodeMapint16uintptr
 }
 
+// NewMapInt16Uintptr returns a new map with keys of type int16 and values of type uintptr
 func NewMapInt16Uintptr() *MapInt16Uintptr {
 	var r MapInt16Uintptr
 	return &r
@@ -22259,15 +22339,15 @@ func (i *IterInt16Uintptr) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt16Uintptr) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt16Uintptr) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -22332,6 +22412,7 @@ type MapInt8Bool struct {
 	root   nodeMapint8bool
 }
 
+// NewMapInt8Bool returns a new map with keys of type int8 and values of type bool
 func NewMapInt8Bool() *MapInt8Bool {
 	var r MapInt8Bool
 	return &r
@@ -22538,15 +22619,15 @@ func (i *IterInt8Bool) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt8Bool) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt8Bool) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -22611,6 +22692,7 @@ type MapInt8Byte struct {
 	root   nodeMapint8byte
 }
 
+// NewMapInt8Byte returns a new map with keys of type int8 and values of type byte
 func NewMapInt8Byte() *MapInt8Byte {
 	var r MapInt8Byte
 	return &r
@@ -22817,15 +22899,15 @@ func (i *IterInt8Byte) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt8Byte) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt8Byte) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -22890,6 +22972,7 @@ type MapInt8Complex128 struct {
 	root   nodeMapint8complex128
 }
 
+// NewMapInt8Complex128 returns a new map with keys of type int8 and values of type complex128
 func NewMapInt8Complex128() *MapInt8Complex128 {
 	var r MapInt8Complex128
 	return &r
@@ -23096,15 +23179,15 @@ func (i *IterInt8Complex128) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt8Complex128) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt8Complex128) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -23169,6 +23252,7 @@ type MapInt8Complex64 struct {
 	root   nodeMapint8complex64
 }
 
+// NewMapInt8Complex64 returns a new map with keys of type int8 and values of type complex64
 func NewMapInt8Complex64() *MapInt8Complex64 {
 	var r MapInt8Complex64
 	return &r
@@ -23375,15 +23459,15 @@ func (i *IterInt8Complex64) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt8Complex64) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt8Complex64) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -23448,6 +23532,7 @@ type MapInt8Error struct {
 	root   nodeMapint8error
 }
 
+// NewMapInt8Error returns a new map with keys of type int8 and values of type error
 func NewMapInt8Error() *MapInt8Error {
 	var r MapInt8Error
 	return &r
@@ -23654,15 +23739,15 @@ func (i *IterInt8Error) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt8Error) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt8Error) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -23727,6 +23812,7 @@ type MapInt8Float32 struct {
 	root   nodeMapint8float32
 }
 
+// NewMapInt8Float32 returns a new map with keys of type int8 and values of type float32
 func NewMapInt8Float32() *MapInt8Float32 {
 	var r MapInt8Float32
 	return &r
@@ -23933,15 +24019,15 @@ func (i *IterInt8Float32) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt8Float32) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt8Float32) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -24006,6 +24092,7 @@ type MapInt8Float64 struct {
 	root   nodeMapint8float64
 }
 
+// NewMapInt8Float64 returns a new map with keys of type int8 and values of type float64
 func NewMapInt8Float64() *MapInt8Float64 {
 	var r MapInt8Float64
 	return &r
@@ -24212,15 +24299,15 @@ func (i *IterInt8Float64) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt8Float64) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt8Float64) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -24285,6 +24372,7 @@ type MapInt8Int struct {
 	root   nodeMapint8int
 }
 
+// NewMapInt8Int returns a new map with keys of type int8 and values of type int
 func NewMapInt8Int() *MapInt8Int {
 	var r MapInt8Int
 	return &r
@@ -24491,15 +24579,15 @@ func (i *IterInt8Int) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt8Int) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt8Int) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -24564,6 +24652,7 @@ type MapInt8Int16 struct {
 	root   nodeMapint8int16
 }
 
+// NewMapInt8Int16 returns a new map with keys of type int8 and values of type int16
 func NewMapInt8Int16() *MapInt8Int16 {
 	var r MapInt8Int16
 	return &r
@@ -24770,15 +24859,15 @@ func (i *IterInt8Int16) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt8Int16) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt8Int16) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -24843,6 +24932,7 @@ type MapInt8Int32 struct {
 	root   nodeMapint8int32
 }
 
+// NewMapInt8Int32 returns a new map with keys of type int8 and values of type int32
 func NewMapInt8Int32() *MapInt8Int32 {
 	var r MapInt8Int32
 	return &r
@@ -25049,15 +25139,15 @@ func (i *IterInt8Int32) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt8Int32) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt8Int32) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -25122,6 +25212,7 @@ type MapInt8Int64 struct {
 	root   nodeMapint8int64
 }
 
+// NewMapInt8Int64 returns a new map with keys of type int8 and values of type int64
 func NewMapInt8Int64() *MapInt8Int64 {
 	var r MapInt8Int64
 	return &r
@@ -25328,15 +25419,15 @@ func (i *IterInt8Int64) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt8Int64) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt8Int64) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -25401,6 +25492,7 @@ type MapInt8Int8 struct {
 	root   nodeMapint8int8
 }
 
+// NewMapInt8Int8 returns a new map with keys of type int8 and values of type int8
 func NewMapInt8Int8() *MapInt8Int8 {
 	var r MapInt8Int8
 	return &r
@@ -25607,15 +25699,15 @@ func (i *IterInt8Int8) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt8Int8) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt8Int8) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -25680,6 +25772,7 @@ type MapInt8Rune struct {
 	root   nodeMapint8rune
 }
 
+// NewMapInt8Rune returns a new map with keys of type int8 and values of type rune
 func NewMapInt8Rune() *MapInt8Rune {
 	var r MapInt8Rune
 	return &r
@@ -25886,15 +25979,15 @@ func (i *IterInt8Rune) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt8Rune) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt8Rune) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -25959,6 +26052,7 @@ type MapInt8String struct {
 	root   nodeMapint8string
 }
 
+// NewMapInt8String returns a new map with keys of type int8 and values of type string
 func NewMapInt8String() *MapInt8String {
 	var r MapInt8String
 	return &r
@@ -26165,15 +26259,15 @@ func (i *IterInt8String) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt8String) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt8String) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -26238,6 +26332,7 @@ type MapInt8Uint struct {
 	root   nodeMapint8uint
 }
 
+// NewMapInt8Uint returns a new map with keys of type int8 and values of type uint
 func NewMapInt8Uint() *MapInt8Uint {
 	var r MapInt8Uint
 	return &r
@@ -26444,15 +26539,15 @@ func (i *IterInt8Uint) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt8Uint) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt8Uint) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -26517,6 +26612,7 @@ type MapInt8Uint16 struct {
 	root   nodeMapint8uint16
 }
 
+// NewMapInt8Uint16 returns a new map with keys of type int8 and values of type uint16
 func NewMapInt8Uint16() *MapInt8Uint16 {
 	var r MapInt8Uint16
 	return &r
@@ -26723,15 +26819,15 @@ func (i *IterInt8Uint16) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt8Uint16) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt8Uint16) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -26796,6 +26892,7 @@ type MapInt8Uint32 struct {
 	root   nodeMapint8uint32
 }
 
+// NewMapInt8Uint32 returns a new map with keys of type int8 and values of type uint32
 func NewMapInt8Uint32() *MapInt8Uint32 {
 	var r MapInt8Uint32
 	return &r
@@ -27002,15 +27099,15 @@ func (i *IterInt8Uint32) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt8Uint32) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt8Uint32) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -27075,6 +27172,7 @@ type MapInt8Uint64 struct {
 	root   nodeMapint8uint64
 }
 
+// NewMapInt8Uint64 returns a new map with keys of type int8 and values of type uint64
 func NewMapInt8Uint64() *MapInt8Uint64 {
 	var r MapInt8Uint64
 	return &r
@@ -27281,15 +27379,15 @@ func (i *IterInt8Uint64) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt8Uint64) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt8Uint64) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -27354,6 +27452,7 @@ type MapInt8Uint8 struct {
 	root   nodeMapint8uint8
 }
 
+// NewMapInt8Uint8 returns a new map with keys of type int8 and values of type uint8
 func NewMapInt8Uint8() *MapInt8Uint8 {
 	var r MapInt8Uint8
 	return &r
@@ -27560,15 +27659,15 @@ func (i *IterInt8Uint8) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt8Uint8) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt8Uint8) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -27633,6 +27732,7 @@ type MapInt8Uintptr struct {
 	root   nodeMapint8uintptr
 }
 
+// NewMapInt8Uintptr returns a new map with keys of type int8 and values of type uintptr
 func NewMapInt8Uintptr() *MapInt8Uintptr {
 	var r MapInt8Uintptr
 	return &r
@@ -27839,15 +27939,15 @@ func (i *IterInt8Uintptr) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterInt8Uintptr) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterInt8Uintptr) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -27912,6 +28012,7 @@ type MapUintBool struct {
 	root   nodeMapuintbool
 }
 
+// NewMapUintBool returns a new map with keys of type uint and values of type bool
 func NewMapUintBool() *MapUintBool {
 	var r MapUintBool
 	return &r
@@ -28118,15 +28219,15 @@ func (i *IterUintBool) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUintBool) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUintBool) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -28191,6 +28292,7 @@ type MapUintByte struct {
 	root   nodeMapuintbyte
 }
 
+// NewMapUintByte returns a new map with keys of type uint and values of type byte
 func NewMapUintByte() *MapUintByte {
 	var r MapUintByte
 	return &r
@@ -28397,15 +28499,15 @@ func (i *IterUintByte) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUintByte) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUintByte) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -28470,6 +28572,7 @@ type MapUintComplex128 struct {
 	root   nodeMapuintcomplex128
 }
 
+// NewMapUintComplex128 returns a new map with keys of type uint and values of type complex128
 func NewMapUintComplex128() *MapUintComplex128 {
 	var r MapUintComplex128
 	return &r
@@ -28676,15 +28779,15 @@ func (i *IterUintComplex128) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUintComplex128) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUintComplex128) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -28749,6 +28852,7 @@ type MapUintComplex64 struct {
 	root   nodeMapuintcomplex64
 }
 
+// NewMapUintComplex64 returns a new map with keys of type uint and values of type complex64
 func NewMapUintComplex64() *MapUintComplex64 {
 	var r MapUintComplex64
 	return &r
@@ -28955,15 +29059,15 @@ func (i *IterUintComplex64) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUintComplex64) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUintComplex64) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -29028,6 +29132,7 @@ type MapUintError struct {
 	root   nodeMapuinterror
 }
 
+// NewMapUintError returns a new map with keys of type uint and values of type error
 func NewMapUintError() *MapUintError {
 	var r MapUintError
 	return &r
@@ -29234,15 +29339,15 @@ func (i *IterUintError) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUintError) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUintError) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -29307,6 +29412,7 @@ type MapUintFloat32 struct {
 	root   nodeMapuintfloat32
 }
 
+// NewMapUintFloat32 returns a new map with keys of type uint and values of type float32
 func NewMapUintFloat32() *MapUintFloat32 {
 	var r MapUintFloat32
 	return &r
@@ -29513,15 +29619,15 @@ func (i *IterUintFloat32) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUintFloat32) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUintFloat32) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -29586,6 +29692,7 @@ type MapUintFloat64 struct {
 	root   nodeMapuintfloat64
 }
 
+// NewMapUintFloat64 returns a new map with keys of type uint and values of type float64
 func NewMapUintFloat64() *MapUintFloat64 {
 	var r MapUintFloat64
 	return &r
@@ -29792,15 +29899,15 @@ func (i *IterUintFloat64) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUintFloat64) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUintFloat64) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -29865,6 +29972,7 @@ type MapUintInt struct {
 	root   nodeMapuintint
 }
 
+// NewMapUintInt returns a new map with keys of type uint and values of type int
 func NewMapUintInt() *MapUintInt {
 	var r MapUintInt
 	return &r
@@ -30071,15 +30179,15 @@ func (i *IterUintInt) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUintInt) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUintInt) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -30144,6 +30252,7 @@ type MapUintInt16 struct {
 	root   nodeMapuintint16
 }
 
+// NewMapUintInt16 returns a new map with keys of type uint and values of type int16
 func NewMapUintInt16() *MapUintInt16 {
 	var r MapUintInt16
 	return &r
@@ -30350,15 +30459,15 @@ func (i *IterUintInt16) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUintInt16) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUintInt16) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -30423,6 +30532,7 @@ type MapUintInt32 struct {
 	root   nodeMapuintint32
 }
 
+// NewMapUintInt32 returns a new map with keys of type uint and values of type int32
 func NewMapUintInt32() *MapUintInt32 {
 	var r MapUintInt32
 	return &r
@@ -30629,15 +30739,15 @@ func (i *IterUintInt32) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUintInt32) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUintInt32) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -30702,6 +30812,7 @@ type MapUintInt64 struct {
 	root   nodeMapuintint64
 }
 
+// NewMapUintInt64 returns a new map with keys of type uint and values of type int64
 func NewMapUintInt64() *MapUintInt64 {
 	var r MapUintInt64
 	return &r
@@ -30908,15 +31019,15 @@ func (i *IterUintInt64) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUintInt64) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUintInt64) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -30981,6 +31092,7 @@ type MapUintInt8 struct {
 	root   nodeMapuintint8
 }
 
+// NewMapUintInt8 returns a new map with keys of type uint and values of type int8
 func NewMapUintInt8() *MapUintInt8 {
 	var r MapUintInt8
 	return &r
@@ -31187,15 +31299,15 @@ func (i *IterUintInt8) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUintInt8) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUintInt8) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -31260,6 +31372,7 @@ type MapUintRune struct {
 	root   nodeMapuintrune
 }
 
+// NewMapUintRune returns a new map with keys of type uint and values of type rune
 func NewMapUintRune() *MapUintRune {
 	var r MapUintRune
 	return &r
@@ -31466,15 +31579,15 @@ func (i *IterUintRune) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUintRune) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUintRune) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -31539,6 +31652,7 @@ type MapUintString struct {
 	root   nodeMapuintstring
 }
 
+// NewMapUintString returns a new map with keys of type uint and values of type string
 func NewMapUintString() *MapUintString {
 	var r MapUintString
 	return &r
@@ -31745,15 +31859,15 @@ func (i *IterUintString) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUintString) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUintString) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -31818,6 +31932,7 @@ type MapUintUint struct {
 	root   nodeMapuintuint
 }
 
+// NewMapUintUint returns a new map with keys of type uint and values of type uint
 func NewMapUintUint() *MapUintUint {
 	var r MapUintUint
 	return &r
@@ -32024,15 +32139,15 @@ func (i *IterUintUint) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUintUint) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUintUint) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -32097,6 +32212,7 @@ type MapUintUint16 struct {
 	root   nodeMapuintuint16
 }
 
+// NewMapUintUint16 returns a new map with keys of type uint and values of type uint16
 func NewMapUintUint16() *MapUintUint16 {
 	var r MapUintUint16
 	return &r
@@ -32303,15 +32419,15 @@ func (i *IterUintUint16) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUintUint16) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUintUint16) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -32376,6 +32492,7 @@ type MapUintUint32 struct {
 	root   nodeMapuintuint32
 }
 
+// NewMapUintUint32 returns a new map with keys of type uint and values of type uint32
 func NewMapUintUint32() *MapUintUint32 {
 	var r MapUintUint32
 	return &r
@@ -32582,15 +32699,15 @@ func (i *IterUintUint32) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUintUint32) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUintUint32) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -32655,6 +32772,7 @@ type MapUintUint64 struct {
 	root   nodeMapuintuint64
 }
 
+// NewMapUintUint64 returns a new map with keys of type uint and values of type uint64
 func NewMapUintUint64() *MapUintUint64 {
 	var r MapUintUint64
 	return &r
@@ -32861,15 +32979,15 @@ func (i *IterUintUint64) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUintUint64) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUintUint64) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -32934,6 +33052,7 @@ type MapUintUint8 struct {
 	root   nodeMapuintuint8
 }
 
+// NewMapUintUint8 returns a new map with keys of type uint and values of type uint8
 func NewMapUintUint8() *MapUintUint8 {
 	var r MapUintUint8
 	return &r
@@ -33140,15 +33259,15 @@ func (i *IterUintUint8) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUintUint8) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUintUint8) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -33213,6 +33332,7 @@ type MapUintUintptr struct {
 	root   nodeMapuintuintptr
 }
 
+// NewMapUintUintptr returns a new map with keys of type uint and values of type uintptr
 func NewMapUintUintptr() *MapUintUintptr {
 	var r MapUintUintptr
 	return &r
@@ -33419,15 +33539,15 @@ func (i *IterUintUintptr) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUintUintptr) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUintUintptr) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -33492,6 +33612,7 @@ type MapUintptrBool struct {
 	root   nodeMapuintptrbool
 }
 
+// NewMapUintptrBool returns a new map with keys of type uintptr and values of type bool
 func NewMapUintptrBool() *MapUintptrBool {
 	var r MapUintptrBool
 	return &r
@@ -33698,15 +33819,15 @@ func (i *IterUintptrBool) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUintptrBool) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUintptrBool) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -33771,6 +33892,7 @@ type MapUintptrByte struct {
 	root   nodeMapuintptrbyte
 }
 
+// NewMapUintptrByte returns a new map with keys of type uintptr and values of type byte
 func NewMapUintptrByte() *MapUintptrByte {
 	var r MapUintptrByte
 	return &r
@@ -33977,15 +34099,15 @@ func (i *IterUintptrByte) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUintptrByte) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUintptrByte) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -34050,6 +34172,7 @@ type MapUintptrComplex128 struct {
 	root   nodeMapuintptrcomplex128
 }
 
+// NewMapUintptrComplex128 returns a new map with keys of type uintptr and values of type complex128
 func NewMapUintptrComplex128() *MapUintptrComplex128 {
 	var r MapUintptrComplex128
 	return &r
@@ -34256,15 +34379,15 @@ func (i *IterUintptrComplex128) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUintptrComplex128) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUintptrComplex128) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -34329,6 +34452,7 @@ type MapUintptrComplex64 struct {
 	root   nodeMapuintptrcomplex64
 }
 
+// NewMapUintptrComplex64 returns a new map with keys of type uintptr and values of type complex64
 func NewMapUintptrComplex64() *MapUintptrComplex64 {
 	var r MapUintptrComplex64
 	return &r
@@ -34535,15 +34659,15 @@ func (i *IterUintptrComplex64) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUintptrComplex64) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUintptrComplex64) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -34608,6 +34732,7 @@ type MapUintptrError struct {
 	root   nodeMapuintptrerror
 }
 
+// NewMapUintptrError returns a new map with keys of type uintptr and values of type error
 func NewMapUintptrError() *MapUintptrError {
 	var r MapUintptrError
 	return &r
@@ -34814,15 +34939,15 @@ func (i *IterUintptrError) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUintptrError) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUintptrError) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -34887,6 +35012,7 @@ type MapUintptrFloat32 struct {
 	root   nodeMapuintptrfloat32
 }
 
+// NewMapUintptrFloat32 returns a new map with keys of type uintptr and values of type float32
 func NewMapUintptrFloat32() *MapUintptrFloat32 {
 	var r MapUintptrFloat32
 	return &r
@@ -35093,15 +35219,15 @@ func (i *IterUintptrFloat32) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUintptrFloat32) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUintptrFloat32) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -35166,6 +35292,7 @@ type MapUintptrFloat64 struct {
 	root   nodeMapuintptrfloat64
 }
 
+// NewMapUintptrFloat64 returns a new map with keys of type uintptr and values of type float64
 func NewMapUintptrFloat64() *MapUintptrFloat64 {
 	var r MapUintptrFloat64
 	return &r
@@ -35372,15 +35499,15 @@ func (i *IterUintptrFloat64) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUintptrFloat64) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUintptrFloat64) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -35445,6 +35572,7 @@ type MapUintptrInt struct {
 	root   nodeMapuintptrint
 }
 
+// NewMapUintptrInt returns a new map with keys of type uintptr and values of type int
 func NewMapUintptrInt() *MapUintptrInt {
 	var r MapUintptrInt
 	return &r
@@ -35651,15 +35779,15 @@ func (i *IterUintptrInt) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUintptrInt) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUintptrInt) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -35724,6 +35852,7 @@ type MapUintptrInt16 struct {
 	root   nodeMapuintptrint16
 }
 
+// NewMapUintptrInt16 returns a new map with keys of type uintptr and values of type int16
 func NewMapUintptrInt16() *MapUintptrInt16 {
 	var r MapUintptrInt16
 	return &r
@@ -35930,15 +36059,15 @@ func (i *IterUintptrInt16) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUintptrInt16) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUintptrInt16) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -36003,6 +36132,7 @@ type MapUintptrInt32 struct {
 	root   nodeMapuintptrint32
 }
 
+// NewMapUintptrInt32 returns a new map with keys of type uintptr and values of type int32
 func NewMapUintptrInt32() *MapUintptrInt32 {
 	var r MapUintptrInt32
 	return &r
@@ -36209,15 +36339,15 @@ func (i *IterUintptrInt32) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUintptrInt32) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUintptrInt32) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -36282,6 +36412,7 @@ type MapUintptrInt64 struct {
 	root   nodeMapuintptrint64
 }
 
+// NewMapUintptrInt64 returns a new map with keys of type uintptr and values of type int64
 func NewMapUintptrInt64() *MapUintptrInt64 {
 	var r MapUintptrInt64
 	return &r
@@ -36488,15 +36619,15 @@ func (i *IterUintptrInt64) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUintptrInt64) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUintptrInt64) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -36561,6 +36692,7 @@ type MapUintptrInt8 struct {
 	root   nodeMapuintptrint8
 }
 
+// NewMapUintptrInt8 returns a new map with keys of type uintptr and values of type int8
 func NewMapUintptrInt8() *MapUintptrInt8 {
 	var r MapUintptrInt8
 	return &r
@@ -36767,15 +36899,15 @@ func (i *IterUintptrInt8) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUintptrInt8) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUintptrInt8) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -36840,6 +36972,7 @@ type MapUintptrRune struct {
 	root   nodeMapuintptrrune
 }
 
+// NewMapUintptrRune returns a new map with keys of type uintptr and values of type rune
 func NewMapUintptrRune() *MapUintptrRune {
 	var r MapUintptrRune
 	return &r
@@ -37046,15 +37179,15 @@ func (i *IterUintptrRune) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUintptrRune) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUintptrRune) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -37119,6 +37252,7 @@ type MapUintptrString struct {
 	root   nodeMapuintptrstring
 }
 
+// NewMapUintptrString returns a new map with keys of type uintptr and values of type string
 func NewMapUintptrString() *MapUintptrString {
 	var r MapUintptrString
 	return &r
@@ -37325,15 +37459,15 @@ func (i *IterUintptrString) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUintptrString) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUintptrString) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -37398,6 +37532,7 @@ type MapUintptrUint struct {
 	root   nodeMapuintptruint
 }
 
+// NewMapUintptrUint returns a new map with keys of type uintptr and values of type uint
 func NewMapUintptrUint() *MapUintptrUint {
 	var r MapUintptrUint
 	return &r
@@ -37604,15 +37739,15 @@ func (i *IterUintptrUint) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUintptrUint) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUintptrUint) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -37677,6 +37812,7 @@ type MapUintptrUint16 struct {
 	root   nodeMapuintptruint16
 }
 
+// NewMapUintptrUint16 returns a new map with keys of type uintptr and values of type uint16
 func NewMapUintptrUint16() *MapUintptrUint16 {
 	var r MapUintptrUint16
 	return &r
@@ -37883,15 +38019,15 @@ func (i *IterUintptrUint16) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUintptrUint16) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUintptrUint16) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -37956,6 +38092,7 @@ type MapUintptrUint32 struct {
 	root   nodeMapuintptruint32
 }
 
+// NewMapUintptrUint32 returns a new map with keys of type uintptr and values of type uint32
 func NewMapUintptrUint32() *MapUintptrUint32 {
 	var r MapUintptrUint32
 	return &r
@@ -38162,15 +38299,15 @@ func (i *IterUintptrUint32) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUintptrUint32) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUintptrUint32) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -38235,6 +38372,7 @@ type MapUintptrUint64 struct {
 	root   nodeMapuintptruint64
 }
 
+// NewMapUintptrUint64 returns a new map with keys of type uintptr and values of type uint64
 func NewMapUintptrUint64() *MapUintptrUint64 {
 	var r MapUintptrUint64
 	return &r
@@ -38441,15 +38579,15 @@ func (i *IterUintptrUint64) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUintptrUint64) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUintptrUint64) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -38514,6 +38652,7 @@ type MapUintptrUint8 struct {
 	root   nodeMapuintptruint8
 }
 
+// NewMapUintptrUint8 returns a new map with keys of type uintptr and values of type uint8
 func NewMapUintptrUint8() *MapUintptrUint8 {
 	var r MapUintptrUint8
 	return &r
@@ -38720,15 +38859,15 @@ func (i *IterUintptrUint8) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUintptrUint8) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUintptrUint8) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -38793,6 +38932,7 @@ type MapUintptrUintptr struct {
 	root   nodeMapuintptruintptr
 }
 
+// NewMapUintptrUintptr returns a new map with keys of type uintptr and values of type uintptr
 func NewMapUintptrUintptr() *MapUintptrUintptr {
 	var r MapUintptrUintptr
 	return &r
@@ -38999,15 +39139,15 @@ func (i *IterUintptrUintptr) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUintptrUintptr) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUintptrUintptr) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -39072,6 +39212,7 @@ type MapUint64Bool struct {
 	root   nodeMapuint64bool
 }
 
+// NewMapUint64Bool returns a new map with keys of type uint64 and values of type bool
 func NewMapUint64Bool() *MapUint64Bool {
 	var r MapUint64Bool
 	return &r
@@ -39278,15 +39419,15 @@ func (i *IterUint64Bool) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint64Bool) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint64Bool) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -39351,6 +39492,7 @@ type MapUint64Byte struct {
 	root   nodeMapuint64byte
 }
 
+// NewMapUint64Byte returns a new map with keys of type uint64 and values of type byte
 func NewMapUint64Byte() *MapUint64Byte {
 	var r MapUint64Byte
 	return &r
@@ -39557,15 +39699,15 @@ func (i *IterUint64Byte) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint64Byte) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint64Byte) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -39630,6 +39772,7 @@ type MapUint64Complex128 struct {
 	root   nodeMapuint64complex128
 }
 
+// NewMapUint64Complex128 returns a new map with keys of type uint64 and values of type complex128
 func NewMapUint64Complex128() *MapUint64Complex128 {
 	var r MapUint64Complex128
 	return &r
@@ -39836,15 +39979,15 @@ func (i *IterUint64Complex128) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint64Complex128) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint64Complex128) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -39909,6 +40052,7 @@ type MapUint64Complex64 struct {
 	root   nodeMapuint64complex64
 }
 
+// NewMapUint64Complex64 returns a new map with keys of type uint64 and values of type complex64
 func NewMapUint64Complex64() *MapUint64Complex64 {
 	var r MapUint64Complex64
 	return &r
@@ -40115,15 +40259,15 @@ func (i *IterUint64Complex64) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint64Complex64) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint64Complex64) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -40188,6 +40332,7 @@ type MapUint64Error struct {
 	root   nodeMapuint64error
 }
 
+// NewMapUint64Error returns a new map with keys of type uint64 and values of type error
 func NewMapUint64Error() *MapUint64Error {
 	var r MapUint64Error
 	return &r
@@ -40394,15 +40539,15 @@ func (i *IterUint64Error) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint64Error) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint64Error) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -40467,6 +40612,7 @@ type MapUint64Float32 struct {
 	root   nodeMapuint64float32
 }
 
+// NewMapUint64Float32 returns a new map with keys of type uint64 and values of type float32
 func NewMapUint64Float32() *MapUint64Float32 {
 	var r MapUint64Float32
 	return &r
@@ -40673,15 +40819,15 @@ func (i *IterUint64Float32) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint64Float32) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint64Float32) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -40746,6 +40892,7 @@ type MapUint64Float64 struct {
 	root   nodeMapuint64float64
 }
 
+// NewMapUint64Float64 returns a new map with keys of type uint64 and values of type float64
 func NewMapUint64Float64() *MapUint64Float64 {
 	var r MapUint64Float64
 	return &r
@@ -40952,15 +41099,15 @@ func (i *IterUint64Float64) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint64Float64) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint64Float64) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -41025,6 +41172,7 @@ type MapUint64Int struct {
 	root   nodeMapuint64int
 }
 
+// NewMapUint64Int returns a new map with keys of type uint64 and values of type int
 func NewMapUint64Int() *MapUint64Int {
 	var r MapUint64Int
 	return &r
@@ -41231,15 +41379,15 @@ func (i *IterUint64Int) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint64Int) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint64Int) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -41304,6 +41452,7 @@ type MapUint64Int16 struct {
 	root   nodeMapuint64int16
 }
 
+// NewMapUint64Int16 returns a new map with keys of type uint64 and values of type int16
 func NewMapUint64Int16() *MapUint64Int16 {
 	var r MapUint64Int16
 	return &r
@@ -41510,15 +41659,15 @@ func (i *IterUint64Int16) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint64Int16) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint64Int16) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -41583,6 +41732,7 @@ type MapUint64Int32 struct {
 	root   nodeMapuint64int32
 }
 
+// NewMapUint64Int32 returns a new map with keys of type uint64 and values of type int32
 func NewMapUint64Int32() *MapUint64Int32 {
 	var r MapUint64Int32
 	return &r
@@ -41789,15 +41939,15 @@ func (i *IterUint64Int32) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint64Int32) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint64Int32) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -41862,6 +42012,7 @@ type MapUint64Int64 struct {
 	root   nodeMapuint64int64
 }
 
+// NewMapUint64Int64 returns a new map with keys of type uint64 and values of type int64
 func NewMapUint64Int64() *MapUint64Int64 {
 	var r MapUint64Int64
 	return &r
@@ -42068,15 +42219,15 @@ func (i *IterUint64Int64) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint64Int64) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint64Int64) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -42141,6 +42292,7 @@ type MapUint64Int8 struct {
 	root   nodeMapuint64int8
 }
 
+// NewMapUint64Int8 returns a new map with keys of type uint64 and values of type int8
 func NewMapUint64Int8() *MapUint64Int8 {
 	var r MapUint64Int8
 	return &r
@@ -42347,15 +42499,15 @@ func (i *IterUint64Int8) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint64Int8) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint64Int8) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -42420,6 +42572,7 @@ type MapUint64Rune struct {
 	root   nodeMapuint64rune
 }
 
+// NewMapUint64Rune returns a new map with keys of type uint64 and values of type rune
 func NewMapUint64Rune() *MapUint64Rune {
 	var r MapUint64Rune
 	return &r
@@ -42626,15 +42779,15 @@ func (i *IterUint64Rune) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint64Rune) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint64Rune) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -42699,6 +42852,7 @@ type MapUint64String struct {
 	root   nodeMapuint64string
 }
 
+// NewMapUint64String returns a new map with keys of type uint64 and values of type string
 func NewMapUint64String() *MapUint64String {
 	var r MapUint64String
 	return &r
@@ -42905,15 +43059,15 @@ func (i *IterUint64String) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint64String) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint64String) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -42978,6 +43132,7 @@ type MapUint64Uint struct {
 	root   nodeMapuint64uint
 }
 
+// NewMapUint64Uint returns a new map with keys of type uint64 and values of type uint
 func NewMapUint64Uint() *MapUint64Uint {
 	var r MapUint64Uint
 	return &r
@@ -43184,15 +43339,15 @@ func (i *IterUint64Uint) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint64Uint) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint64Uint) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -43257,6 +43412,7 @@ type MapUint64Uint16 struct {
 	root   nodeMapuint64uint16
 }
 
+// NewMapUint64Uint16 returns a new map with keys of type uint64 and values of type uint16
 func NewMapUint64Uint16() *MapUint64Uint16 {
 	var r MapUint64Uint16
 	return &r
@@ -43463,15 +43619,15 @@ func (i *IterUint64Uint16) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint64Uint16) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint64Uint16) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -43536,6 +43692,7 @@ type MapUint64Uint32 struct {
 	root   nodeMapuint64uint32
 }
 
+// NewMapUint64Uint32 returns a new map with keys of type uint64 and values of type uint32
 func NewMapUint64Uint32() *MapUint64Uint32 {
 	var r MapUint64Uint32
 	return &r
@@ -43742,15 +43899,15 @@ func (i *IterUint64Uint32) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint64Uint32) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint64Uint32) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -43815,6 +43972,7 @@ type MapUint64Uint64 struct {
 	root   nodeMapuint64uint64
 }
 
+// NewMapUint64Uint64 returns a new map with keys of type uint64 and values of type uint64
 func NewMapUint64Uint64() *MapUint64Uint64 {
 	var r MapUint64Uint64
 	return &r
@@ -44021,15 +44179,15 @@ func (i *IterUint64Uint64) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint64Uint64) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint64Uint64) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -44094,6 +44252,7 @@ type MapUint64Uint8 struct {
 	root   nodeMapuint64uint8
 }
 
+// NewMapUint64Uint8 returns a new map with keys of type uint64 and values of type uint8
 func NewMapUint64Uint8() *MapUint64Uint8 {
 	var r MapUint64Uint8
 	return &r
@@ -44300,15 +44459,15 @@ func (i *IterUint64Uint8) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint64Uint8) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint64Uint8) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -44373,6 +44532,7 @@ type MapUint64Uintptr struct {
 	root   nodeMapuint64uintptr
 }
 
+// NewMapUint64Uintptr returns a new map with keys of type uint64 and values of type uintptr
 func NewMapUint64Uintptr() *MapUint64Uintptr {
 	var r MapUint64Uintptr
 	return &r
@@ -44579,15 +44739,15 @@ func (i *IterUint64Uintptr) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint64Uintptr) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint64Uintptr) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -44652,6 +44812,7 @@ type MapUint32Bool struct {
 	root   nodeMapuint32bool
 }
 
+// NewMapUint32Bool returns a new map with keys of type uint32 and values of type bool
 func NewMapUint32Bool() *MapUint32Bool {
 	var r MapUint32Bool
 	return &r
@@ -44858,15 +45019,15 @@ func (i *IterUint32Bool) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint32Bool) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint32Bool) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -44931,6 +45092,7 @@ type MapUint32Byte struct {
 	root   nodeMapuint32byte
 }
 
+// NewMapUint32Byte returns a new map with keys of type uint32 and values of type byte
 func NewMapUint32Byte() *MapUint32Byte {
 	var r MapUint32Byte
 	return &r
@@ -45137,15 +45299,15 @@ func (i *IterUint32Byte) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint32Byte) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint32Byte) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -45210,6 +45372,7 @@ type MapUint32Complex128 struct {
 	root   nodeMapuint32complex128
 }
 
+// NewMapUint32Complex128 returns a new map with keys of type uint32 and values of type complex128
 func NewMapUint32Complex128() *MapUint32Complex128 {
 	var r MapUint32Complex128
 	return &r
@@ -45416,15 +45579,15 @@ func (i *IterUint32Complex128) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint32Complex128) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint32Complex128) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -45489,6 +45652,7 @@ type MapUint32Complex64 struct {
 	root   nodeMapuint32complex64
 }
 
+// NewMapUint32Complex64 returns a new map with keys of type uint32 and values of type complex64
 func NewMapUint32Complex64() *MapUint32Complex64 {
 	var r MapUint32Complex64
 	return &r
@@ -45695,15 +45859,15 @@ func (i *IterUint32Complex64) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint32Complex64) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint32Complex64) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -45768,6 +45932,7 @@ type MapUint32Error struct {
 	root   nodeMapuint32error
 }
 
+// NewMapUint32Error returns a new map with keys of type uint32 and values of type error
 func NewMapUint32Error() *MapUint32Error {
 	var r MapUint32Error
 	return &r
@@ -45974,15 +46139,15 @@ func (i *IterUint32Error) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint32Error) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint32Error) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -46047,6 +46212,7 @@ type MapUint32Float32 struct {
 	root   nodeMapuint32float32
 }
 
+// NewMapUint32Float32 returns a new map with keys of type uint32 and values of type float32
 func NewMapUint32Float32() *MapUint32Float32 {
 	var r MapUint32Float32
 	return &r
@@ -46253,15 +46419,15 @@ func (i *IterUint32Float32) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint32Float32) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint32Float32) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -46326,6 +46492,7 @@ type MapUint32Float64 struct {
 	root   nodeMapuint32float64
 }
 
+// NewMapUint32Float64 returns a new map with keys of type uint32 and values of type float64
 func NewMapUint32Float64() *MapUint32Float64 {
 	var r MapUint32Float64
 	return &r
@@ -46532,15 +46699,15 @@ func (i *IterUint32Float64) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint32Float64) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint32Float64) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -46605,6 +46772,7 @@ type MapUint32Int struct {
 	root   nodeMapuint32int
 }
 
+// NewMapUint32Int returns a new map with keys of type uint32 and values of type int
 func NewMapUint32Int() *MapUint32Int {
 	var r MapUint32Int
 	return &r
@@ -46811,15 +46979,15 @@ func (i *IterUint32Int) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint32Int) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint32Int) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -46884,6 +47052,7 @@ type MapUint32Int16 struct {
 	root   nodeMapuint32int16
 }
 
+// NewMapUint32Int16 returns a new map with keys of type uint32 and values of type int16
 func NewMapUint32Int16() *MapUint32Int16 {
 	var r MapUint32Int16
 	return &r
@@ -47090,15 +47259,15 @@ func (i *IterUint32Int16) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint32Int16) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint32Int16) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -47163,6 +47332,7 @@ type MapUint32Int32 struct {
 	root   nodeMapuint32int32
 }
 
+// NewMapUint32Int32 returns a new map with keys of type uint32 and values of type int32
 func NewMapUint32Int32() *MapUint32Int32 {
 	var r MapUint32Int32
 	return &r
@@ -47369,15 +47539,15 @@ func (i *IterUint32Int32) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint32Int32) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint32Int32) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -47442,6 +47612,7 @@ type MapUint32Int64 struct {
 	root   nodeMapuint32int64
 }
 
+// NewMapUint32Int64 returns a new map with keys of type uint32 and values of type int64
 func NewMapUint32Int64() *MapUint32Int64 {
 	var r MapUint32Int64
 	return &r
@@ -47648,15 +47819,15 @@ func (i *IterUint32Int64) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint32Int64) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint32Int64) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -47721,6 +47892,7 @@ type MapUint32Int8 struct {
 	root   nodeMapuint32int8
 }
 
+// NewMapUint32Int8 returns a new map with keys of type uint32 and values of type int8
 func NewMapUint32Int8() *MapUint32Int8 {
 	var r MapUint32Int8
 	return &r
@@ -47927,15 +48099,15 @@ func (i *IterUint32Int8) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint32Int8) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint32Int8) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -48000,6 +48172,7 @@ type MapUint32Rune struct {
 	root   nodeMapuint32rune
 }
 
+// NewMapUint32Rune returns a new map with keys of type uint32 and values of type rune
 func NewMapUint32Rune() *MapUint32Rune {
 	var r MapUint32Rune
 	return &r
@@ -48206,15 +48379,15 @@ func (i *IterUint32Rune) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint32Rune) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint32Rune) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -48279,6 +48452,7 @@ type MapUint32String struct {
 	root   nodeMapuint32string
 }
 
+// NewMapUint32String returns a new map with keys of type uint32 and values of type string
 func NewMapUint32String() *MapUint32String {
 	var r MapUint32String
 	return &r
@@ -48485,15 +48659,15 @@ func (i *IterUint32String) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint32String) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint32String) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -48558,6 +48732,7 @@ type MapUint32Uint struct {
 	root   nodeMapuint32uint
 }
 
+// NewMapUint32Uint returns a new map with keys of type uint32 and values of type uint
 func NewMapUint32Uint() *MapUint32Uint {
 	var r MapUint32Uint
 	return &r
@@ -48764,15 +48939,15 @@ func (i *IterUint32Uint) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint32Uint) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint32Uint) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -48837,6 +49012,7 @@ type MapUint32Uint16 struct {
 	root   nodeMapuint32uint16
 }
 
+// NewMapUint32Uint16 returns a new map with keys of type uint32 and values of type uint16
 func NewMapUint32Uint16() *MapUint32Uint16 {
 	var r MapUint32Uint16
 	return &r
@@ -49043,15 +49219,15 @@ func (i *IterUint32Uint16) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint32Uint16) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint32Uint16) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -49116,6 +49292,7 @@ type MapUint32Uint32 struct {
 	root   nodeMapuint32uint32
 }
 
+// NewMapUint32Uint32 returns a new map with keys of type uint32 and values of type uint32
 func NewMapUint32Uint32() *MapUint32Uint32 {
 	var r MapUint32Uint32
 	return &r
@@ -49322,15 +49499,15 @@ func (i *IterUint32Uint32) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint32Uint32) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint32Uint32) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -49395,6 +49572,7 @@ type MapUint32Uint64 struct {
 	root   nodeMapuint32uint64
 }
 
+// NewMapUint32Uint64 returns a new map with keys of type uint32 and values of type uint64
 func NewMapUint32Uint64() *MapUint32Uint64 {
 	var r MapUint32Uint64
 	return &r
@@ -49601,15 +49779,15 @@ func (i *IterUint32Uint64) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint32Uint64) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint32Uint64) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -49674,6 +49852,7 @@ type MapUint32Uint8 struct {
 	root   nodeMapuint32uint8
 }
 
+// NewMapUint32Uint8 returns a new map with keys of type uint32 and values of type uint8
 func NewMapUint32Uint8() *MapUint32Uint8 {
 	var r MapUint32Uint8
 	return &r
@@ -49880,15 +50059,15 @@ func (i *IterUint32Uint8) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint32Uint8) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint32Uint8) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -49953,6 +50132,7 @@ type MapUint32Uintptr struct {
 	root   nodeMapuint32uintptr
 }
 
+// NewMapUint32Uintptr returns a new map with keys of type uint32 and values of type uintptr
 func NewMapUint32Uintptr() *MapUint32Uintptr {
 	var r MapUint32Uintptr
 	return &r
@@ -50159,15 +50339,15 @@ func (i *IterUint32Uintptr) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint32Uintptr) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint32Uintptr) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -50232,6 +50412,7 @@ type MapUint16Bool struct {
 	root   nodeMapuint16bool
 }
 
+// NewMapUint16Bool returns a new map with keys of type uint16 and values of type bool
 func NewMapUint16Bool() *MapUint16Bool {
 	var r MapUint16Bool
 	return &r
@@ -50438,15 +50619,15 @@ func (i *IterUint16Bool) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint16Bool) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint16Bool) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -50511,6 +50692,7 @@ type MapUint16Byte struct {
 	root   nodeMapuint16byte
 }
 
+// NewMapUint16Byte returns a new map with keys of type uint16 and values of type byte
 func NewMapUint16Byte() *MapUint16Byte {
 	var r MapUint16Byte
 	return &r
@@ -50717,15 +50899,15 @@ func (i *IterUint16Byte) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint16Byte) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint16Byte) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -50790,6 +50972,7 @@ type MapUint16Complex128 struct {
 	root   nodeMapuint16complex128
 }
 
+// NewMapUint16Complex128 returns a new map with keys of type uint16 and values of type complex128
 func NewMapUint16Complex128() *MapUint16Complex128 {
 	var r MapUint16Complex128
 	return &r
@@ -50996,15 +51179,15 @@ func (i *IterUint16Complex128) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint16Complex128) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint16Complex128) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -51069,6 +51252,7 @@ type MapUint16Complex64 struct {
 	root   nodeMapuint16complex64
 }
 
+// NewMapUint16Complex64 returns a new map with keys of type uint16 and values of type complex64
 func NewMapUint16Complex64() *MapUint16Complex64 {
 	var r MapUint16Complex64
 	return &r
@@ -51275,15 +51459,15 @@ func (i *IterUint16Complex64) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint16Complex64) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint16Complex64) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -51348,6 +51532,7 @@ type MapUint16Error struct {
 	root   nodeMapuint16error
 }
 
+// NewMapUint16Error returns a new map with keys of type uint16 and values of type error
 func NewMapUint16Error() *MapUint16Error {
 	var r MapUint16Error
 	return &r
@@ -51554,15 +51739,15 @@ func (i *IterUint16Error) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint16Error) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint16Error) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -51627,6 +51812,7 @@ type MapUint16Float32 struct {
 	root   nodeMapuint16float32
 }
 
+// NewMapUint16Float32 returns a new map with keys of type uint16 and values of type float32
 func NewMapUint16Float32() *MapUint16Float32 {
 	var r MapUint16Float32
 	return &r
@@ -51833,15 +52019,15 @@ func (i *IterUint16Float32) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint16Float32) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint16Float32) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -51906,6 +52092,7 @@ type MapUint16Float64 struct {
 	root   nodeMapuint16float64
 }
 
+// NewMapUint16Float64 returns a new map with keys of type uint16 and values of type float64
 func NewMapUint16Float64() *MapUint16Float64 {
 	var r MapUint16Float64
 	return &r
@@ -52112,15 +52299,15 @@ func (i *IterUint16Float64) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint16Float64) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint16Float64) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -52185,6 +52372,7 @@ type MapUint16Int struct {
 	root   nodeMapuint16int
 }
 
+// NewMapUint16Int returns a new map with keys of type uint16 and values of type int
 func NewMapUint16Int() *MapUint16Int {
 	var r MapUint16Int
 	return &r
@@ -52391,15 +52579,15 @@ func (i *IterUint16Int) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint16Int) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint16Int) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -52464,6 +52652,7 @@ type MapUint16Int16 struct {
 	root   nodeMapuint16int16
 }
 
+// NewMapUint16Int16 returns a new map with keys of type uint16 and values of type int16
 func NewMapUint16Int16() *MapUint16Int16 {
 	var r MapUint16Int16
 	return &r
@@ -52670,15 +52859,15 @@ func (i *IterUint16Int16) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint16Int16) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint16Int16) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -52743,6 +52932,7 @@ type MapUint16Int32 struct {
 	root   nodeMapuint16int32
 }
 
+// NewMapUint16Int32 returns a new map with keys of type uint16 and values of type int32
 func NewMapUint16Int32() *MapUint16Int32 {
 	var r MapUint16Int32
 	return &r
@@ -52949,15 +53139,15 @@ func (i *IterUint16Int32) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint16Int32) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint16Int32) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -53022,6 +53212,7 @@ type MapUint16Int64 struct {
 	root   nodeMapuint16int64
 }
 
+// NewMapUint16Int64 returns a new map with keys of type uint16 and values of type int64
 func NewMapUint16Int64() *MapUint16Int64 {
 	var r MapUint16Int64
 	return &r
@@ -53228,15 +53419,15 @@ func (i *IterUint16Int64) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint16Int64) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint16Int64) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -53301,6 +53492,7 @@ type MapUint16Int8 struct {
 	root   nodeMapuint16int8
 }
 
+// NewMapUint16Int8 returns a new map with keys of type uint16 and values of type int8
 func NewMapUint16Int8() *MapUint16Int8 {
 	var r MapUint16Int8
 	return &r
@@ -53507,15 +53699,15 @@ func (i *IterUint16Int8) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint16Int8) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint16Int8) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -53580,6 +53772,7 @@ type MapUint16Rune struct {
 	root   nodeMapuint16rune
 }
 
+// NewMapUint16Rune returns a new map with keys of type uint16 and values of type rune
 func NewMapUint16Rune() *MapUint16Rune {
 	var r MapUint16Rune
 	return &r
@@ -53786,15 +53979,15 @@ func (i *IterUint16Rune) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint16Rune) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint16Rune) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -53859,6 +54052,7 @@ type MapUint16String struct {
 	root   nodeMapuint16string
 }
 
+// NewMapUint16String returns a new map with keys of type uint16 and values of type string
 func NewMapUint16String() *MapUint16String {
 	var r MapUint16String
 	return &r
@@ -54065,15 +54259,15 @@ func (i *IterUint16String) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint16String) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint16String) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -54138,6 +54332,7 @@ type MapUint16Uint struct {
 	root   nodeMapuint16uint
 }
 
+// NewMapUint16Uint returns a new map with keys of type uint16 and values of type uint
 func NewMapUint16Uint() *MapUint16Uint {
 	var r MapUint16Uint
 	return &r
@@ -54344,15 +54539,15 @@ func (i *IterUint16Uint) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint16Uint) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint16Uint) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -54417,6 +54612,7 @@ type MapUint16Uint16 struct {
 	root   nodeMapuint16uint16
 }
 
+// NewMapUint16Uint16 returns a new map with keys of type uint16 and values of type uint16
 func NewMapUint16Uint16() *MapUint16Uint16 {
 	var r MapUint16Uint16
 	return &r
@@ -54623,15 +54819,15 @@ func (i *IterUint16Uint16) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint16Uint16) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint16Uint16) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -54696,6 +54892,7 @@ type MapUint16Uint32 struct {
 	root   nodeMapuint16uint32
 }
 
+// NewMapUint16Uint32 returns a new map with keys of type uint16 and values of type uint32
 func NewMapUint16Uint32() *MapUint16Uint32 {
 	var r MapUint16Uint32
 	return &r
@@ -54902,15 +55099,15 @@ func (i *IterUint16Uint32) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint16Uint32) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint16Uint32) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -54975,6 +55172,7 @@ type MapUint16Uint64 struct {
 	root   nodeMapuint16uint64
 }
 
+// NewMapUint16Uint64 returns a new map with keys of type uint16 and values of type uint64
 func NewMapUint16Uint64() *MapUint16Uint64 {
 	var r MapUint16Uint64
 	return &r
@@ -55181,15 +55379,15 @@ func (i *IterUint16Uint64) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint16Uint64) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint16Uint64) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -55254,6 +55452,7 @@ type MapUint16Uint8 struct {
 	root   nodeMapuint16uint8
 }
 
+// NewMapUint16Uint8 returns a new map with keys of type uint16 and values of type uint8
 func NewMapUint16Uint8() *MapUint16Uint8 {
 	var r MapUint16Uint8
 	return &r
@@ -55460,15 +55659,15 @@ func (i *IterUint16Uint8) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint16Uint8) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint16Uint8) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -55533,6 +55732,7 @@ type MapUint16Uintptr struct {
 	root   nodeMapuint16uintptr
 }
 
+// NewMapUint16Uintptr returns a new map with keys of type uint16 and values of type uintptr
 func NewMapUint16Uintptr() *MapUint16Uintptr {
 	var r MapUint16Uintptr
 	return &r
@@ -55739,15 +55939,15 @@ func (i *IterUint16Uintptr) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint16Uintptr) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint16Uintptr) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -55812,6 +56012,7 @@ type MapUint8Bool struct {
 	root   nodeMapuint8bool
 }
 
+// NewMapUint8Bool returns a new map with keys of type uint8 and values of type bool
 func NewMapUint8Bool() *MapUint8Bool {
 	var r MapUint8Bool
 	return &r
@@ -56018,15 +56219,15 @@ func (i *IterUint8Bool) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint8Bool) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint8Bool) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -56091,6 +56292,7 @@ type MapUint8Byte struct {
 	root   nodeMapuint8byte
 }
 
+// NewMapUint8Byte returns a new map with keys of type uint8 and values of type byte
 func NewMapUint8Byte() *MapUint8Byte {
 	var r MapUint8Byte
 	return &r
@@ -56297,15 +56499,15 @@ func (i *IterUint8Byte) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint8Byte) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint8Byte) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -56370,6 +56572,7 @@ type MapUint8Complex128 struct {
 	root   nodeMapuint8complex128
 }
 
+// NewMapUint8Complex128 returns a new map with keys of type uint8 and values of type complex128
 func NewMapUint8Complex128() *MapUint8Complex128 {
 	var r MapUint8Complex128
 	return &r
@@ -56576,15 +56779,15 @@ func (i *IterUint8Complex128) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint8Complex128) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint8Complex128) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -56649,6 +56852,7 @@ type MapUint8Complex64 struct {
 	root   nodeMapuint8complex64
 }
 
+// NewMapUint8Complex64 returns a new map with keys of type uint8 and values of type complex64
 func NewMapUint8Complex64() *MapUint8Complex64 {
 	var r MapUint8Complex64
 	return &r
@@ -56855,15 +57059,15 @@ func (i *IterUint8Complex64) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint8Complex64) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint8Complex64) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -56928,6 +57132,7 @@ type MapUint8Error struct {
 	root   nodeMapuint8error
 }
 
+// NewMapUint8Error returns a new map with keys of type uint8 and values of type error
 func NewMapUint8Error() *MapUint8Error {
 	var r MapUint8Error
 	return &r
@@ -57134,15 +57339,15 @@ func (i *IterUint8Error) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint8Error) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint8Error) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -57207,6 +57412,7 @@ type MapUint8Float32 struct {
 	root   nodeMapuint8float32
 }
 
+// NewMapUint8Float32 returns a new map with keys of type uint8 and values of type float32
 func NewMapUint8Float32() *MapUint8Float32 {
 	var r MapUint8Float32
 	return &r
@@ -57413,15 +57619,15 @@ func (i *IterUint8Float32) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint8Float32) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint8Float32) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -57486,6 +57692,7 @@ type MapUint8Float64 struct {
 	root   nodeMapuint8float64
 }
 
+// NewMapUint8Float64 returns a new map with keys of type uint8 and values of type float64
 func NewMapUint8Float64() *MapUint8Float64 {
 	var r MapUint8Float64
 	return &r
@@ -57692,15 +57899,15 @@ func (i *IterUint8Float64) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint8Float64) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint8Float64) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -57765,6 +57972,7 @@ type MapUint8Int struct {
 	root   nodeMapuint8int
 }
 
+// NewMapUint8Int returns a new map with keys of type uint8 and values of type int
 func NewMapUint8Int() *MapUint8Int {
 	var r MapUint8Int
 	return &r
@@ -57971,15 +58179,15 @@ func (i *IterUint8Int) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint8Int) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint8Int) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -58044,6 +58252,7 @@ type MapUint8Int16 struct {
 	root   nodeMapuint8int16
 }
 
+// NewMapUint8Int16 returns a new map with keys of type uint8 and values of type int16
 func NewMapUint8Int16() *MapUint8Int16 {
 	var r MapUint8Int16
 	return &r
@@ -58250,15 +58459,15 @@ func (i *IterUint8Int16) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint8Int16) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint8Int16) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -58323,6 +58532,7 @@ type MapUint8Int32 struct {
 	root   nodeMapuint8int32
 }
 
+// NewMapUint8Int32 returns a new map with keys of type uint8 and values of type int32
 func NewMapUint8Int32() *MapUint8Int32 {
 	var r MapUint8Int32
 	return &r
@@ -58529,15 +58739,15 @@ func (i *IterUint8Int32) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint8Int32) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint8Int32) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -58602,6 +58812,7 @@ type MapUint8Int64 struct {
 	root   nodeMapuint8int64
 }
 
+// NewMapUint8Int64 returns a new map with keys of type uint8 and values of type int64
 func NewMapUint8Int64() *MapUint8Int64 {
 	var r MapUint8Int64
 	return &r
@@ -58808,15 +59019,15 @@ func (i *IterUint8Int64) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint8Int64) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint8Int64) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -58881,6 +59092,7 @@ type MapUint8Int8 struct {
 	root   nodeMapuint8int8
 }
 
+// NewMapUint8Int8 returns a new map with keys of type uint8 and values of type int8
 func NewMapUint8Int8() *MapUint8Int8 {
 	var r MapUint8Int8
 	return &r
@@ -59087,15 +59299,15 @@ func (i *IterUint8Int8) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint8Int8) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint8Int8) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -59160,6 +59372,7 @@ type MapUint8Rune struct {
 	root   nodeMapuint8rune
 }
 
+// NewMapUint8Rune returns a new map with keys of type uint8 and values of type rune
 func NewMapUint8Rune() *MapUint8Rune {
 	var r MapUint8Rune
 	return &r
@@ -59366,15 +59579,15 @@ func (i *IterUint8Rune) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint8Rune) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint8Rune) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -59439,6 +59652,7 @@ type MapUint8String struct {
 	root   nodeMapuint8string
 }
 
+// NewMapUint8String returns a new map with keys of type uint8 and values of type string
 func NewMapUint8String() *MapUint8String {
 	var r MapUint8String
 	return &r
@@ -59645,15 +59859,15 @@ func (i *IterUint8String) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint8String) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint8String) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -59718,6 +59932,7 @@ type MapUint8Uint struct {
 	root   nodeMapuint8uint
 }
 
+// NewMapUint8Uint returns a new map with keys of type uint8 and values of type uint
 func NewMapUint8Uint() *MapUint8Uint {
 	var r MapUint8Uint
 	return &r
@@ -59924,15 +60139,15 @@ func (i *IterUint8Uint) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint8Uint) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint8Uint) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -59997,6 +60212,7 @@ type MapUint8Uint16 struct {
 	root   nodeMapuint8uint16
 }
 
+// NewMapUint8Uint16 returns a new map with keys of type uint8 and values of type uint16
 func NewMapUint8Uint16() *MapUint8Uint16 {
 	var r MapUint8Uint16
 	return &r
@@ -60203,15 +60419,15 @@ func (i *IterUint8Uint16) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint8Uint16) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint8Uint16) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -60276,6 +60492,7 @@ type MapUint8Uint32 struct {
 	root   nodeMapuint8uint32
 }
 
+// NewMapUint8Uint32 returns a new map with keys of type uint8 and values of type uint32
 func NewMapUint8Uint32() *MapUint8Uint32 {
 	var r MapUint8Uint32
 	return &r
@@ -60482,15 +60699,15 @@ func (i *IterUint8Uint32) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint8Uint32) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint8Uint32) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -60555,6 +60772,7 @@ type MapUint8Uint64 struct {
 	root   nodeMapuint8uint64
 }
 
+// NewMapUint8Uint64 returns a new map with keys of type uint8 and values of type uint64
 func NewMapUint8Uint64() *MapUint8Uint64 {
 	var r MapUint8Uint64
 	return &r
@@ -60761,15 +60979,15 @@ func (i *IterUint8Uint64) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint8Uint64) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint8Uint64) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -60834,6 +61052,7 @@ type MapUint8Uint8 struct {
 	root   nodeMapuint8uint8
 }
 
+// NewMapUint8Uint8 returns a new map with keys of type uint8 and values of type uint8
 func NewMapUint8Uint8() *MapUint8Uint8 {
 	var r MapUint8Uint8
 	return &r
@@ -61040,15 +61259,15 @@ func (i *IterUint8Uint8) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint8Uint8) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint8Uint8) Prev() bool {
 	i.step(0)
 	return i.Found
@@ -61113,6 +61332,7 @@ type MapUint8Uintptr struct {
 	root   nodeMapuint8uintptr
 }
 
+// NewMapUint8Uintptr returns a new map with keys of type uint8 and values of type uintptr
 func NewMapUint8Uintptr() *MapUint8Uintptr {
 	var r MapUint8Uintptr
 	return &r
@@ -61319,15 +61539,15 @@ func (i *IterUint8Uintptr) Reset() {
 
 // Next advances the iterator to the next higher key and populates the iterators public Fields.
 // If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// The return value is true unless there is no next higher key to advance to.
 func (i *IterUint8Uintptr) Next() bool {
 	i.step(1)
 	return i.Found
 }
 
-// Next advances the iterator to the next higher key and populates the iterators public Fields.
-// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
-// The return value is True unless there is no next higher key to advance to.
+// Prev advances the iterator to the next lower key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Prev will set the iterator to the highest key.
+// The return value is true unless there is no next lower key to advance to.
 func (i *IterUint8Uintptr) Prev() bool {
 	i.step(0)
 	return i.Found
