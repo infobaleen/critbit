@@ -15,7 +15,7 @@ func (s UintSlice) Less(i, j int) bool { return s[i] < s[j] }
 func TestBasic(t *testing.T) {
 	const L = 10000
 	var iRef = make([]int, L)
-	var uRef = make([]uint, L)
+	var uRef = make(UintSlice, L)
 	var iMap MapIntInt
 	var uMap MapUintUint
 
@@ -31,6 +31,14 @@ func TestBasic(t *testing.T) {
 		uMap.Set(uint(el), uint(el))
 		iMap.Set(el, el)
 	}
+
+	// Remove half of the entries
+	for i := L / 2; i < L; i++ {
+		uMap.Rem(uRef[i])
+		iMap.Rem(iRef[i])
+	}
+	uRef = uRef[:L/2]
+	iRef = iRef[:L/2]
 
 	// Check contents
 	for _, r := range uRef {

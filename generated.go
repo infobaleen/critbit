@@ -4,7 +4,10 @@
 
 package critbit
 
-import "unsafe"
+import (
+	"fmt"
+	"unsafe"
+)
 
 // MapIntBool implements an associative array of bool indexed by int.
 type MapIntBool struct {
@@ -53,14 +56,18 @@ func (c *nodeMapintbool) value() *bool {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapintbool) find(key int) (uint, *nodeMapintbool) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapintbool) find(key int) (crit uint, child, parent *nodeMapintbool) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapIntBool) transformKey(key int) int {
@@ -73,6 +80,21 @@ func (t *MapIntBool) transformKey(key int) int {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapIntBool) Rem(key int) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -88,7 +110,7 @@ func (t *MapIntBool) SetP(key int, val *bool) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -104,6 +126,7 @@ func (t *MapIntBool) SetP(key int, val *bool) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -119,7 +142,7 @@ func (t *MapIntBool) GetP(key int) (*bool, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*bool)(l.child), true
 	}
@@ -143,17 +166,17 @@ func (t *MapIntBool) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapintbool) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapintbool)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*bool)(c.child))
-// 	}
-// }
+func (c *nodeMapintbool) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapintbool)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*bool)(c.child))
+	}
+}
 
 // IterIntBool The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -333,14 +356,18 @@ func (c *nodeMapintbyte) value() *byte {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapintbyte) find(key int) (uint, *nodeMapintbyte) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapintbyte) find(key int) (crit uint, child, parent *nodeMapintbyte) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapIntByte) transformKey(key int) int {
@@ -353,6 +380,21 @@ func (t *MapIntByte) transformKey(key int) int {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapIntByte) Rem(key int) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -368,7 +410,7 @@ func (t *MapIntByte) SetP(key int, val *byte) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -384,6 +426,7 @@ func (t *MapIntByte) SetP(key int, val *byte) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -399,7 +442,7 @@ func (t *MapIntByte) GetP(key int) (*byte, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*byte)(l.child), true
 	}
@@ -423,17 +466,17 @@ func (t *MapIntByte) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapintbyte) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapintbyte)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*byte)(c.child))
-// 	}
-// }
+func (c *nodeMapintbyte) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapintbyte)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*byte)(c.child))
+	}
+}
 
 // IterIntByte The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -613,14 +656,18 @@ func (c *nodeMapintcomplex128) value() *complex128 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapintcomplex128) find(key int) (uint, *nodeMapintcomplex128) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapintcomplex128) find(key int) (crit uint, child, parent *nodeMapintcomplex128) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapIntComplex128) transformKey(key int) int {
@@ -633,6 +680,21 @@ func (t *MapIntComplex128) transformKey(key int) int {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapIntComplex128) Rem(key int) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -648,7 +710,7 @@ func (t *MapIntComplex128) SetP(key int, val *complex128) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -664,6 +726,7 @@ func (t *MapIntComplex128) SetP(key int, val *complex128) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -679,7 +742,7 @@ func (t *MapIntComplex128) GetP(key int) (*complex128, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*complex128)(l.child), true
 	}
@@ -703,17 +766,17 @@ func (t *MapIntComplex128) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapintcomplex128) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapintcomplex128)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*complex128)(c.child))
-// 	}
-// }
+func (c *nodeMapintcomplex128) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapintcomplex128)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*complex128)(c.child))
+	}
+}
 
 // IterIntComplex128 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -893,14 +956,18 @@ func (c *nodeMapintcomplex64) value() *complex64 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapintcomplex64) find(key int) (uint, *nodeMapintcomplex64) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapintcomplex64) find(key int) (crit uint, child, parent *nodeMapintcomplex64) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapIntComplex64) transformKey(key int) int {
@@ -913,6 +980,21 @@ func (t *MapIntComplex64) transformKey(key int) int {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapIntComplex64) Rem(key int) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -928,7 +1010,7 @@ func (t *MapIntComplex64) SetP(key int, val *complex64) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -944,6 +1026,7 @@ func (t *MapIntComplex64) SetP(key int, val *complex64) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -959,7 +1042,7 @@ func (t *MapIntComplex64) GetP(key int) (*complex64, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*complex64)(l.child), true
 	}
@@ -983,17 +1066,17 @@ func (t *MapIntComplex64) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapintcomplex64) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapintcomplex64)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*complex64)(c.child))
-// 	}
-// }
+func (c *nodeMapintcomplex64) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapintcomplex64)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*complex64)(c.child))
+	}
+}
 
 // IterIntComplex64 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -1173,14 +1256,18 @@ func (c *nodeMapinterror) value() *error {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapinterror) find(key int) (uint, *nodeMapinterror) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapinterror) find(key int) (crit uint, child, parent *nodeMapinterror) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapIntError) transformKey(key int) int {
@@ -1193,6 +1280,21 @@ func (t *MapIntError) transformKey(key int) int {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapIntError) Rem(key int) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -1208,7 +1310,7 @@ func (t *MapIntError) SetP(key int, val *error) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -1224,6 +1326,7 @@ func (t *MapIntError) SetP(key int, val *error) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -1239,7 +1342,7 @@ func (t *MapIntError) GetP(key int) (*error, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*error)(l.child), true
 	}
@@ -1263,17 +1366,17 @@ func (t *MapIntError) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapinterror) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapinterror)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*error)(c.child))
-// 	}
-// }
+func (c *nodeMapinterror) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapinterror)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*error)(c.child))
+	}
+}
 
 // IterIntError The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -1453,14 +1556,18 @@ func (c *nodeMapintfloat32) value() *float32 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapintfloat32) find(key int) (uint, *nodeMapintfloat32) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapintfloat32) find(key int) (crit uint, child, parent *nodeMapintfloat32) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapIntFloat32) transformKey(key int) int {
@@ -1473,6 +1580,21 @@ func (t *MapIntFloat32) transformKey(key int) int {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapIntFloat32) Rem(key int) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -1488,7 +1610,7 @@ func (t *MapIntFloat32) SetP(key int, val *float32) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -1504,6 +1626,7 @@ func (t *MapIntFloat32) SetP(key int, val *float32) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -1519,7 +1642,7 @@ func (t *MapIntFloat32) GetP(key int) (*float32, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*float32)(l.child), true
 	}
@@ -1543,17 +1666,17 @@ func (t *MapIntFloat32) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapintfloat32) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapintfloat32)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*float32)(c.child))
-// 	}
-// }
+func (c *nodeMapintfloat32) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapintfloat32)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*float32)(c.child))
+	}
+}
 
 // IterIntFloat32 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -1733,14 +1856,18 @@ func (c *nodeMapintfloat64) value() *float64 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapintfloat64) find(key int) (uint, *nodeMapintfloat64) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapintfloat64) find(key int) (crit uint, child, parent *nodeMapintfloat64) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapIntFloat64) transformKey(key int) int {
@@ -1753,6 +1880,21 @@ func (t *MapIntFloat64) transformKey(key int) int {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapIntFloat64) Rem(key int) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -1768,7 +1910,7 @@ func (t *MapIntFloat64) SetP(key int, val *float64) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -1784,6 +1926,7 @@ func (t *MapIntFloat64) SetP(key int, val *float64) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -1799,7 +1942,7 @@ func (t *MapIntFloat64) GetP(key int) (*float64, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*float64)(l.child), true
 	}
@@ -1823,17 +1966,17 @@ func (t *MapIntFloat64) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapintfloat64) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapintfloat64)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*float64)(c.child))
-// 	}
-// }
+func (c *nodeMapintfloat64) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapintfloat64)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*float64)(c.child))
+	}
+}
 
 // IterIntFloat64 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -2013,14 +2156,18 @@ func (c *nodeMapintint) value() *int {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapintint) find(key int) (uint, *nodeMapintint) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapintint) find(key int) (crit uint, child, parent *nodeMapintint) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapIntInt) transformKey(key int) int {
@@ -2033,6 +2180,21 @@ func (t *MapIntInt) transformKey(key int) int {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapIntInt) Rem(key int) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -2048,7 +2210,7 @@ func (t *MapIntInt) SetP(key int, val *int) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -2064,6 +2226,7 @@ func (t *MapIntInt) SetP(key int, val *int) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -2079,7 +2242,7 @@ func (t *MapIntInt) GetP(key int) (*int, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*int)(l.child), true
 	}
@@ -2103,17 +2266,17 @@ func (t *MapIntInt) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapintint) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapintint)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int)(c.child))
-// 	}
-// }
+func (c *nodeMapintint) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapintint)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int)(c.child))
+	}
+}
 
 // IterIntInt The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -2293,14 +2456,18 @@ func (c *nodeMapintint16) value() *int16 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapintint16) find(key int) (uint, *nodeMapintint16) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapintint16) find(key int) (crit uint, child, parent *nodeMapintint16) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapIntInt16) transformKey(key int) int {
@@ -2313,6 +2480,21 @@ func (t *MapIntInt16) transformKey(key int) int {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapIntInt16) Rem(key int) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -2328,7 +2510,7 @@ func (t *MapIntInt16) SetP(key int, val *int16) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -2344,6 +2526,7 @@ func (t *MapIntInt16) SetP(key int, val *int16) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -2359,7 +2542,7 @@ func (t *MapIntInt16) GetP(key int) (*int16, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*int16)(l.child), true
 	}
@@ -2383,17 +2566,17 @@ func (t *MapIntInt16) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapintint16) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapintint16)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int16)(c.child))
-// 	}
-// }
+func (c *nodeMapintint16) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapintint16)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int16)(c.child))
+	}
+}
 
 // IterIntInt16 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -2573,14 +2756,18 @@ func (c *nodeMapintint32) value() *int32 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapintint32) find(key int) (uint, *nodeMapintint32) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapintint32) find(key int) (crit uint, child, parent *nodeMapintint32) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapIntInt32) transformKey(key int) int {
@@ -2593,6 +2780,21 @@ func (t *MapIntInt32) transformKey(key int) int {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapIntInt32) Rem(key int) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -2608,7 +2810,7 @@ func (t *MapIntInt32) SetP(key int, val *int32) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -2624,6 +2826,7 @@ func (t *MapIntInt32) SetP(key int, val *int32) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -2639,7 +2842,7 @@ func (t *MapIntInt32) GetP(key int) (*int32, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*int32)(l.child), true
 	}
@@ -2663,17 +2866,17 @@ func (t *MapIntInt32) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapintint32) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapintint32)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int32)(c.child))
-// 	}
-// }
+func (c *nodeMapintint32) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapintint32)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int32)(c.child))
+	}
+}
 
 // IterIntInt32 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -2853,14 +3056,18 @@ func (c *nodeMapintint64) value() *int64 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapintint64) find(key int) (uint, *nodeMapintint64) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapintint64) find(key int) (crit uint, child, parent *nodeMapintint64) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapIntInt64) transformKey(key int) int {
@@ -2873,6 +3080,21 @@ func (t *MapIntInt64) transformKey(key int) int {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapIntInt64) Rem(key int) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -2888,7 +3110,7 @@ func (t *MapIntInt64) SetP(key int, val *int64) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -2904,6 +3126,7 @@ func (t *MapIntInt64) SetP(key int, val *int64) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -2919,7 +3142,7 @@ func (t *MapIntInt64) GetP(key int) (*int64, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*int64)(l.child), true
 	}
@@ -2943,17 +3166,17 @@ func (t *MapIntInt64) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapintint64) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapintint64)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int64)(c.child))
-// 	}
-// }
+func (c *nodeMapintint64) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapintint64)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int64)(c.child))
+	}
+}
 
 // IterIntInt64 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -3133,14 +3356,18 @@ func (c *nodeMapintint8) value() *int8 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapintint8) find(key int) (uint, *nodeMapintint8) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapintint8) find(key int) (crit uint, child, parent *nodeMapintint8) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapIntInt8) transformKey(key int) int {
@@ -3153,6 +3380,21 @@ func (t *MapIntInt8) transformKey(key int) int {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapIntInt8) Rem(key int) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -3168,7 +3410,7 @@ func (t *MapIntInt8) SetP(key int, val *int8) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -3184,6 +3426,7 @@ func (t *MapIntInt8) SetP(key int, val *int8) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -3199,7 +3442,7 @@ func (t *MapIntInt8) GetP(key int) (*int8, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*int8)(l.child), true
 	}
@@ -3223,17 +3466,17 @@ func (t *MapIntInt8) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapintint8) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapintint8)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int8)(c.child))
-// 	}
-// }
+func (c *nodeMapintint8) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapintint8)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int8)(c.child))
+	}
+}
 
 // IterIntInt8 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -3413,14 +3656,18 @@ func (c *nodeMapintrune) value() *rune {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapintrune) find(key int) (uint, *nodeMapintrune) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapintrune) find(key int) (crit uint, child, parent *nodeMapintrune) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapIntRune) transformKey(key int) int {
@@ -3433,6 +3680,21 @@ func (t *MapIntRune) transformKey(key int) int {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapIntRune) Rem(key int) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -3448,7 +3710,7 @@ func (t *MapIntRune) SetP(key int, val *rune) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -3464,6 +3726,7 @@ func (t *MapIntRune) SetP(key int, val *rune) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -3479,7 +3742,7 @@ func (t *MapIntRune) GetP(key int) (*rune, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*rune)(l.child), true
 	}
@@ -3503,17 +3766,17 @@ func (t *MapIntRune) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapintrune) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapintrune)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*rune)(c.child))
-// 	}
-// }
+func (c *nodeMapintrune) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapintrune)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*rune)(c.child))
+	}
+}
 
 // IterIntRune The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -3693,14 +3956,18 @@ func (c *nodeMapintstring) value() *string {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapintstring) find(key int) (uint, *nodeMapintstring) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapintstring) find(key int) (crit uint, child, parent *nodeMapintstring) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapIntString) transformKey(key int) int {
@@ -3713,6 +3980,21 @@ func (t *MapIntString) transformKey(key int) int {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapIntString) Rem(key int) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -3728,7 +4010,7 @@ func (t *MapIntString) SetP(key int, val *string) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -3744,6 +4026,7 @@ func (t *MapIntString) SetP(key int, val *string) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -3759,7 +4042,7 @@ func (t *MapIntString) GetP(key int) (*string, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*string)(l.child), true
 	}
@@ -3783,17 +4066,17 @@ func (t *MapIntString) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapintstring) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapintstring)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*string)(c.child))
-// 	}
-// }
+func (c *nodeMapintstring) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapintstring)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*string)(c.child))
+	}
+}
 
 // IterIntString The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -3973,14 +4256,18 @@ func (c *nodeMapintuint) value() *uint {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapintuint) find(key int) (uint, *nodeMapintuint) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapintuint) find(key int) (crit uint, child, parent *nodeMapintuint) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapIntUint) transformKey(key int) int {
@@ -3993,6 +4280,21 @@ func (t *MapIntUint) transformKey(key int) int {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapIntUint) Rem(key int) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -4008,7 +4310,7 @@ func (t *MapIntUint) SetP(key int, val *uint) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -4024,6 +4326,7 @@ func (t *MapIntUint) SetP(key int, val *uint) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -4039,7 +4342,7 @@ func (t *MapIntUint) GetP(key int) (*uint, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uint)(l.child), true
 	}
@@ -4063,17 +4366,17 @@ func (t *MapIntUint) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapintuint) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapintuint)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint)(c.child))
-// 	}
-// }
+func (c *nodeMapintuint) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapintuint)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint)(c.child))
+	}
+}
 
 // IterIntUint The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -4253,14 +4556,18 @@ func (c *nodeMapintuint16) value() *uint16 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapintuint16) find(key int) (uint, *nodeMapintuint16) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapintuint16) find(key int) (crit uint, child, parent *nodeMapintuint16) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapIntUint16) transformKey(key int) int {
@@ -4273,6 +4580,21 @@ func (t *MapIntUint16) transformKey(key int) int {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapIntUint16) Rem(key int) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -4288,7 +4610,7 @@ func (t *MapIntUint16) SetP(key int, val *uint16) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -4304,6 +4626,7 @@ func (t *MapIntUint16) SetP(key int, val *uint16) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -4319,7 +4642,7 @@ func (t *MapIntUint16) GetP(key int) (*uint16, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uint16)(l.child), true
 	}
@@ -4343,17 +4666,17 @@ func (t *MapIntUint16) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapintuint16) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapintuint16)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint16)(c.child))
-// 	}
-// }
+func (c *nodeMapintuint16) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapintuint16)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint16)(c.child))
+	}
+}
 
 // IterIntUint16 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -4533,14 +4856,18 @@ func (c *nodeMapintuint32) value() *uint32 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapintuint32) find(key int) (uint, *nodeMapintuint32) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapintuint32) find(key int) (crit uint, child, parent *nodeMapintuint32) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapIntUint32) transformKey(key int) int {
@@ -4553,6 +4880,21 @@ func (t *MapIntUint32) transformKey(key int) int {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapIntUint32) Rem(key int) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -4568,7 +4910,7 @@ func (t *MapIntUint32) SetP(key int, val *uint32) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -4584,6 +4926,7 @@ func (t *MapIntUint32) SetP(key int, val *uint32) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -4599,7 +4942,7 @@ func (t *MapIntUint32) GetP(key int) (*uint32, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uint32)(l.child), true
 	}
@@ -4623,17 +4966,17 @@ func (t *MapIntUint32) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapintuint32) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapintuint32)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint32)(c.child))
-// 	}
-// }
+func (c *nodeMapintuint32) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapintuint32)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint32)(c.child))
+	}
+}
 
 // IterIntUint32 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -4813,14 +5156,18 @@ func (c *nodeMapintuint64) value() *uint64 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapintuint64) find(key int) (uint, *nodeMapintuint64) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapintuint64) find(key int) (crit uint, child, parent *nodeMapintuint64) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapIntUint64) transformKey(key int) int {
@@ -4833,6 +5180,21 @@ func (t *MapIntUint64) transformKey(key int) int {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapIntUint64) Rem(key int) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -4848,7 +5210,7 @@ func (t *MapIntUint64) SetP(key int, val *uint64) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -4864,6 +5226,7 @@ func (t *MapIntUint64) SetP(key int, val *uint64) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -4879,7 +5242,7 @@ func (t *MapIntUint64) GetP(key int) (*uint64, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uint64)(l.child), true
 	}
@@ -4903,17 +5266,17 @@ func (t *MapIntUint64) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapintuint64) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapintuint64)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint64)(c.child))
-// 	}
-// }
+func (c *nodeMapintuint64) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapintuint64)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint64)(c.child))
+	}
+}
 
 // IterIntUint64 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -5093,14 +5456,18 @@ func (c *nodeMapintuint8) value() *uint8 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapintuint8) find(key int) (uint, *nodeMapintuint8) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapintuint8) find(key int) (crit uint, child, parent *nodeMapintuint8) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapIntUint8) transformKey(key int) int {
@@ -5113,6 +5480,21 @@ func (t *MapIntUint8) transformKey(key int) int {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapIntUint8) Rem(key int) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -5128,7 +5510,7 @@ func (t *MapIntUint8) SetP(key int, val *uint8) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -5144,6 +5526,7 @@ func (t *MapIntUint8) SetP(key int, val *uint8) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -5159,7 +5542,7 @@ func (t *MapIntUint8) GetP(key int) (*uint8, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uint8)(l.child), true
 	}
@@ -5183,17 +5566,17 @@ func (t *MapIntUint8) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapintuint8) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapintuint8)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint8)(c.child))
-// 	}
-// }
+func (c *nodeMapintuint8) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapintuint8)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint8)(c.child))
+	}
+}
 
 // IterIntUint8 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -5373,14 +5756,18 @@ func (c *nodeMapintuintptr) value() *uintptr {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapintuintptr) find(key int) (uint, *nodeMapintuintptr) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapintuintptr) find(key int) (crit uint, child, parent *nodeMapintuintptr) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapIntUintptr) transformKey(key int) int {
@@ -5393,6 +5780,21 @@ func (t *MapIntUintptr) transformKey(key int) int {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapIntUintptr) Rem(key int) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -5408,7 +5810,7 @@ func (t *MapIntUintptr) SetP(key int, val *uintptr) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -5424,6 +5826,7 @@ func (t *MapIntUintptr) SetP(key int, val *uintptr) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -5439,7 +5842,7 @@ func (t *MapIntUintptr) GetP(key int) (*uintptr, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uintptr)(l.child), true
 	}
@@ -5463,17 +5866,17 @@ func (t *MapIntUintptr) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapintuintptr) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapintuintptr)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uintptr)(c.child))
-// 	}
-// }
+func (c *nodeMapintuintptr) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapintuintptr)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uintptr)(c.child))
+	}
+}
 
 // IterIntUintptr The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -5653,14 +6056,18 @@ func (c *nodeMapint64bool) value() *bool {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint64bool) find(key int64) (uint, *nodeMapint64bool) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint64bool) find(key int64) (crit uint, child, parent *nodeMapint64bool) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt64Bool) transformKey(key int64) int64 {
@@ -5673,6 +6080,21 @@ func (t *MapInt64Bool) transformKey(key int64) int64 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt64Bool) Rem(key int64) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -5688,7 +6110,7 @@ func (t *MapInt64Bool) SetP(key int64, val *bool) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -5704,6 +6126,7 @@ func (t *MapInt64Bool) SetP(key int64, val *bool) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -5719,7 +6142,7 @@ func (t *MapInt64Bool) GetP(key int64) (*bool, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*bool)(l.child), true
 	}
@@ -5743,17 +6166,17 @@ func (t *MapInt64Bool) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint64bool) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint64bool)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*bool)(c.child))
-// 	}
-// }
+func (c *nodeMapint64bool) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint64bool)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*bool)(c.child))
+	}
+}
 
 // IterInt64Bool The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -5933,14 +6356,18 @@ func (c *nodeMapint64byte) value() *byte {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint64byte) find(key int64) (uint, *nodeMapint64byte) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint64byte) find(key int64) (crit uint, child, parent *nodeMapint64byte) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt64Byte) transformKey(key int64) int64 {
@@ -5953,6 +6380,21 @@ func (t *MapInt64Byte) transformKey(key int64) int64 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt64Byte) Rem(key int64) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -5968,7 +6410,7 @@ func (t *MapInt64Byte) SetP(key int64, val *byte) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -5984,6 +6426,7 @@ func (t *MapInt64Byte) SetP(key int64, val *byte) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -5999,7 +6442,7 @@ func (t *MapInt64Byte) GetP(key int64) (*byte, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*byte)(l.child), true
 	}
@@ -6023,17 +6466,17 @@ func (t *MapInt64Byte) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint64byte) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint64byte)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*byte)(c.child))
-// 	}
-// }
+func (c *nodeMapint64byte) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint64byte)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*byte)(c.child))
+	}
+}
 
 // IterInt64Byte The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -6213,14 +6656,18 @@ func (c *nodeMapint64complex128) value() *complex128 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint64complex128) find(key int64) (uint, *nodeMapint64complex128) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint64complex128) find(key int64) (crit uint, child, parent *nodeMapint64complex128) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt64Complex128) transformKey(key int64) int64 {
@@ -6233,6 +6680,21 @@ func (t *MapInt64Complex128) transformKey(key int64) int64 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt64Complex128) Rem(key int64) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -6248,7 +6710,7 @@ func (t *MapInt64Complex128) SetP(key int64, val *complex128) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -6264,6 +6726,7 @@ func (t *MapInt64Complex128) SetP(key int64, val *complex128) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -6279,7 +6742,7 @@ func (t *MapInt64Complex128) GetP(key int64) (*complex128, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*complex128)(l.child), true
 	}
@@ -6303,17 +6766,17 @@ func (t *MapInt64Complex128) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint64complex128) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint64complex128)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*complex128)(c.child))
-// 	}
-// }
+func (c *nodeMapint64complex128) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint64complex128)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*complex128)(c.child))
+	}
+}
 
 // IterInt64Complex128 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -6493,14 +6956,18 @@ func (c *nodeMapint64complex64) value() *complex64 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint64complex64) find(key int64) (uint, *nodeMapint64complex64) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint64complex64) find(key int64) (crit uint, child, parent *nodeMapint64complex64) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt64Complex64) transformKey(key int64) int64 {
@@ -6513,6 +6980,21 @@ func (t *MapInt64Complex64) transformKey(key int64) int64 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt64Complex64) Rem(key int64) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -6528,7 +7010,7 @@ func (t *MapInt64Complex64) SetP(key int64, val *complex64) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -6544,6 +7026,7 @@ func (t *MapInt64Complex64) SetP(key int64, val *complex64) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -6559,7 +7042,7 @@ func (t *MapInt64Complex64) GetP(key int64) (*complex64, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*complex64)(l.child), true
 	}
@@ -6583,17 +7066,17 @@ func (t *MapInt64Complex64) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint64complex64) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint64complex64)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*complex64)(c.child))
-// 	}
-// }
+func (c *nodeMapint64complex64) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint64complex64)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*complex64)(c.child))
+	}
+}
 
 // IterInt64Complex64 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -6773,14 +7256,18 @@ func (c *nodeMapint64error) value() *error {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint64error) find(key int64) (uint, *nodeMapint64error) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint64error) find(key int64) (crit uint, child, parent *nodeMapint64error) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt64Error) transformKey(key int64) int64 {
@@ -6793,6 +7280,21 @@ func (t *MapInt64Error) transformKey(key int64) int64 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt64Error) Rem(key int64) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -6808,7 +7310,7 @@ func (t *MapInt64Error) SetP(key int64, val *error) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -6824,6 +7326,7 @@ func (t *MapInt64Error) SetP(key int64, val *error) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -6839,7 +7342,7 @@ func (t *MapInt64Error) GetP(key int64) (*error, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*error)(l.child), true
 	}
@@ -6863,17 +7366,17 @@ func (t *MapInt64Error) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint64error) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint64error)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*error)(c.child))
-// 	}
-// }
+func (c *nodeMapint64error) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint64error)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*error)(c.child))
+	}
+}
 
 // IterInt64Error The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -7053,14 +7556,18 @@ func (c *nodeMapint64float32) value() *float32 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint64float32) find(key int64) (uint, *nodeMapint64float32) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint64float32) find(key int64) (crit uint, child, parent *nodeMapint64float32) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt64Float32) transformKey(key int64) int64 {
@@ -7073,6 +7580,21 @@ func (t *MapInt64Float32) transformKey(key int64) int64 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt64Float32) Rem(key int64) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -7088,7 +7610,7 @@ func (t *MapInt64Float32) SetP(key int64, val *float32) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -7104,6 +7626,7 @@ func (t *MapInt64Float32) SetP(key int64, val *float32) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -7119,7 +7642,7 @@ func (t *MapInt64Float32) GetP(key int64) (*float32, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*float32)(l.child), true
 	}
@@ -7143,17 +7666,17 @@ func (t *MapInt64Float32) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint64float32) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint64float32)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*float32)(c.child))
-// 	}
-// }
+func (c *nodeMapint64float32) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint64float32)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*float32)(c.child))
+	}
+}
 
 // IterInt64Float32 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -7333,14 +7856,18 @@ func (c *nodeMapint64float64) value() *float64 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint64float64) find(key int64) (uint, *nodeMapint64float64) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint64float64) find(key int64) (crit uint, child, parent *nodeMapint64float64) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt64Float64) transformKey(key int64) int64 {
@@ -7353,6 +7880,21 @@ func (t *MapInt64Float64) transformKey(key int64) int64 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt64Float64) Rem(key int64) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -7368,7 +7910,7 @@ func (t *MapInt64Float64) SetP(key int64, val *float64) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -7384,6 +7926,7 @@ func (t *MapInt64Float64) SetP(key int64, val *float64) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -7399,7 +7942,7 @@ func (t *MapInt64Float64) GetP(key int64) (*float64, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*float64)(l.child), true
 	}
@@ -7423,17 +7966,17 @@ func (t *MapInt64Float64) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint64float64) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint64float64)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*float64)(c.child))
-// 	}
-// }
+func (c *nodeMapint64float64) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint64float64)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*float64)(c.child))
+	}
+}
 
 // IterInt64Float64 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -7613,14 +8156,18 @@ func (c *nodeMapint64int) value() *int {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint64int) find(key int64) (uint, *nodeMapint64int) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint64int) find(key int64) (crit uint, child, parent *nodeMapint64int) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt64Int) transformKey(key int64) int64 {
@@ -7633,6 +8180,21 @@ func (t *MapInt64Int) transformKey(key int64) int64 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt64Int) Rem(key int64) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -7648,7 +8210,7 @@ func (t *MapInt64Int) SetP(key int64, val *int) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -7664,6 +8226,7 @@ func (t *MapInt64Int) SetP(key int64, val *int) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -7679,7 +8242,7 @@ func (t *MapInt64Int) GetP(key int64) (*int, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*int)(l.child), true
 	}
@@ -7703,17 +8266,17 @@ func (t *MapInt64Int) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint64int) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint64int)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int)(c.child))
-// 	}
-// }
+func (c *nodeMapint64int) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint64int)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int)(c.child))
+	}
+}
 
 // IterInt64Int The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -7893,14 +8456,18 @@ func (c *nodeMapint64int16) value() *int16 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint64int16) find(key int64) (uint, *nodeMapint64int16) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint64int16) find(key int64) (crit uint, child, parent *nodeMapint64int16) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt64Int16) transformKey(key int64) int64 {
@@ -7913,6 +8480,21 @@ func (t *MapInt64Int16) transformKey(key int64) int64 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt64Int16) Rem(key int64) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -7928,7 +8510,7 @@ func (t *MapInt64Int16) SetP(key int64, val *int16) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -7944,6 +8526,7 @@ func (t *MapInt64Int16) SetP(key int64, val *int16) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -7959,7 +8542,7 @@ func (t *MapInt64Int16) GetP(key int64) (*int16, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*int16)(l.child), true
 	}
@@ -7983,17 +8566,17 @@ func (t *MapInt64Int16) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint64int16) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint64int16)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int16)(c.child))
-// 	}
-// }
+func (c *nodeMapint64int16) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint64int16)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int16)(c.child))
+	}
+}
 
 // IterInt64Int16 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -8173,14 +8756,18 @@ func (c *nodeMapint64int32) value() *int32 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint64int32) find(key int64) (uint, *nodeMapint64int32) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint64int32) find(key int64) (crit uint, child, parent *nodeMapint64int32) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt64Int32) transformKey(key int64) int64 {
@@ -8193,6 +8780,21 @@ func (t *MapInt64Int32) transformKey(key int64) int64 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt64Int32) Rem(key int64) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -8208,7 +8810,7 @@ func (t *MapInt64Int32) SetP(key int64, val *int32) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -8224,6 +8826,7 @@ func (t *MapInt64Int32) SetP(key int64, val *int32) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -8239,7 +8842,7 @@ func (t *MapInt64Int32) GetP(key int64) (*int32, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*int32)(l.child), true
 	}
@@ -8263,17 +8866,17 @@ func (t *MapInt64Int32) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint64int32) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint64int32)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int32)(c.child))
-// 	}
-// }
+func (c *nodeMapint64int32) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint64int32)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int32)(c.child))
+	}
+}
 
 // IterInt64Int32 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -8453,14 +9056,18 @@ func (c *nodeMapint64int64) value() *int64 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint64int64) find(key int64) (uint, *nodeMapint64int64) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint64int64) find(key int64) (crit uint, child, parent *nodeMapint64int64) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt64Int64) transformKey(key int64) int64 {
@@ -8473,6 +9080,21 @@ func (t *MapInt64Int64) transformKey(key int64) int64 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt64Int64) Rem(key int64) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -8488,7 +9110,7 @@ func (t *MapInt64Int64) SetP(key int64, val *int64) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -8504,6 +9126,7 @@ func (t *MapInt64Int64) SetP(key int64, val *int64) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -8519,7 +9142,7 @@ func (t *MapInt64Int64) GetP(key int64) (*int64, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*int64)(l.child), true
 	}
@@ -8543,17 +9166,17 @@ func (t *MapInt64Int64) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint64int64) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint64int64)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int64)(c.child))
-// 	}
-// }
+func (c *nodeMapint64int64) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint64int64)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int64)(c.child))
+	}
+}
 
 // IterInt64Int64 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -8733,14 +9356,18 @@ func (c *nodeMapint64int8) value() *int8 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint64int8) find(key int64) (uint, *nodeMapint64int8) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint64int8) find(key int64) (crit uint, child, parent *nodeMapint64int8) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt64Int8) transformKey(key int64) int64 {
@@ -8753,6 +9380,21 @@ func (t *MapInt64Int8) transformKey(key int64) int64 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt64Int8) Rem(key int64) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -8768,7 +9410,7 @@ func (t *MapInt64Int8) SetP(key int64, val *int8) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -8784,6 +9426,7 @@ func (t *MapInt64Int8) SetP(key int64, val *int8) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -8799,7 +9442,7 @@ func (t *MapInt64Int8) GetP(key int64) (*int8, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*int8)(l.child), true
 	}
@@ -8823,17 +9466,17 @@ func (t *MapInt64Int8) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint64int8) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint64int8)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int8)(c.child))
-// 	}
-// }
+func (c *nodeMapint64int8) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint64int8)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int8)(c.child))
+	}
+}
 
 // IterInt64Int8 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -9013,14 +9656,18 @@ func (c *nodeMapint64rune) value() *rune {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint64rune) find(key int64) (uint, *nodeMapint64rune) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint64rune) find(key int64) (crit uint, child, parent *nodeMapint64rune) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt64Rune) transformKey(key int64) int64 {
@@ -9033,6 +9680,21 @@ func (t *MapInt64Rune) transformKey(key int64) int64 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt64Rune) Rem(key int64) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -9048,7 +9710,7 @@ func (t *MapInt64Rune) SetP(key int64, val *rune) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -9064,6 +9726,7 @@ func (t *MapInt64Rune) SetP(key int64, val *rune) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -9079,7 +9742,7 @@ func (t *MapInt64Rune) GetP(key int64) (*rune, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*rune)(l.child), true
 	}
@@ -9103,17 +9766,17 @@ func (t *MapInt64Rune) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint64rune) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint64rune)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*rune)(c.child))
-// 	}
-// }
+func (c *nodeMapint64rune) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint64rune)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*rune)(c.child))
+	}
+}
 
 // IterInt64Rune The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -9293,14 +9956,18 @@ func (c *nodeMapint64string) value() *string {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint64string) find(key int64) (uint, *nodeMapint64string) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint64string) find(key int64) (crit uint, child, parent *nodeMapint64string) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt64String) transformKey(key int64) int64 {
@@ -9313,6 +9980,21 @@ func (t *MapInt64String) transformKey(key int64) int64 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt64String) Rem(key int64) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -9328,7 +10010,7 @@ func (t *MapInt64String) SetP(key int64, val *string) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -9344,6 +10026,7 @@ func (t *MapInt64String) SetP(key int64, val *string) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -9359,7 +10042,7 @@ func (t *MapInt64String) GetP(key int64) (*string, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*string)(l.child), true
 	}
@@ -9383,17 +10066,17 @@ func (t *MapInt64String) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint64string) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint64string)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*string)(c.child))
-// 	}
-// }
+func (c *nodeMapint64string) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint64string)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*string)(c.child))
+	}
+}
 
 // IterInt64String The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -9573,14 +10256,18 @@ func (c *nodeMapint64uint) value() *uint {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint64uint) find(key int64) (uint, *nodeMapint64uint) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint64uint) find(key int64) (crit uint, child, parent *nodeMapint64uint) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt64Uint) transformKey(key int64) int64 {
@@ -9593,6 +10280,21 @@ func (t *MapInt64Uint) transformKey(key int64) int64 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt64Uint) Rem(key int64) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -9608,7 +10310,7 @@ func (t *MapInt64Uint) SetP(key int64, val *uint) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -9624,6 +10326,7 @@ func (t *MapInt64Uint) SetP(key int64, val *uint) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -9639,7 +10342,7 @@ func (t *MapInt64Uint) GetP(key int64) (*uint, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uint)(l.child), true
 	}
@@ -9663,17 +10366,17 @@ func (t *MapInt64Uint) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint64uint) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint64uint)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint)(c.child))
-// 	}
-// }
+func (c *nodeMapint64uint) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint64uint)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint)(c.child))
+	}
+}
 
 // IterInt64Uint The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -9853,14 +10556,18 @@ func (c *nodeMapint64uint16) value() *uint16 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint64uint16) find(key int64) (uint, *nodeMapint64uint16) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint64uint16) find(key int64) (crit uint, child, parent *nodeMapint64uint16) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt64Uint16) transformKey(key int64) int64 {
@@ -9873,6 +10580,21 @@ func (t *MapInt64Uint16) transformKey(key int64) int64 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt64Uint16) Rem(key int64) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -9888,7 +10610,7 @@ func (t *MapInt64Uint16) SetP(key int64, val *uint16) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -9904,6 +10626,7 @@ func (t *MapInt64Uint16) SetP(key int64, val *uint16) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -9919,7 +10642,7 @@ func (t *MapInt64Uint16) GetP(key int64) (*uint16, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uint16)(l.child), true
 	}
@@ -9943,17 +10666,17 @@ func (t *MapInt64Uint16) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint64uint16) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint64uint16)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint16)(c.child))
-// 	}
-// }
+func (c *nodeMapint64uint16) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint64uint16)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint16)(c.child))
+	}
+}
 
 // IterInt64Uint16 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -10133,14 +10856,18 @@ func (c *nodeMapint64uint32) value() *uint32 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint64uint32) find(key int64) (uint, *nodeMapint64uint32) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint64uint32) find(key int64) (crit uint, child, parent *nodeMapint64uint32) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt64Uint32) transformKey(key int64) int64 {
@@ -10153,6 +10880,21 @@ func (t *MapInt64Uint32) transformKey(key int64) int64 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt64Uint32) Rem(key int64) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -10168,7 +10910,7 @@ func (t *MapInt64Uint32) SetP(key int64, val *uint32) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -10184,6 +10926,7 @@ func (t *MapInt64Uint32) SetP(key int64, val *uint32) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -10199,7 +10942,7 @@ func (t *MapInt64Uint32) GetP(key int64) (*uint32, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uint32)(l.child), true
 	}
@@ -10223,17 +10966,17 @@ func (t *MapInt64Uint32) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint64uint32) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint64uint32)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint32)(c.child))
-// 	}
-// }
+func (c *nodeMapint64uint32) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint64uint32)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint32)(c.child))
+	}
+}
 
 // IterInt64Uint32 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -10413,14 +11156,18 @@ func (c *nodeMapint64uint64) value() *uint64 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint64uint64) find(key int64) (uint, *nodeMapint64uint64) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint64uint64) find(key int64) (crit uint, child, parent *nodeMapint64uint64) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt64Uint64) transformKey(key int64) int64 {
@@ -10433,6 +11180,21 @@ func (t *MapInt64Uint64) transformKey(key int64) int64 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt64Uint64) Rem(key int64) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -10448,7 +11210,7 @@ func (t *MapInt64Uint64) SetP(key int64, val *uint64) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -10464,6 +11226,7 @@ func (t *MapInt64Uint64) SetP(key int64, val *uint64) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -10479,7 +11242,7 @@ func (t *MapInt64Uint64) GetP(key int64) (*uint64, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uint64)(l.child), true
 	}
@@ -10503,17 +11266,17 @@ func (t *MapInt64Uint64) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint64uint64) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint64uint64)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint64)(c.child))
-// 	}
-// }
+func (c *nodeMapint64uint64) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint64uint64)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint64)(c.child))
+	}
+}
 
 // IterInt64Uint64 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -10693,14 +11456,18 @@ func (c *nodeMapint64uint8) value() *uint8 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint64uint8) find(key int64) (uint, *nodeMapint64uint8) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint64uint8) find(key int64) (crit uint, child, parent *nodeMapint64uint8) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt64Uint8) transformKey(key int64) int64 {
@@ -10713,6 +11480,21 @@ func (t *MapInt64Uint8) transformKey(key int64) int64 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt64Uint8) Rem(key int64) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -10728,7 +11510,7 @@ func (t *MapInt64Uint8) SetP(key int64, val *uint8) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -10744,6 +11526,7 @@ func (t *MapInt64Uint8) SetP(key int64, val *uint8) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -10759,7 +11542,7 @@ func (t *MapInt64Uint8) GetP(key int64) (*uint8, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uint8)(l.child), true
 	}
@@ -10783,17 +11566,17 @@ func (t *MapInt64Uint8) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint64uint8) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint64uint8)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint8)(c.child))
-// 	}
-// }
+func (c *nodeMapint64uint8) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint64uint8)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint8)(c.child))
+	}
+}
 
 // IterInt64Uint8 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -10973,14 +11756,18 @@ func (c *nodeMapint64uintptr) value() *uintptr {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint64uintptr) find(key int64) (uint, *nodeMapint64uintptr) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint64uintptr) find(key int64) (crit uint, child, parent *nodeMapint64uintptr) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt64Uintptr) transformKey(key int64) int64 {
@@ -10993,6 +11780,21 @@ func (t *MapInt64Uintptr) transformKey(key int64) int64 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt64Uintptr) Rem(key int64) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -11008,7 +11810,7 @@ func (t *MapInt64Uintptr) SetP(key int64, val *uintptr) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -11024,6 +11826,7 @@ func (t *MapInt64Uintptr) SetP(key int64, val *uintptr) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -11039,7 +11842,7 @@ func (t *MapInt64Uintptr) GetP(key int64) (*uintptr, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uintptr)(l.child), true
 	}
@@ -11063,17 +11866,17 @@ func (t *MapInt64Uintptr) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint64uintptr) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint64uintptr)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uintptr)(c.child))
-// 	}
-// }
+func (c *nodeMapint64uintptr) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint64uintptr)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uintptr)(c.child))
+	}
+}
 
 // IterInt64Uintptr The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -11253,14 +12056,18 @@ func (c *nodeMapint32bool) value() *bool {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint32bool) find(key int32) (uint, *nodeMapint32bool) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint32bool) find(key int32) (crit uint, child, parent *nodeMapint32bool) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt32Bool) transformKey(key int32) int32 {
@@ -11273,6 +12080,21 @@ func (t *MapInt32Bool) transformKey(key int32) int32 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt32Bool) Rem(key int32) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -11288,7 +12110,7 @@ func (t *MapInt32Bool) SetP(key int32, val *bool) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -11304,6 +12126,7 @@ func (t *MapInt32Bool) SetP(key int32, val *bool) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -11319,7 +12142,7 @@ func (t *MapInt32Bool) GetP(key int32) (*bool, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*bool)(l.child), true
 	}
@@ -11343,17 +12166,17 @@ func (t *MapInt32Bool) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint32bool) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint32bool)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*bool)(c.child))
-// 	}
-// }
+func (c *nodeMapint32bool) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint32bool)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*bool)(c.child))
+	}
+}
 
 // IterInt32Bool The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -11533,14 +12356,18 @@ func (c *nodeMapint32byte) value() *byte {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint32byte) find(key int32) (uint, *nodeMapint32byte) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint32byte) find(key int32) (crit uint, child, parent *nodeMapint32byte) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt32Byte) transformKey(key int32) int32 {
@@ -11553,6 +12380,21 @@ func (t *MapInt32Byte) transformKey(key int32) int32 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt32Byte) Rem(key int32) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -11568,7 +12410,7 @@ func (t *MapInt32Byte) SetP(key int32, val *byte) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -11584,6 +12426,7 @@ func (t *MapInt32Byte) SetP(key int32, val *byte) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -11599,7 +12442,7 @@ func (t *MapInt32Byte) GetP(key int32) (*byte, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*byte)(l.child), true
 	}
@@ -11623,17 +12466,17 @@ func (t *MapInt32Byte) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint32byte) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint32byte)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*byte)(c.child))
-// 	}
-// }
+func (c *nodeMapint32byte) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint32byte)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*byte)(c.child))
+	}
+}
 
 // IterInt32Byte The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -11813,14 +12656,18 @@ func (c *nodeMapint32complex128) value() *complex128 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint32complex128) find(key int32) (uint, *nodeMapint32complex128) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint32complex128) find(key int32) (crit uint, child, parent *nodeMapint32complex128) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt32Complex128) transformKey(key int32) int32 {
@@ -11833,6 +12680,21 @@ func (t *MapInt32Complex128) transformKey(key int32) int32 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt32Complex128) Rem(key int32) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -11848,7 +12710,7 @@ func (t *MapInt32Complex128) SetP(key int32, val *complex128) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -11864,6 +12726,7 @@ func (t *MapInt32Complex128) SetP(key int32, val *complex128) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -11879,7 +12742,7 @@ func (t *MapInt32Complex128) GetP(key int32) (*complex128, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*complex128)(l.child), true
 	}
@@ -11903,17 +12766,17 @@ func (t *MapInt32Complex128) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint32complex128) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint32complex128)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*complex128)(c.child))
-// 	}
-// }
+func (c *nodeMapint32complex128) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint32complex128)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*complex128)(c.child))
+	}
+}
 
 // IterInt32Complex128 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -12093,14 +12956,18 @@ func (c *nodeMapint32complex64) value() *complex64 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint32complex64) find(key int32) (uint, *nodeMapint32complex64) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint32complex64) find(key int32) (crit uint, child, parent *nodeMapint32complex64) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt32Complex64) transformKey(key int32) int32 {
@@ -12113,6 +12980,21 @@ func (t *MapInt32Complex64) transformKey(key int32) int32 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt32Complex64) Rem(key int32) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -12128,7 +13010,7 @@ func (t *MapInt32Complex64) SetP(key int32, val *complex64) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -12144,6 +13026,7 @@ func (t *MapInt32Complex64) SetP(key int32, val *complex64) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -12159,7 +13042,7 @@ func (t *MapInt32Complex64) GetP(key int32) (*complex64, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*complex64)(l.child), true
 	}
@@ -12183,17 +13066,17 @@ func (t *MapInt32Complex64) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint32complex64) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint32complex64)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*complex64)(c.child))
-// 	}
-// }
+func (c *nodeMapint32complex64) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint32complex64)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*complex64)(c.child))
+	}
+}
 
 // IterInt32Complex64 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -12373,14 +13256,18 @@ func (c *nodeMapint32error) value() *error {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint32error) find(key int32) (uint, *nodeMapint32error) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint32error) find(key int32) (crit uint, child, parent *nodeMapint32error) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt32Error) transformKey(key int32) int32 {
@@ -12393,6 +13280,21 @@ func (t *MapInt32Error) transformKey(key int32) int32 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt32Error) Rem(key int32) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -12408,7 +13310,7 @@ func (t *MapInt32Error) SetP(key int32, val *error) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -12424,6 +13326,7 @@ func (t *MapInt32Error) SetP(key int32, val *error) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -12439,7 +13342,7 @@ func (t *MapInt32Error) GetP(key int32) (*error, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*error)(l.child), true
 	}
@@ -12463,17 +13366,17 @@ func (t *MapInt32Error) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint32error) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint32error)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*error)(c.child))
-// 	}
-// }
+func (c *nodeMapint32error) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint32error)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*error)(c.child))
+	}
+}
 
 // IterInt32Error The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -12653,14 +13556,18 @@ func (c *nodeMapint32float32) value() *float32 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint32float32) find(key int32) (uint, *nodeMapint32float32) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint32float32) find(key int32) (crit uint, child, parent *nodeMapint32float32) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt32Float32) transformKey(key int32) int32 {
@@ -12673,6 +13580,21 @@ func (t *MapInt32Float32) transformKey(key int32) int32 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt32Float32) Rem(key int32) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -12688,7 +13610,7 @@ func (t *MapInt32Float32) SetP(key int32, val *float32) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -12704,6 +13626,7 @@ func (t *MapInt32Float32) SetP(key int32, val *float32) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -12719,7 +13642,7 @@ func (t *MapInt32Float32) GetP(key int32) (*float32, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*float32)(l.child), true
 	}
@@ -12743,17 +13666,17 @@ func (t *MapInt32Float32) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint32float32) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint32float32)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*float32)(c.child))
-// 	}
-// }
+func (c *nodeMapint32float32) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint32float32)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*float32)(c.child))
+	}
+}
 
 // IterInt32Float32 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -12933,14 +13856,18 @@ func (c *nodeMapint32float64) value() *float64 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint32float64) find(key int32) (uint, *nodeMapint32float64) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint32float64) find(key int32) (crit uint, child, parent *nodeMapint32float64) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt32Float64) transformKey(key int32) int32 {
@@ -12953,6 +13880,21 @@ func (t *MapInt32Float64) transformKey(key int32) int32 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt32Float64) Rem(key int32) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -12968,7 +13910,7 @@ func (t *MapInt32Float64) SetP(key int32, val *float64) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -12984,6 +13926,7 @@ func (t *MapInt32Float64) SetP(key int32, val *float64) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -12999,7 +13942,7 @@ func (t *MapInt32Float64) GetP(key int32) (*float64, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*float64)(l.child), true
 	}
@@ -13023,17 +13966,17 @@ func (t *MapInt32Float64) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint32float64) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint32float64)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*float64)(c.child))
-// 	}
-// }
+func (c *nodeMapint32float64) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint32float64)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*float64)(c.child))
+	}
+}
 
 // IterInt32Float64 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -13213,14 +14156,18 @@ func (c *nodeMapint32int) value() *int {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint32int) find(key int32) (uint, *nodeMapint32int) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint32int) find(key int32) (crit uint, child, parent *nodeMapint32int) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt32Int) transformKey(key int32) int32 {
@@ -13233,6 +14180,21 @@ func (t *MapInt32Int) transformKey(key int32) int32 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt32Int) Rem(key int32) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -13248,7 +14210,7 @@ func (t *MapInt32Int) SetP(key int32, val *int) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -13264,6 +14226,7 @@ func (t *MapInt32Int) SetP(key int32, val *int) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -13279,7 +14242,7 @@ func (t *MapInt32Int) GetP(key int32) (*int, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*int)(l.child), true
 	}
@@ -13303,17 +14266,17 @@ func (t *MapInt32Int) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint32int) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint32int)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int)(c.child))
-// 	}
-// }
+func (c *nodeMapint32int) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint32int)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int)(c.child))
+	}
+}
 
 // IterInt32Int The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -13493,14 +14456,18 @@ func (c *nodeMapint32int16) value() *int16 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint32int16) find(key int32) (uint, *nodeMapint32int16) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint32int16) find(key int32) (crit uint, child, parent *nodeMapint32int16) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt32Int16) transformKey(key int32) int32 {
@@ -13513,6 +14480,21 @@ func (t *MapInt32Int16) transformKey(key int32) int32 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt32Int16) Rem(key int32) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -13528,7 +14510,7 @@ func (t *MapInt32Int16) SetP(key int32, val *int16) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -13544,6 +14526,7 @@ func (t *MapInt32Int16) SetP(key int32, val *int16) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -13559,7 +14542,7 @@ func (t *MapInt32Int16) GetP(key int32) (*int16, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*int16)(l.child), true
 	}
@@ -13583,17 +14566,17 @@ func (t *MapInt32Int16) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint32int16) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint32int16)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int16)(c.child))
-// 	}
-// }
+func (c *nodeMapint32int16) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint32int16)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int16)(c.child))
+	}
+}
 
 // IterInt32Int16 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -13773,14 +14756,18 @@ func (c *nodeMapint32int32) value() *int32 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint32int32) find(key int32) (uint, *nodeMapint32int32) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint32int32) find(key int32) (crit uint, child, parent *nodeMapint32int32) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt32Int32) transformKey(key int32) int32 {
@@ -13793,6 +14780,21 @@ func (t *MapInt32Int32) transformKey(key int32) int32 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt32Int32) Rem(key int32) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -13808,7 +14810,7 @@ func (t *MapInt32Int32) SetP(key int32, val *int32) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -13824,6 +14826,7 @@ func (t *MapInt32Int32) SetP(key int32, val *int32) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -13839,7 +14842,7 @@ func (t *MapInt32Int32) GetP(key int32) (*int32, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*int32)(l.child), true
 	}
@@ -13863,17 +14866,17 @@ func (t *MapInt32Int32) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint32int32) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint32int32)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int32)(c.child))
-// 	}
-// }
+func (c *nodeMapint32int32) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint32int32)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int32)(c.child))
+	}
+}
 
 // IterInt32Int32 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -14053,14 +15056,18 @@ func (c *nodeMapint32int64) value() *int64 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint32int64) find(key int32) (uint, *nodeMapint32int64) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint32int64) find(key int32) (crit uint, child, parent *nodeMapint32int64) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt32Int64) transformKey(key int32) int32 {
@@ -14073,6 +15080,21 @@ func (t *MapInt32Int64) transformKey(key int32) int32 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt32Int64) Rem(key int32) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -14088,7 +15110,7 @@ func (t *MapInt32Int64) SetP(key int32, val *int64) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -14104,6 +15126,7 @@ func (t *MapInt32Int64) SetP(key int32, val *int64) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -14119,7 +15142,7 @@ func (t *MapInt32Int64) GetP(key int32) (*int64, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*int64)(l.child), true
 	}
@@ -14143,17 +15166,17 @@ func (t *MapInt32Int64) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint32int64) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint32int64)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int64)(c.child))
-// 	}
-// }
+func (c *nodeMapint32int64) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint32int64)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int64)(c.child))
+	}
+}
 
 // IterInt32Int64 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -14333,14 +15356,18 @@ func (c *nodeMapint32int8) value() *int8 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint32int8) find(key int32) (uint, *nodeMapint32int8) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint32int8) find(key int32) (crit uint, child, parent *nodeMapint32int8) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt32Int8) transformKey(key int32) int32 {
@@ -14353,6 +15380,21 @@ func (t *MapInt32Int8) transformKey(key int32) int32 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt32Int8) Rem(key int32) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -14368,7 +15410,7 @@ func (t *MapInt32Int8) SetP(key int32, val *int8) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -14384,6 +15426,7 @@ func (t *MapInt32Int8) SetP(key int32, val *int8) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -14399,7 +15442,7 @@ func (t *MapInt32Int8) GetP(key int32) (*int8, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*int8)(l.child), true
 	}
@@ -14423,17 +15466,17 @@ func (t *MapInt32Int8) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint32int8) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint32int8)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int8)(c.child))
-// 	}
-// }
+func (c *nodeMapint32int8) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint32int8)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int8)(c.child))
+	}
+}
 
 // IterInt32Int8 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -14613,14 +15656,18 @@ func (c *nodeMapint32rune) value() *rune {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint32rune) find(key int32) (uint, *nodeMapint32rune) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint32rune) find(key int32) (crit uint, child, parent *nodeMapint32rune) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt32Rune) transformKey(key int32) int32 {
@@ -14633,6 +15680,21 @@ func (t *MapInt32Rune) transformKey(key int32) int32 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt32Rune) Rem(key int32) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -14648,7 +15710,7 @@ func (t *MapInt32Rune) SetP(key int32, val *rune) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -14664,6 +15726,7 @@ func (t *MapInt32Rune) SetP(key int32, val *rune) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -14679,7 +15742,7 @@ func (t *MapInt32Rune) GetP(key int32) (*rune, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*rune)(l.child), true
 	}
@@ -14703,17 +15766,17 @@ func (t *MapInt32Rune) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint32rune) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint32rune)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*rune)(c.child))
-// 	}
-// }
+func (c *nodeMapint32rune) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint32rune)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*rune)(c.child))
+	}
+}
 
 // IterInt32Rune The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -14893,14 +15956,18 @@ func (c *nodeMapint32string) value() *string {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint32string) find(key int32) (uint, *nodeMapint32string) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint32string) find(key int32) (crit uint, child, parent *nodeMapint32string) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt32String) transformKey(key int32) int32 {
@@ -14913,6 +15980,21 @@ func (t *MapInt32String) transformKey(key int32) int32 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt32String) Rem(key int32) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -14928,7 +16010,7 @@ func (t *MapInt32String) SetP(key int32, val *string) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -14944,6 +16026,7 @@ func (t *MapInt32String) SetP(key int32, val *string) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -14959,7 +16042,7 @@ func (t *MapInt32String) GetP(key int32) (*string, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*string)(l.child), true
 	}
@@ -14983,17 +16066,17 @@ func (t *MapInt32String) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint32string) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint32string)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*string)(c.child))
-// 	}
-// }
+func (c *nodeMapint32string) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint32string)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*string)(c.child))
+	}
+}
 
 // IterInt32String The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -15173,14 +16256,18 @@ func (c *nodeMapint32uint) value() *uint {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint32uint) find(key int32) (uint, *nodeMapint32uint) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint32uint) find(key int32) (crit uint, child, parent *nodeMapint32uint) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt32Uint) transformKey(key int32) int32 {
@@ -15193,6 +16280,21 @@ func (t *MapInt32Uint) transformKey(key int32) int32 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt32Uint) Rem(key int32) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -15208,7 +16310,7 @@ func (t *MapInt32Uint) SetP(key int32, val *uint) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -15224,6 +16326,7 @@ func (t *MapInt32Uint) SetP(key int32, val *uint) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -15239,7 +16342,7 @@ func (t *MapInt32Uint) GetP(key int32) (*uint, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uint)(l.child), true
 	}
@@ -15263,17 +16366,17 @@ func (t *MapInt32Uint) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint32uint) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint32uint)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint)(c.child))
-// 	}
-// }
+func (c *nodeMapint32uint) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint32uint)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint)(c.child))
+	}
+}
 
 // IterInt32Uint The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -15453,14 +16556,18 @@ func (c *nodeMapint32uint16) value() *uint16 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint32uint16) find(key int32) (uint, *nodeMapint32uint16) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint32uint16) find(key int32) (crit uint, child, parent *nodeMapint32uint16) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt32Uint16) transformKey(key int32) int32 {
@@ -15473,6 +16580,21 @@ func (t *MapInt32Uint16) transformKey(key int32) int32 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt32Uint16) Rem(key int32) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -15488,7 +16610,7 @@ func (t *MapInt32Uint16) SetP(key int32, val *uint16) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -15504,6 +16626,7 @@ func (t *MapInt32Uint16) SetP(key int32, val *uint16) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -15519,7 +16642,7 @@ func (t *MapInt32Uint16) GetP(key int32) (*uint16, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uint16)(l.child), true
 	}
@@ -15543,17 +16666,17 @@ func (t *MapInt32Uint16) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint32uint16) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint32uint16)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint16)(c.child))
-// 	}
-// }
+func (c *nodeMapint32uint16) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint32uint16)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint16)(c.child))
+	}
+}
 
 // IterInt32Uint16 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -15733,14 +16856,18 @@ func (c *nodeMapint32uint32) value() *uint32 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint32uint32) find(key int32) (uint, *nodeMapint32uint32) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint32uint32) find(key int32) (crit uint, child, parent *nodeMapint32uint32) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt32Uint32) transformKey(key int32) int32 {
@@ -15753,6 +16880,21 @@ func (t *MapInt32Uint32) transformKey(key int32) int32 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt32Uint32) Rem(key int32) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -15768,7 +16910,7 @@ func (t *MapInt32Uint32) SetP(key int32, val *uint32) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -15784,6 +16926,7 @@ func (t *MapInt32Uint32) SetP(key int32, val *uint32) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -15799,7 +16942,7 @@ func (t *MapInt32Uint32) GetP(key int32) (*uint32, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uint32)(l.child), true
 	}
@@ -15823,17 +16966,17 @@ func (t *MapInt32Uint32) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint32uint32) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint32uint32)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint32)(c.child))
-// 	}
-// }
+func (c *nodeMapint32uint32) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint32uint32)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint32)(c.child))
+	}
+}
 
 // IterInt32Uint32 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -16013,14 +17156,18 @@ func (c *nodeMapint32uint64) value() *uint64 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint32uint64) find(key int32) (uint, *nodeMapint32uint64) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint32uint64) find(key int32) (crit uint, child, parent *nodeMapint32uint64) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt32Uint64) transformKey(key int32) int32 {
@@ -16033,6 +17180,21 @@ func (t *MapInt32Uint64) transformKey(key int32) int32 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt32Uint64) Rem(key int32) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -16048,7 +17210,7 @@ func (t *MapInt32Uint64) SetP(key int32, val *uint64) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -16064,6 +17226,7 @@ func (t *MapInt32Uint64) SetP(key int32, val *uint64) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -16079,7 +17242,7 @@ func (t *MapInt32Uint64) GetP(key int32) (*uint64, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uint64)(l.child), true
 	}
@@ -16103,17 +17266,17 @@ func (t *MapInt32Uint64) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint32uint64) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint32uint64)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint64)(c.child))
-// 	}
-// }
+func (c *nodeMapint32uint64) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint32uint64)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint64)(c.child))
+	}
+}
 
 // IterInt32Uint64 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -16293,14 +17456,18 @@ func (c *nodeMapint32uint8) value() *uint8 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint32uint8) find(key int32) (uint, *nodeMapint32uint8) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint32uint8) find(key int32) (crit uint, child, parent *nodeMapint32uint8) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt32Uint8) transformKey(key int32) int32 {
@@ -16313,6 +17480,21 @@ func (t *MapInt32Uint8) transformKey(key int32) int32 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt32Uint8) Rem(key int32) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -16328,7 +17510,7 @@ func (t *MapInt32Uint8) SetP(key int32, val *uint8) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -16344,6 +17526,7 @@ func (t *MapInt32Uint8) SetP(key int32, val *uint8) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -16359,7 +17542,7 @@ func (t *MapInt32Uint8) GetP(key int32) (*uint8, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uint8)(l.child), true
 	}
@@ -16383,17 +17566,17 @@ func (t *MapInt32Uint8) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint32uint8) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint32uint8)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint8)(c.child))
-// 	}
-// }
+func (c *nodeMapint32uint8) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint32uint8)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint8)(c.child))
+	}
+}
 
 // IterInt32Uint8 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -16573,14 +17756,18 @@ func (c *nodeMapint32uintptr) value() *uintptr {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint32uintptr) find(key int32) (uint, *nodeMapint32uintptr) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint32uintptr) find(key int32) (crit uint, child, parent *nodeMapint32uintptr) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt32Uintptr) transformKey(key int32) int32 {
@@ -16593,6 +17780,21 @@ func (t *MapInt32Uintptr) transformKey(key int32) int32 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt32Uintptr) Rem(key int32) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -16608,7 +17810,7 @@ func (t *MapInt32Uintptr) SetP(key int32, val *uintptr) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -16624,6 +17826,7 @@ func (t *MapInt32Uintptr) SetP(key int32, val *uintptr) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -16639,7 +17842,7 @@ func (t *MapInt32Uintptr) GetP(key int32) (*uintptr, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uintptr)(l.child), true
 	}
@@ -16663,17 +17866,17 @@ func (t *MapInt32Uintptr) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint32uintptr) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint32uintptr)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uintptr)(c.child))
-// 	}
-// }
+func (c *nodeMapint32uintptr) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint32uintptr)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uintptr)(c.child))
+	}
+}
 
 // IterInt32Uintptr The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -16853,14 +18056,18 @@ func (c *nodeMapint16bool) value() *bool {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint16bool) find(key int16) (uint, *nodeMapint16bool) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint16bool) find(key int16) (crit uint, child, parent *nodeMapint16bool) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt16Bool) transformKey(key int16) int16 {
@@ -16873,6 +18080,21 @@ func (t *MapInt16Bool) transformKey(key int16) int16 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt16Bool) Rem(key int16) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -16888,7 +18110,7 @@ func (t *MapInt16Bool) SetP(key int16, val *bool) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -16904,6 +18126,7 @@ func (t *MapInt16Bool) SetP(key int16, val *bool) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -16919,7 +18142,7 @@ func (t *MapInt16Bool) GetP(key int16) (*bool, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*bool)(l.child), true
 	}
@@ -16943,17 +18166,17 @@ func (t *MapInt16Bool) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint16bool) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint16bool)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*bool)(c.child))
-// 	}
-// }
+func (c *nodeMapint16bool) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint16bool)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*bool)(c.child))
+	}
+}
 
 // IterInt16Bool The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -17133,14 +18356,18 @@ func (c *nodeMapint16byte) value() *byte {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint16byte) find(key int16) (uint, *nodeMapint16byte) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint16byte) find(key int16) (crit uint, child, parent *nodeMapint16byte) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt16Byte) transformKey(key int16) int16 {
@@ -17153,6 +18380,21 @@ func (t *MapInt16Byte) transformKey(key int16) int16 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt16Byte) Rem(key int16) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -17168,7 +18410,7 @@ func (t *MapInt16Byte) SetP(key int16, val *byte) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -17184,6 +18426,7 @@ func (t *MapInt16Byte) SetP(key int16, val *byte) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -17199,7 +18442,7 @@ func (t *MapInt16Byte) GetP(key int16) (*byte, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*byte)(l.child), true
 	}
@@ -17223,17 +18466,17 @@ func (t *MapInt16Byte) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint16byte) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint16byte)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*byte)(c.child))
-// 	}
-// }
+func (c *nodeMapint16byte) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint16byte)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*byte)(c.child))
+	}
+}
 
 // IterInt16Byte The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -17413,14 +18656,18 @@ func (c *nodeMapint16complex128) value() *complex128 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint16complex128) find(key int16) (uint, *nodeMapint16complex128) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint16complex128) find(key int16) (crit uint, child, parent *nodeMapint16complex128) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt16Complex128) transformKey(key int16) int16 {
@@ -17433,6 +18680,21 @@ func (t *MapInt16Complex128) transformKey(key int16) int16 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt16Complex128) Rem(key int16) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -17448,7 +18710,7 @@ func (t *MapInt16Complex128) SetP(key int16, val *complex128) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -17464,6 +18726,7 @@ func (t *MapInt16Complex128) SetP(key int16, val *complex128) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -17479,7 +18742,7 @@ func (t *MapInt16Complex128) GetP(key int16) (*complex128, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*complex128)(l.child), true
 	}
@@ -17503,17 +18766,17 @@ func (t *MapInt16Complex128) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint16complex128) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint16complex128)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*complex128)(c.child))
-// 	}
-// }
+func (c *nodeMapint16complex128) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint16complex128)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*complex128)(c.child))
+	}
+}
 
 // IterInt16Complex128 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -17693,14 +18956,18 @@ func (c *nodeMapint16complex64) value() *complex64 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint16complex64) find(key int16) (uint, *nodeMapint16complex64) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint16complex64) find(key int16) (crit uint, child, parent *nodeMapint16complex64) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt16Complex64) transformKey(key int16) int16 {
@@ -17713,6 +18980,21 @@ func (t *MapInt16Complex64) transformKey(key int16) int16 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt16Complex64) Rem(key int16) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -17728,7 +19010,7 @@ func (t *MapInt16Complex64) SetP(key int16, val *complex64) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -17744,6 +19026,7 @@ func (t *MapInt16Complex64) SetP(key int16, val *complex64) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -17759,7 +19042,7 @@ func (t *MapInt16Complex64) GetP(key int16) (*complex64, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*complex64)(l.child), true
 	}
@@ -17783,17 +19066,17 @@ func (t *MapInt16Complex64) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint16complex64) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint16complex64)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*complex64)(c.child))
-// 	}
-// }
+func (c *nodeMapint16complex64) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint16complex64)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*complex64)(c.child))
+	}
+}
 
 // IterInt16Complex64 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -17973,14 +19256,18 @@ func (c *nodeMapint16error) value() *error {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint16error) find(key int16) (uint, *nodeMapint16error) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint16error) find(key int16) (crit uint, child, parent *nodeMapint16error) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt16Error) transformKey(key int16) int16 {
@@ -17993,6 +19280,21 @@ func (t *MapInt16Error) transformKey(key int16) int16 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt16Error) Rem(key int16) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -18008,7 +19310,7 @@ func (t *MapInt16Error) SetP(key int16, val *error) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -18024,6 +19326,7 @@ func (t *MapInt16Error) SetP(key int16, val *error) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -18039,7 +19342,7 @@ func (t *MapInt16Error) GetP(key int16) (*error, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*error)(l.child), true
 	}
@@ -18063,17 +19366,17 @@ func (t *MapInt16Error) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint16error) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint16error)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*error)(c.child))
-// 	}
-// }
+func (c *nodeMapint16error) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint16error)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*error)(c.child))
+	}
+}
 
 // IterInt16Error The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -18253,14 +19556,18 @@ func (c *nodeMapint16float32) value() *float32 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint16float32) find(key int16) (uint, *nodeMapint16float32) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint16float32) find(key int16) (crit uint, child, parent *nodeMapint16float32) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt16Float32) transformKey(key int16) int16 {
@@ -18273,6 +19580,21 @@ func (t *MapInt16Float32) transformKey(key int16) int16 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt16Float32) Rem(key int16) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -18288,7 +19610,7 @@ func (t *MapInt16Float32) SetP(key int16, val *float32) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -18304,6 +19626,7 @@ func (t *MapInt16Float32) SetP(key int16, val *float32) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -18319,7 +19642,7 @@ func (t *MapInt16Float32) GetP(key int16) (*float32, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*float32)(l.child), true
 	}
@@ -18343,17 +19666,17 @@ func (t *MapInt16Float32) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint16float32) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint16float32)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*float32)(c.child))
-// 	}
-// }
+func (c *nodeMapint16float32) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint16float32)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*float32)(c.child))
+	}
+}
 
 // IterInt16Float32 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -18533,14 +19856,18 @@ func (c *nodeMapint16float64) value() *float64 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint16float64) find(key int16) (uint, *nodeMapint16float64) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint16float64) find(key int16) (crit uint, child, parent *nodeMapint16float64) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt16Float64) transformKey(key int16) int16 {
@@ -18553,6 +19880,21 @@ func (t *MapInt16Float64) transformKey(key int16) int16 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt16Float64) Rem(key int16) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -18568,7 +19910,7 @@ func (t *MapInt16Float64) SetP(key int16, val *float64) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -18584,6 +19926,7 @@ func (t *MapInt16Float64) SetP(key int16, val *float64) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -18599,7 +19942,7 @@ func (t *MapInt16Float64) GetP(key int16) (*float64, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*float64)(l.child), true
 	}
@@ -18623,17 +19966,17 @@ func (t *MapInt16Float64) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint16float64) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint16float64)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*float64)(c.child))
-// 	}
-// }
+func (c *nodeMapint16float64) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint16float64)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*float64)(c.child))
+	}
+}
 
 // IterInt16Float64 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -18813,14 +20156,18 @@ func (c *nodeMapint16int) value() *int {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint16int) find(key int16) (uint, *nodeMapint16int) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint16int) find(key int16) (crit uint, child, parent *nodeMapint16int) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt16Int) transformKey(key int16) int16 {
@@ -18833,6 +20180,21 @@ func (t *MapInt16Int) transformKey(key int16) int16 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt16Int) Rem(key int16) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -18848,7 +20210,7 @@ func (t *MapInt16Int) SetP(key int16, val *int) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -18864,6 +20226,7 @@ func (t *MapInt16Int) SetP(key int16, val *int) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -18879,7 +20242,7 @@ func (t *MapInt16Int) GetP(key int16) (*int, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*int)(l.child), true
 	}
@@ -18903,17 +20266,17 @@ func (t *MapInt16Int) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint16int) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint16int)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int)(c.child))
-// 	}
-// }
+func (c *nodeMapint16int) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint16int)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int)(c.child))
+	}
+}
 
 // IterInt16Int The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -19093,14 +20456,18 @@ func (c *nodeMapint16int16) value() *int16 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint16int16) find(key int16) (uint, *nodeMapint16int16) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint16int16) find(key int16) (crit uint, child, parent *nodeMapint16int16) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt16Int16) transformKey(key int16) int16 {
@@ -19113,6 +20480,21 @@ func (t *MapInt16Int16) transformKey(key int16) int16 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt16Int16) Rem(key int16) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -19128,7 +20510,7 @@ func (t *MapInt16Int16) SetP(key int16, val *int16) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -19144,6 +20526,7 @@ func (t *MapInt16Int16) SetP(key int16, val *int16) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -19159,7 +20542,7 @@ func (t *MapInt16Int16) GetP(key int16) (*int16, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*int16)(l.child), true
 	}
@@ -19183,17 +20566,17 @@ func (t *MapInt16Int16) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint16int16) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint16int16)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int16)(c.child))
-// 	}
-// }
+func (c *nodeMapint16int16) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint16int16)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int16)(c.child))
+	}
+}
 
 // IterInt16Int16 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -19373,14 +20756,18 @@ func (c *nodeMapint16int32) value() *int32 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint16int32) find(key int16) (uint, *nodeMapint16int32) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint16int32) find(key int16) (crit uint, child, parent *nodeMapint16int32) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt16Int32) transformKey(key int16) int16 {
@@ -19393,6 +20780,21 @@ func (t *MapInt16Int32) transformKey(key int16) int16 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt16Int32) Rem(key int16) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -19408,7 +20810,7 @@ func (t *MapInt16Int32) SetP(key int16, val *int32) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -19424,6 +20826,7 @@ func (t *MapInt16Int32) SetP(key int16, val *int32) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -19439,7 +20842,7 @@ func (t *MapInt16Int32) GetP(key int16) (*int32, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*int32)(l.child), true
 	}
@@ -19463,17 +20866,17 @@ func (t *MapInt16Int32) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint16int32) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint16int32)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int32)(c.child))
-// 	}
-// }
+func (c *nodeMapint16int32) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint16int32)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int32)(c.child))
+	}
+}
 
 // IterInt16Int32 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -19653,14 +21056,18 @@ func (c *nodeMapint16int64) value() *int64 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint16int64) find(key int16) (uint, *nodeMapint16int64) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint16int64) find(key int16) (crit uint, child, parent *nodeMapint16int64) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt16Int64) transformKey(key int16) int16 {
@@ -19673,6 +21080,21 @@ func (t *MapInt16Int64) transformKey(key int16) int16 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt16Int64) Rem(key int16) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -19688,7 +21110,7 @@ func (t *MapInt16Int64) SetP(key int16, val *int64) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -19704,6 +21126,7 @@ func (t *MapInt16Int64) SetP(key int16, val *int64) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -19719,7 +21142,7 @@ func (t *MapInt16Int64) GetP(key int16) (*int64, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*int64)(l.child), true
 	}
@@ -19743,17 +21166,17 @@ func (t *MapInt16Int64) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint16int64) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint16int64)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int64)(c.child))
-// 	}
-// }
+func (c *nodeMapint16int64) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint16int64)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int64)(c.child))
+	}
+}
 
 // IterInt16Int64 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -19933,14 +21356,18 @@ func (c *nodeMapint16int8) value() *int8 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint16int8) find(key int16) (uint, *nodeMapint16int8) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint16int8) find(key int16) (crit uint, child, parent *nodeMapint16int8) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt16Int8) transformKey(key int16) int16 {
@@ -19953,6 +21380,21 @@ func (t *MapInt16Int8) transformKey(key int16) int16 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt16Int8) Rem(key int16) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -19968,7 +21410,7 @@ func (t *MapInt16Int8) SetP(key int16, val *int8) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -19984,6 +21426,7 @@ func (t *MapInt16Int8) SetP(key int16, val *int8) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -19999,7 +21442,7 @@ func (t *MapInt16Int8) GetP(key int16) (*int8, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*int8)(l.child), true
 	}
@@ -20023,17 +21466,17 @@ func (t *MapInt16Int8) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint16int8) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint16int8)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int8)(c.child))
-// 	}
-// }
+func (c *nodeMapint16int8) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint16int8)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int8)(c.child))
+	}
+}
 
 // IterInt16Int8 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -20213,14 +21656,18 @@ func (c *nodeMapint16rune) value() *rune {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint16rune) find(key int16) (uint, *nodeMapint16rune) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint16rune) find(key int16) (crit uint, child, parent *nodeMapint16rune) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt16Rune) transformKey(key int16) int16 {
@@ -20233,6 +21680,21 @@ func (t *MapInt16Rune) transformKey(key int16) int16 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt16Rune) Rem(key int16) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -20248,7 +21710,7 @@ func (t *MapInt16Rune) SetP(key int16, val *rune) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -20264,6 +21726,7 @@ func (t *MapInt16Rune) SetP(key int16, val *rune) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -20279,7 +21742,7 @@ func (t *MapInt16Rune) GetP(key int16) (*rune, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*rune)(l.child), true
 	}
@@ -20303,17 +21766,17 @@ func (t *MapInt16Rune) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint16rune) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint16rune)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*rune)(c.child))
-// 	}
-// }
+func (c *nodeMapint16rune) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint16rune)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*rune)(c.child))
+	}
+}
 
 // IterInt16Rune The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -20493,14 +21956,18 @@ func (c *nodeMapint16string) value() *string {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint16string) find(key int16) (uint, *nodeMapint16string) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint16string) find(key int16) (crit uint, child, parent *nodeMapint16string) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt16String) transformKey(key int16) int16 {
@@ -20513,6 +21980,21 @@ func (t *MapInt16String) transformKey(key int16) int16 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt16String) Rem(key int16) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -20528,7 +22010,7 @@ func (t *MapInt16String) SetP(key int16, val *string) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -20544,6 +22026,7 @@ func (t *MapInt16String) SetP(key int16, val *string) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -20559,7 +22042,7 @@ func (t *MapInt16String) GetP(key int16) (*string, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*string)(l.child), true
 	}
@@ -20583,17 +22066,17 @@ func (t *MapInt16String) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint16string) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint16string)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*string)(c.child))
-// 	}
-// }
+func (c *nodeMapint16string) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint16string)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*string)(c.child))
+	}
+}
 
 // IterInt16String The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -20773,14 +22256,18 @@ func (c *nodeMapint16uint) value() *uint {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint16uint) find(key int16) (uint, *nodeMapint16uint) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint16uint) find(key int16) (crit uint, child, parent *nodeMapint16uint) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt16Uint) transformKey(key int16) int16 {
@@ -20793,6 +22280,21 @@ func (t *MapInt16Uint) transformKey(key int16) int16 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt16Uint) Rem(key int16) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -20808,7 +22310,7 @@ func (t *MapInt16Uint) SetP(key int16, val *uint) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -20824,6 +22326,7 @@ func (t *MapInt16Uint) SetP(key int16, val *uint) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -20839,7 +22342,7 @@ func (t *MapInt16Uint) GetP(key int16) (*uint, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uint)(l.child), true
 	}
@@ -20863,17 +22366,17 @@ func (t *MapInt16Uint) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint16uint) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint16uint)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint)(c.child))
-// 	}
-// }
+func (c *nodeMapint16uint) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint16uint)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint)(c.child))
+	}
+}
 
 // IterInt16Uint The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -21053,14 +22556,18 @@ func (c *nodeMapint16uint16) value() *uint16 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint16uint16) find(key int16) (uint, *nodeMapint16uint16) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint16uint16) find(key int16) (crit uint, child, parent *nodeMapint16uint16) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt16Uint16) transformKey(key int16) int16 {
@@ -21073,6 +22580,21 @@ func (t *MapInt16Uint16) transformKey(key int16) int16 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt16Uint16) Rem(key int16) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -21088,7 +22610,7 @@ func (t *MapInt16Uint16) SetP(key int16, val *uint16) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -21104,6 +22626,7 @@ func (t *MapInt16Uint16) SetP(key int16, val *uint16) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -21119,7 +22642,7 @@ func (t *MapInt16Uint16) GetP(key int16) (*uint16, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uint16)(l.child), true
 	}
@@ -21143,17 +22666,17 @@ func (t *MapInt16Uint16) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint16uint16) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint16uint16)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint16)(c.child))
-// 	}
-// }
+func (c *nodeMapint16uint16) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint16uint16)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint16)(c.child))
+	}
+}
 
 // IterInt16Uint16 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -21333,14 +22856,18 @@ func (c *nodeMapint16uint32) value() *uint32 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint16uint32) find(key int16) (uint, *nodeMapint16uint32) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint16uint32) find(key int16) (crit uint, child, parent *nodeMapint16uint32) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt16Uint32) transformKey(key int16) int16 {
@@ -21353,6 +22880,21 @@ func (t *MapInt16Uint32) transformKey(key int16) int16 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt16Uint32) Rem(key int16) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -21368,7 +22910,7 @@ func (t *MapInt16Uint32) SetP(key int16, val *uint32) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -21384,6 +22926,7 @@ func (t *MapInt16Uint32) SetP(key int16, val *uint32) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -21399,7 +22942,7 @@ func (t *MapInt16Uint32) GetP(key int16) (*uint32, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uint32)(l.child), true
 	}
@@ -21423,17 +22966,17 @@ func (t *MapInt16Uint32) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint16uint32) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint16uint32)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint32)(c.child))
-// 	}
-// }
+func (c *nodeMapint16uint32) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint16uint32)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint32)(c.child))
+	}
+}
 
 // IterInt16Uint32 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -21613,14 +23156,18 @@ func (c *nodeMapint16uint64) value() *uint64 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint16uint64) find(key int16) (uint, *nodeMapint16uint64) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint16uint64) find(key int16) (crit uint, child, parent *nodeMapint16uint64) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt16Uint64) transformKey(key int16) int16 {
@@ -21633,6 +23180,21 @@ func (t *MapInt16Uint64) transformKey(key int16) int16 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt16Uint64) Rem(key int16) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -21648,7 +23210,7 @@ func (t *MapInt16Uint64) SetP(key int16, val *uint64) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -21664,6 +23226,7 @@ func (t *MapInt16Uint64) SetP(key int16, val *uint64) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -21679,7 +23242,7 @@ func (t *MapInt16Uint64) GetP(key int16) (*uint64, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uint64)(l.child), true
 	}
@@ -21703,17 +23266,17 @@ func (t *MapInt16Uint64) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint16uint64) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint16uint64)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint64)(c.child))
-// 	}
-// }
+func (c *nodeMapint16uint64) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint16uint64)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint64)(c.child))
+	}
+}
 
 // IterInt16Uint64 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -21893,14 +23456,18 @@ func (c *nodeMapint16uint8) value() *uint8 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint16uint8) find(key int16) (uint, *nodeMapint16uint8) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint16uint8) find(key int16) (crit uint, child, parent *nodeMapint16uint8) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt16Uint8) transformKey(key int16) int16 {
@@ -21913,6 +23480,21 @@ func (t *MapInt16Uint8) transformKey(key int16) int16 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt16Uint8) Rem(key int16) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -21928,7 +23510,7 @@ func (t *MapInt16Uint8) SetP(key int16, val *uint8) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -21944,6 +23526,7 @@ func (t *MapInt16Uint8) SetP(key int16, val *uint8) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -21959,7 +23542,7 @@ func (t *MapInt16Uint8) GetP(key int16) (*uint8, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uint8)(l.child), true
 	}
@@ -21983,17 +23566,17 @@ func (t *MapInt16Uint8) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint16uint8) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint16uint8)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint8)(c.child))
-// 	}
-// }
+func (c *nodeMapint16uint8) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint16uint8)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint8)(c.child))
+	}
+}
 
 // IterInt16Uint8 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -22173,14 +23756,18 @@ func (c *nodeMapint16uintptr) value() *uintptr {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint16uintptr) find(key int16) (uint, *nodeMapint16uintptr) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint16uintptr) find(key int16) (crit uint, child, parent *nodeMapint16uintptr) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt16Uintptr) transformKey(key int16) int16 {
@@ -22193,6 +23780,21 @@ func (t *MapInt16Uintptr) transformKey(key int16) int16 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt16Uintptr) Rem(key int16) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -22208,7 +23810,7 @@ func (t *MapInt16Uintptr) SetP(key int16, val *uintptr) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -22224,6 +23826,7 @@ func (t *MapInt16Uintptr) SetP(key int16, val *uintptr) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -22239,7 +23842,7 @@ func (t *MapInt16Uintptr) GetP(key int16) (*uintptr, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uintptr)(l.child), true
 	}
@@ -22263,17 +23866,17 @@ func (t *MapInt16Uintptr) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint16uintptr) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint16uintptr)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uintptr)(c.child))
-// 	}
-// }
+func (c *nodeMapint16uintptr) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint16uintptr)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uintptr)(c.child))
+	}
+}
 
 // IterInt16Uintptr The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -22453,14 +24056,18 @@ func (c *nodeMapint8bool) value() *bool {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint8bool) find(key int8) (uint, *nodeMapint8bool) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint8bool) find(key int8) (crit uint, child, parent *nodeMapint8bool) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt8Bool) transformKey(key int8) int8 {
@@ -22473,6 +24080,21 @@ func (t *MapInt8Bool) transformKey(key int8) int8 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt8Bool) Rem(key int8) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -22488,7 +24110,7 @@ func (t *MapInt8Bool) SetP(key int8, val *bool) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -22504,6 +24126,7 @@ func (t *MapInt8Bool) SetP(key int8, val *bool) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -22519,7 +24142,7 @@ func (t *MapInt8Bool) GetP(key int8) (*bool, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*bool)(l.child), true
 	}
@@ -22543,17 +24166,17 @@ func (t *MapInt8Bool) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint8bool) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint8bool)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*bool)(c.child))
-// 	}
-// }
+func (c *nodeMapint8bool) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint8bool)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*bool)(c.child))
+	}
+}
 
 // IterInt8Bool The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -22733,14 +24356,18 @@ func (c *nodeMapint8byte) value() *byte {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint8byte) find(key int8) (uint, *nodeMapint8byte) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint8byte) find(key int8) (crit uint, child, parent *nodeMapint8byte) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt8Byte) transformKey(key int8) int8 {
@@ -22753,6 +24380,21 @@ func (t *MapInt8Byte) transformKey(key int8) int8 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt8Byte) Rem(key int8) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -22768,7 +24410,7 @@ func (t *MapInt8Byte) SetP(key int8, val *byte) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -22784,6 +24426,7 @@ func (t *MapInt8Byte) SetP(key int8, val *byte) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -22799,7 +24442,7 @@ func (t *MapInt8Byte) GetP(key int8) (*byte, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*byte)(l.child), true
 	}
@@ -22823,17 +24466,17 @@ func (t *MapInt8Byte) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint8byte) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint8byte)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*byte)(c.child))
-// 	}
-// }
+func (c *nodeMapint8byte) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint8byte)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*byte)(c.child))
+	}
+}
 
 // IterInt8Byte The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -23013,14 +24656,18 @@ func (c *nodeMapint8complex128) value() *complex128 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint8complex128) find(key int8) (uint, *nodeMapint8complex128) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint8complex128) find(key int8) (crit uint, child, parent *nodeMapint8complex128) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt8Complex128) transformKey(key int8) int8 {
@@ -23033,6 +24680,21 @@ func (t *MapInt8Complex128) transformKey(key int8) int8 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt8Complex128) Rem(key int8) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -23048,7 +24710,7 @@ func (t *MapInt8Complex128) SetP(key int8, val *complex128) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -23064,6 +24726,7 @@ func (t *MapInt8Complex128) SetP(key int8, val *complex128) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -23079,7 +24742,7 @@ func (t *MapInt8Complex128) GetP(key int8) (*complex128, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*complex128)(l.child), true
 	}
@@ -23103,17 +24766,17 @@ func (t *MapInt8Complex128) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint8complex128) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint8complex128)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*complex128)(c.child))
-// 	}
-// }
+func (c *nodeMapint8complex128) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint8complex128)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*complex128)(c.child))
+	}
+}
 
 // IterInt8Complex128 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -23293,14 +24956,18 @@ func (c *nodeMapint8complex64) value() *complex64 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint8complex64) find(key int8) (uint, *nodeMapint8complex64) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint8complex64) find(key int8) (crit uint, child, parent *nodeMapint8complex64) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt8Complex64) transformKey(key int8) int8 {
@@ -23313,6 +24980,21 @@ func (t *MapInt8Complex64) transformKey(key int8) int8 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt8Complex64) Rem(key int8) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -23328,7 +25010,7 @@ func (t *MapInt8Complex64) SetP(key int8, val *complex64) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -23344,6 +25026,7 @@ func (t *MapInt8Complex64) SetP(key int8, val *complex64) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -23359,7 +25042,7 @@ func (t *MapInt8Complex64) GetP(key int8) (*complex64, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*complex64)(l.child), true
 	}
@@ -23383,17 +25066,17 @@ func (t *MapInt8Complex64) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint8complex64) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint8complex64)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*complex64)(c.child))
-// 	}
-// }
+func (c *nodeMapint8complex64) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint8complex64)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*complex64)(c.child))
+	}
+}
 
 // IterInt8Complex64 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -23573,14 +25256,18 @@ func (c *nodeMapint8error) value() *error {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint8error) find(key int8) (uint, *nodeMapint8error) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint8error) find(key int8) (crit uint, child, parent *nodeMapint8error) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt8Error) transformKey(key int8) int8 {
@@ -23593,6 +25280,21 @@ func (t *MapInt8Error) transformKey(key int8) int8 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt8Error) Rem(key int8) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -23608,7 +25310,7 @@ func (t *MapInt8Error) SetP(key int8, val *error) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -23624,6 +25326,7 @@ func (t *MapInt8Error) SetP(key int8, val *error) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -23639,7 +25342,7 @@ func (t *MapInt8Error) GetP(key int8) (*error, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*error)(l.child), true
 	}
@@ -23663,17 +25366,17 @@ func (t *MapInt8Error) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint8error) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint8error)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*error)(c.child))
-// 	}
-// }
+func (c *nodeMapint8error) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint8error)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*error)(c.child))
+	}
+}
 
 // IterInt8Error The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -23853,14 +25556,18 @@ func (c *nodeMapint8float32) value() *float32 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint8float32) find(key int8) (uint, *nodeMapint8float32) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint8float32) find(key int8) (crit uint, child, parent *nodeMapint8float32) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt8Float32) transformKey(key int8) int8 {
@@ -23873,6 +25580,21 @@ func (t *MapInt8Float32) transformKey(key int8) int8 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt8Float32) Rem(key int8) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -23888,7 +25610,7 @@ func (t *MapInt8Float32) SetP(key int8, val *float32) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -23904,6 +25626,7 @@ func (t *MapInt8Float32) SetP(key int8, val *float32) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -23919,7 +25642,7 @@ func (t *MapInt8Float32) GetP(key int8) (*float32, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*float32)(l.child), true
 	}
@@ -23943,17 +25666,17 @@ func (t *MapInt8Float32) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint8float32) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint8float32)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*float32)(c.child))
-// 	}
-// }
+func (c *nodeMapint8float32) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint8float32)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*float32)(c.child))
+	}
+}
 
 // IterInt8Float32 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -24133,14 +25856,18 @@ func (c *nodeMapint8float64) value() *float64 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint8float64) find(key int8) (uint, *nodeMapint8float64) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint8float64) find(key int8) (crit uint, child, parent *nodeMapint8float64) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt8Float64) transformKey(key int8) int8 {
@@ -24153,6 +25880,21 @@ func (t *MapInt8Float64) transformKey(key int8) int8 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt8Float64) Rem(key int8) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -24168,7 +25910,7 @@ func (t *MapInt8Float64) SetP(key int8, val *float64) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -24184,6 +25926,7 @@ func (t *MapInt8Float64) SetP(key int8, val *float64) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -24199,7 +25942,7 @@ func (t *MapInt8Float64) GetP(key int8) (*float64, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*float64)(l.child), true
 	}
@@ -24223,17 +25966,17 @@ func (t *MapInt8Float64) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint8float64) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint8float64)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*float64)(c.child))
-// 	}
-// }
+func (c *nodeMapint8float64) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint8float64)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*float64)(c.child))
+	}
+}
 
 // IterInt8Float64 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -24413,14 +26156,18 @@ func (c *nodeMapint8int) value() *int {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint8int) find(key int8) (uint, *nodeMapint8int) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint8int) find(key int8) (crit uint, child, parent *nodeMapint8int) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt8Int) transformKey(key int8) int8 {
@@ -24433,6 +26180,21 @@ func (t *MapInt8Int) transformKey(key int8) int8 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt8Int) Rem(key int8) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -24448,7 +26210,7 @@ func (t *MapInt8Int) SetP(key int8, val *int) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -24464,6 +26226,7 @@ func (t *MapInt8Int) SetP(key int8, val *int) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -24479,7 +26242,7 @@ func (t *MapInt8Int) GetP(key int8) (*int, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*int)(l.child), true
 	}
@@ -24503,17 +26266,17 @@ func (t *MapInt8Int) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint8int) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint8int)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int)(c.child))
-// 	}
-// }
+func (c *nodeMapint8int) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint8int)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int)(c.child))
+	}
+}
 
 // IterInt8Int The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -24693,14 +26456,18 @@ func (c *nodeMapint8int16) value() *int16 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint8int16) find(key int8) (uint, *nodeMapint8int16) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint8int16) find(key int8) (crit uint, child, parent *nodeMapint8int16) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt8Int16) transformKey(key int8) int8 {
@@ -24713,6 +26480,21 @@ func (t *MapInt8Int16) transformKey(key int8) int8 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt8Int16) Rem(key int8) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -24728,7 +26510,7 @@ func (t *MapInt8Int16) SetP(key int8, val *int16) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -24744,6 +26526,7 @@ func (t *MapInt8Int16) SetP(key int8, val *int16) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -24759,7 +26542,7 @@ func (t *MapInt8Int16) GetP(key int8) (*int16, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*int16)(l.child), true
 	}
@@ -24783,17 +26566,17 @@ func (t *MapInt8Int16) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint8int16) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint8int16)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int16)(c.child))
-// 	}
-// }
+func (c *nodeMapint8int16) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint8int16)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int16)(c.child))
+	}
+}
 
 // IterInt8Int16 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -24973,14 +26756,18 @@ func (c *nodeMapint8int32) value() *int32 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint8int32) find(key int8) (uint, *nodeMapint8int32) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint8int32) find(key int8) (crit uint, child, parent *nodeMapint8int32) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt8Int32) transformKey(key int8) int8 {
@@ -24993,6 +26780,21 @@ func (t *MapInt8Int32) transformKey(key int8) int8 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt8Int32) Rem(key int8) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -25008,7 +26810,7 @@ func (t *MapInt8Int32) SetP(key int8, val *int32) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -25024,6 +26826,7 @@ func (t *MapInt8Int32) SetP(key int8, val *int32) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -25039,7 +26842,7 @@ func (t *MapInt8Int32) GetP(key int8) (*int32, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*int32)(l.child), true
 	}
@@ -25063,17 +26866,17 @@ func (t *MapInt8Int32) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint8int32) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint8int32)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int32)(c.child))
-// 	}
-// }
+func (c *nodeMapint8int32) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint8int32)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int32)(c.child))
+	}
+}
 
 // IterInt8Int32 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -25253,14 +27056,18 @@ func (c *nodeMapint8int64) value() *int64 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint8int64) find(key int8) (uint, *nodeMapint8int64) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint8int64) find(key int8) (crit uint, child, parent *nodeMapint8int64) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt8Int64) transformKey(key int8) int8 {
@@ -25273,6 +27080,21 @@ func (t *MapInt8Int64) transformKey(key int8) int8 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt8Int64) Rem(key int8) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -25288,7 +27110,7 @@ func (t *MapInt8Int64) SetP(key int8, val *int64) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -25304,6 +27126,7 @@ func (t *MapInt8Int64) SetP(key int8, val *int64) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -25319,7 +27142,7 @@ func (t *MapInt8Int64) GetP(key int8) (*int64, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*int64)(l.child), true
 	}
@@ -25343,17 +27166,17 @@ func (t *MapInt8Int64) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint8int64) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint8int64)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int64)(c.child))
-// 	}
-// }
+func (c *nodeMapint8int64) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint8int64)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int64)(c.child))
+	}
+}
 
 // IterInt8Int64 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -25533,14 +27356,18 @@ func (c *nodeMapint8int8) value() *int8 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint8int8) find(key int8) (uint, *nodeMapint8int8) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint8int8) find(key int8) (crit uint, child, parent *nodeMapint8int8) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt8Int8) transformKey(key int8) int8 {
@@ -25553,6 +27380,21 @@ func (t *MapInt8Int8) transformKey(key int8) int8 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt8Int8) Rem(key int8) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -25568,7 +27410,7 @@ func (t *MapInt8Int8) SetP(key int8, val *int8) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -25584,6 +27426,7 @@ func (t *MapInt8Int8) SetP(key int8, val *int8) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -25599,7 +27442,7 @@ func (t *MapInt8Int8) GetP(key int8) (*int8, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*int8)(l.child), true
 	}
@@ -25623,17 +27466,17 @@ func (t *MapInt8Int8) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint8int8) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint8int8)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int8)(c.child))
-// 	}
-// }
+func (c *nodeMapint8int8) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint8int8)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int8)(c.child))
+	}
+}
 
 // IterInt8Int8 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -25813,14 +27656,18 @@ func (c *nodeMapint8rune) value() *rune {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint8rune) find(key int8) (uint, *nodeMapint8rune) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint8rune) find(key int8) (crit uint, child, parent *nodeMapint8rune) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt8Rune) transformKey(key int8) int8 {
@@ -25833,6 +27680,21 @@ func (t *MapInt8Rune) transformKey(key int8) int8 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt8Rune) Rem(key int8) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -25848,7 +27710,7 @@ func (t *MapInt8Rune) SetP(key int8, val *rune) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -25864,6 +27726,7 @@ func (t *MapInt8Rune) SetP(key int8, val *rune) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -25879,7 +27742,7 @@ func (t *MapInt8Rune) GetP(key int8) (*rune, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*rune)(l.child), true
 	}
@@ -25903,17 +27766,17 @@ func (t *MapInt8Rune) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint8rune) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint8rune)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*rune)(c.child))
-// 	}
-// }
+func (c *nodeMapint8rune) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint8rune)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*rune)(c.child))
+	}
+}
 
 // IterInt8Rune The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -26093,14 +27956,18 @@ func (c *nodeMapint8string) value() *string {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint8string) find(key int8) (uint, *nodeMapint8string) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint8string) find(key int8) (crit uint, child, parent *nodeMapint8string) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt8String) transformKey(key int8) int8 {
@@ -26113,6 +27980,21 @@ func (t *MapInt8String) transformKey(key int8) int8 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt8String) Rem(key int8) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -26128,7 +28010,7 @@ func (t *MapInt8String) SetP(key int8, val *string) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -26144,6 +28026,7 @@ func (t *MapInt8String) SetP(key int8, val *string) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -26159,7 +28042,7 @@ func (t *MapInt8String) GetP(key int8) (*string, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*string)(l.child), true
 	}
@@ -26183,17 +28066,17 @@ func (t *MapInt8String) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint8string) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint8string)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*string)(c.child))
-// 	}
-// }
+func (c *nodeMapint8string) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint8string)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*string)(c.child))
+	}
+}
 
 // IterInt8String The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -26373,14 +28256,18 @@ func (c *nodeMapint8uint) value() *uint {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint8uint) find(key int8) (uint, *nodeMapint8uint) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint8uint) find(key int8) (crit uint, child, parent *nodeMapint8uint) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt8Uint) transformKey(key int8) int8 {
@@ -26393,6 +28280,21 @@ func (t *MapInt8Uint) transformKey(key int8) int8 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt8Uint) Rem(key int8) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -26408,7 +28310,7 @@ func (t *MapInt8Uint) SetP(key int8, val *uint) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -26424,6 +28326,7 @@ func (t *MapInt8Uint) SetP(key int8, val *uint) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -26439,7 +28342,7 @@ func (t *MapInt8Uint) GetP(key int8) (*uint, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uint)(l.child), true
 	}
@@ -26463,17 +28366,17 @@ func (t *MapInt8Uint) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint8uint) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint8uint)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint)(c.child))
-// 	}
-// }
+func (c *nodeMapint8uint) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint8uint)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint)(c.child))
+	}
+}
 
 // IterInt8Uint The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -26653,14 +28556,18 @@ func (c *nodeMapint8uint16) value() *uint16 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint8uint16) find(key int8) (uint, *nodeMapint8uint16) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint8uint16) find(key int8) (crit uint, child, parent *nodeMapint8uint16) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt8Uint16) transformKey(key int8) int8 {
@@ -26673,6 +28580,21 @@ func (t *MapInt8Uint16) transformKey(key int8) int8 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt8Uint16) Rem(key int8) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -26688,7 +28610,7 @@ func (t *MapInt8Uint16) SetP(key int8, val *uint16) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -26704,6 +28626,7 @@ func (t *MapInt8Uint16) SetP(key int8, val *uint16) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -26719,7 +28642,7 @@ func (t *MapInt8Uint16) GetP(key int8) (*uint16, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uint16)(l.child), true
 	}
@@ -26743,17 +28666,17 @@ func (t *MapInt8Uint16) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint8uint16) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint8uint16)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint16)(c.child))
-// 	}
-// }
+func (c *nodeMapint8uint16) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint8uint16)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint16)(c.child))
+	}
+}
 
 // IterInt8Uint16 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -26933,14 +28856,18 @@ func (c *nodeMapint8uint32) value() *uint32 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint8uint32) find(key int8) (uint, *nodeMapint8uint32) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint8uint32) find(key int8) (crit uint, child, parent *nodeMapint8uint32) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt8Uint32) transformKey(key int8) int8 {
@@ -26953,6 +28880,21 @@ func (t *MapInt8Uint32) transformKey(key int8) int8 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt8Uint32) Rem(key int8) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -26968,7 +28910,7 @@ func (t *MapInt8Uint32) SetP(key int8, val *uint32) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -26984,6 +28926,7 @@ func (t *MapInt8Uint32) SetP(key int8, val *uint32) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -26999,7 +28942,7 @@ func (t *MapInt8Uint32) GetP(key int8) (*uint32, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uint32)(l.child), true
 	}
@@ -27023,17 +28966,17 @@ func (t *MapInt8Uint32) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint8uint32) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint8uint32)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint32)(c.child))
-// 	}
-// }
+func (c *nodeMapint8uint32) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint8uint32)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint32)(c.child))
+	}
+}
 
 // IterInt8Uint32 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -27213,14 +29156,18 @@ func (c *nodeMapint8uint64) value() *uint64 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint8uint64) find(key int8) (uint, *nodeMapint8uint64) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint8uint64) find(key int8) (crit uint, child, parent *nodeMapint8uint64) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt8Uint64) transformKey(key int8) int8 {
@@ -27233,6 +29180,21 @@ func (t *MapInt8Uint64) transformKey(key int8) int8 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt8Uint64) Rem(key int8) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -27248,7 +29210,7 @@ func (t *MapInt8Uint64) SetP(key int8, val *uint64) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -27264,6 +29226,7 @@ func (t *MapInt8Uint64) SetP(key int8, val *uint64) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -27279,7 +29242,7 @@ func (t *MapInt8Uint64) GetP(key int8) (*uint64, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uint64)(l.child), true
 	}
@@ -27303,17 +29266,17 @@ func (t *MapInt8Uint64) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint8uint64) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint8uint64)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint64)(c.child))
-// 	}
-// }
+func (c *nodeMapint8uint64) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint8uint64)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint64)(c.child))
+	}
+}
 
 // IterInt8Uint64 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -27493,14 +29456,18 @@ func (c *nodeMapint8uint8) value() *uint8 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint8uint8) find(key int8) (uint, *nodeMapint8uint8) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint8uint8) find(key int8) (crit uint, child, parent *nodeMapint8uint8) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt8Uint8) transformKey(key int8) int8 {
@@ -27513,6 +29480,21 @@ func (t *MapInt8Uint8) transformKey(key int8) int8 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt8Uint8) Rem(key int8) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -27528,7 +29510,7 @@ func (t *MapInt8Uint8) SetP(key int8, val *uint8) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -27544,6 +29526,7 @@ func (t *MapInt8Uint8) SetP(key int8, val *uint8) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -27559,7 +29542,7 @@ func (t *MapInt8Uint8) GetP(key int8) (*uint8, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uint8)(l.child), true
 	}
@@ -27583,17 +29566,17 @@ func (t *MapInt8Uint8) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint8uint8) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint8uint8)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint8)(c.child))
-// 	}
-// }
+func (c *nodeMapint8uint8) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint8uint8)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint8)(c.child))
+	}
+}
 
 // IterInt8Uint8 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -27773,14 +29756,18 @@ func (c *nodeMapint8uintptr) value() *uintptr {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapint8uintptr) find(key int8) (uint, *nodeMapint8uintptr) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapint8uintptr) find(key int8) (crit uint, child, parent *nodeMapint8uintptr) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapInt8Uintptr) transformKey(key int8) int8 {
@@ -27793,6 +29780,21 @@ func (t *MapInt8Uintptr) transformKey(key int8) int8 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapInt8Uintptr) Rem(key int8) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -27808,7 +29810,7 @@ func (t *MapInt8Uintptr) SetP(key int8, val *uintptr) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -27824,6 +29826,7 @@ func (t *MapInt8Uintptr) SetP(key int8, val *uintptr) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -27839,7 +29842,7 @@ func (t *MapInt8Uintptr) GetP(key int8) (*uintptr, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uintptr)(l.child), true
 	}
@@ -27863,17 +29866,17 @@ func (t *MapInt8Uintptr) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapint8uintptr) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapint8uintptr)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uintptr)(c.child))
-// 	}
-// }
+func (c *nodeMapint8uintptr) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapint8uintptr)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uintptr)(c.child))
+	}
+}
 
 // IterInt8Uintptr The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -28053,14 +30056,18 @@ func (c *nodeMapuintbool) value() *bool {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuintbool) find(key uint) (uint, *nodeMapuintbool) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuintbool) find(key uint) (crit uint, child, parent *nodeMapuintbool) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUintBool) transformKey(key uint) uint {
@@ -28073,6 +30080,21 @@ func (t *MapUintBool) transformKey(key uint) uint {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUintBool) Rem(key uint) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -28088,7 +30110,7 @@ func (t *MapUintBool) SetP(key uint, val *bool) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -28104,6 +30126,7 @@ func (t *MapUintBool) SetP(key uint, val *bool) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -28119,7 +30142,7 @@ func (t *MapUintBool) GetP(key uint) (*bool, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*bool)(l.child), true
 	}
@@ -28143,17 +30166,17 @@ func (t *MapUintBool) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuintbool) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuintbool)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*bool)(c.child))
-// 	}
-// }
+func (c *nodeMapuintbool) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuintbool)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*bool)(c.child))
+	}
+}
 
 // IterUintBool The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -28333,14 +30356,18 @@ func (c *nodeMapuintbyte) value() *byte {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuintbyte) find(key uint) (uint, *nodeMapuintbyte) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuintbyte) find(key uint) (crit uint, child, parent *nodeMapuintbyte) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUintByte) transformKey(key uint) uint {
@@ -28353,6 +30380,21 @@ func (t *MapUintByte) transformKey(key uint) uint {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUintByte) Rem(key uint) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -28368,7 +30410,7 @@ func (t *MapUintByte) SetP(key uint, val *byte) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -28384,6 +30426,7 @@ func (t *MapUintByte) SetP(key uint, val *byte) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -28399,7 +30442,7 @@ func (t *MapUintByte) GetP(key uint) (*byte, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*byte)(l.child), true
 	}
@@ -28423,17 +30466,17 @@ func (t *MapUintByte) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuintbyte) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuintbyte)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*byte)(c.child))
-// 	}
-// }
+func (c *nodeMapuintbyte) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuintbyte)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*byte)(c.child))
+	}
+}
 
 // IterUintByte The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -28613,14 +30656,18 @@ func (c *nodeMapuintcomplex128) value() *complex128 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuintcomplex128) find(key uint) (uint, *nodeMapuintcomplex128) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuintcomplex128) find(key uint) (crit uint, child, parent *nodeMapuintcomplex128) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUintComplex128) transformKey(key uint) uint {
@@ -28633,6 +30680,21 @@ func (t *MapUintComplex128) transformKey(key uint) uint {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUintComplex128) Rem(key uint) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -28648,7 +30710,7 @@ func (t *MapUintComplex128) SetP(key uint, val *complex128) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -28664,6 +30726,7 @@ func (t *MapUintComplex128) SetP(key uint, val *complex128) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -28679,7 +30742,7 @@ func (t *MapUintComplex128) GetP(key uint) (*complex128, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*complex128)(l.child), true
 	}
@@ -28703,17 +30766,17 @@ func (t *MapUintComplex128) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuintcomplex128) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuintcomplex128)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*complex128)(c.child))
-// 	}
-// }
+func (c *nodeMapuintcomplex128) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuintcomplex128)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*complex128)(c.child))
+	}
+}
 
 // IterUintComplex128 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -28893,14 +30956,18 @@ func (c *nodeMapuintcomplex64) value() *complex64 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuintcomplex64) find(key uint) (uint, *nodeMapuintcomplex64) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuintcomplex64) find(key uint) (crit uint, child, parent *nodeMapuintcomplex64) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUintComplex64) transformKey(key uint) uint {
@@ -28913,6 +30980,21 @@ func (t *MapUintComplex64) transformKey(key uint) uint {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUintComplex64) Rem(key uint) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -28928,7 +31010,7 @@ func (t *MapUintComplex64) SetP(key uint, val *complex64) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -28944,6 +31026,7 @@ func (t *MapUintComplex64) SetP(key uint, val *complex64) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -28959,7 +31042,7 @@ func (t *MapUintComplex64) GetP(key uint) (*complex64, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*complex64)(l.child), true
 	}
@@ -28983,17 +31066,17 @@ func (t *MapUintComplex64) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuintcomplex64) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuintcomplex64)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*complex64)(c.child))
-// 	}
-// }
+func (c *nodeMapuintcomplex64) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuintcomplex64)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*complex64)(c.child))
+	}
+}
 
 // IterUintComplex64 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -29173,14 +31256,18 @@ func (c *nodeMapuinterror) value() *error {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuinterror) find(key uint) (uint, *nodeMapuinterror) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuinterror) find(key uint) (crit uint, child, parent *nodeMapuinterror) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUintError) transformKey(key uint) uint {
@@ -29193,6 +31280,21 @@ func (t *MapUintError) transformKey(key uint) uint {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUintError) Rem(key uint) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -29208,7 +31310,7 @@ func (t *MapUintError) SetP(key uint, val *error) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -29224,6 +31326,7 @@ func (t *MapUintError) SetP(key uint, val *error) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -29239,7 +31342,7 @@ func (t *MapUintError) GetP(key uint) (*error, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*error)(l.child), true
 	}
@@ -29263,17 +31366,17 @@ func (t *MapUintError) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuinterror) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuinterror)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*error)(c.child))
-// 	}
-// }
+func (c *nodeMapuinterror) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuinterror)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*error)(c.child))
+	}
+}
 
 // IterUintError The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -29453,14 +31556,18 @@ func (c *nodeMapuintfloat32) value() *float32 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuintfloat32) find(key uint) (uint, *nodeMapuintfloat32) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuintfloat32) find(key uint) (crit uint, child, parent *nodeMapuintfloat32) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUintFloat32) transformKey(key uint) uint {
@@ -29473,6 +31580,21 @@ func (t *MapUintFloat32) transformKey(key uint) uint {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUintFloat32) Rem(key uint) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -29488,7 +31610,7 @@ func (t *MapUintFloat32) SetP(key uint, val *float32) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -29504,6 +31626,7 @@ func (t *MapUintFloat32) SetP(key uint, val *float32) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -29519,7 +31642,7 @@ func (t *MapUintFloat32) GetP(key uint) (*float32, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*float32)(l.child), true
 	}
@@ -29543,17 +31666,17 @@ func (t *MapUintFloat32) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuintfloat32) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuintfloat32)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*float32)(c.child))
-// 	}
-// }
+func (c *nodeMapuintfloat32) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuintfloat32)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*float32)(c.child))
+	}
+}
 
 // IterUintFloat32 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -29733,14 +31856,18 @@ func (c *nodeMapuintfloat64) value() *float64 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuintfloat64) find(key uint) (uint, *nodeMapuintfloat64) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuintfloat64) find(key uint) (crit uint, child, parent *nodeMapuintfloat64) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUintFloat64) transformKey(key uint) uint {
@@ -29753,6 +31880,21 @@ func (t *MapUintFloat64) transformKey(key uint) uint {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUintFloat64) Rem(key uint) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -29768,7 +31910,7 @@ func (t *MapUintFloat64) SetP(key uint, val *float64) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -29784,6 +31926,7 @@ func (t *MapUintFloat64) SetP(key uint, val *float64) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -29799,7 +31942,7 @@ func (t *MapUintFloat64) GetP(key uint) (*float64, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*float64)(l.child), true
 	}
@@ -29823,17 +31966,17 @@ func (t *MapUintFloat64) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuintfloat64) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuintfloat64)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*float64)(c.child))
-// 	}
-// }
+func (c *nodeMapuintfloat64) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuintfloat64)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*float64)(c.child))
+	}
+}
 
 // IterUintFloat64 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -30013,14 +32156,18 @@ func (c *nodeMapuintint) value() *int {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuintint) find(key uint) (uint, *nodeMapuintint) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuintint) find(key uint) (crit uint, child, parent *nodeMapuintint) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUintInt) transformKey(key uint) uint {
@@ -30033,6 +32180,21 @@ func (t *MapUintInt) transformKey(key uint) uint {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUintInt) Rem(key uint) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -30048,7 +32210,7 @@ func (t *MapUintInt) SetP(key uint, val *int) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -30064,6 +32226,7 @@ func (t *MapUintInt) SetP(key uint, val *int) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -30079,7 +32242,7 @@ func (t *MapUintInt) GetP(key uint) (*int, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*int)(l.child), true
 	}
@@ -30103,17 +32266,17 @@ func (t *MapUintInt) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuintint) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuintint)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int)(c.child))
-// 	}
-// }
+func (c *nodeMapuintint) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuintint)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int)(c.child))
+	}
+}
 
 // IterUintInt The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -30293,14 +32456,18 @@ func (c *nodeMapuintint16) value() *int16 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuintint16) find(key uint) (uint, *nodeMapuintint16) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuintint16) find(key uint) (crit uint, child, parent *nodeMapuintint16) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUintInt16) transformKey(key uint) uint {
@@ -30313,6 +32480,21 @@ func (t *MapUintInt16) transformKey(key uint) uint {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUintInt16) Rem(key uint) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -30328,7 +32510,7 @@ func (t *MapUintInt16) SetP(key uint, val *int16) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -30344,6 +32526,7 @@ func (t *MapUintInt16) SetP(key uint, val *int16) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -30359,7 +32542,7 @@ func (t *MapUintInt16) GetP(key uint) (*int16, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*int16)(l.child), true
 	}
@@ -30383,17 +32566,17 @@ func (t *MapUintInt16) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuintint16) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuintint16)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int16)(c.child))
-// 	}
-// }
+func (c *nodeMapuintint16) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuintint16)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int16)(c.child))
+	}
+}
 
 // IterUintInt16 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -30573,14 +32756,18 @@ func (c *nodeMapuintint32) value() *int32 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuintint32) find(key uint) (uint, *nodeMapuintint32) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuintint32) find(key uint) (crit uint, child, parent *nodeMapuintint32) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUintInt32) transformKey(key uint) uint {
@@ -30593,6 +32780,21 @@ func (t *MapUintInt32) transformKey(key uint) uint {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUintInt32) Rem(key uint) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -30608,7 +32810,7 @@ func (t *MapUintInt32) SetP(key uint, val *int32) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -30624,6 +32826,7 @@ func (t *MapUintInt32) SetP(key uint, val *int32) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -30639,7 +32842,7 @@ func (t *MapUintInt32) GetP(key uint) (*int32, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*int32)(l.child), true
 	}
@@ -30663,17 +32866,17 @@ func (t *MapUintInt32) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuintint32) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuintint32)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int32)(c.child))
-// 	}
-// }
+func (c *nodeMapuintint32) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuintint32)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int32)(c.child))
+	}
+}
 
 // IterUintInt32 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -30853,14 +33056,18 @@ func (c *nodeMapuintint64) value() *int64 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuintint64) find(key uint) (uint, *nodeMapuintint64) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuintint64) find(key uint) (crit uint, child, parent *nodeMapuintint64) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUintInt64) transformKey(key uint) uint {
@@ -30873,6 +33080,21 @@ func (t *MapUintInt64) transformKey(key uint) uint {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUintInt64) Rem(key uint) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -30888,7 +33110,7 @@ func (t *MapUintInt64) SetP(key uint, val *int64) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -30904,6 +33126,7 @@ func (t *MapUintInt64) SetP(key uint, val *int64) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -30919,7 +33142,7 @@ func (t *MapUintInt64) GetP(key uint) (*int64, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*int64)(l.child), true
 	}
@@ -30943,17 +33166,17 @@ func (t *MapUintInt64) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuintint64) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuintint64)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int64)(c.child))
-// 	}
-// }
+func (c *nodeMapuintint64) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuintint64)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int64)(c.child))
+	}
+}
 
 // IterUintInt64 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -31133,14 +33356,18 @@ func (c *nodeMapuintint8) value() *int8 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuintint8) find(key uint) (uint, *nodeMapuintint8) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuintint8) find(key uint) (crit uint, child, parent *nodeMapuintint8) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUintInt8) transformKey(key uint) uint {
@@ -31153,6 +33380,21 @@ func (t *MapUintInt8) transformKey(key uint) uint {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUintInt8) Rem(key uint) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -31168,7 +33410,7 @@ func (t *MapUintInt8) SetP(key uint, val *int8) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -31184,6 +33426,7 @@ func (t *MapUintInt8) SetP(key uint, val *int8) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -31199,7 +33442,7 @@ func (t *MapUintInt8) GetP(key uint) (*int8, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*int8)(l.child), true
 	}
@@ -31223,17 +33466,17 @@ func (t *MapUintInt8) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuintint8) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuintint8)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int8)(c.child))
-// 	}
-// }
+func (c *nodeMapuintint8) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuintint8)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int8)(c.child))
+	}
+}
 
 // IterUintInt8 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -31413,14 +33656,18 @@ func (c *nodeMapuintrune) value() *rune {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuintrune) find(key uint) (uint, *nodeMapuintrune) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuintrune) find(key uint) (crit uint, child, parent *nodeMapuintrune) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUintRune) transformKey(key uint) uint {
@@ -31433,6 +33680,21 @@ func (t *MapUintRune) transformKey(key uint) uint {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUintRune) Rem(key uint) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -31448,7 +33710,7 @@ func (t *MapUintRune) SetP(key uint, val *rune) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -31464,6 +33726,7 @@ func (t *MapUintRune) SetP(key uint, val *rune) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -31479,7 +33742,7 @@ func (t *MapUintRune) GetP(key uint) (*rune, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*rune)(l.child), true
 	}
@@ -31503,17 +33766,17 @@ func (t *MapUintRune) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuintrune) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuintrune)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*rune)(c.child))
-// 	}
-// }
+func (c *nodeMapuintrune) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuintrune)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*rune)(c.child))
+	}
+}
 
 // IterUintRune The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -31693,14 +33956,18 @@ func (c *nodeMapuintstring) value() *string {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuintstring) find(key uint) (uint, *nodeMapuintstring) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuintstring) find(key uint) (crit uint, child, parent *nodeMapuintstring) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUintString) transformKey(key uint) uint {
@@ -31713,6 +33980,21 @@ func (t *MapUintString) transformKey(key uint) uint {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUintString) Rem(key uint) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -31728,7 +34010,7 @@ func (t *MapUintString) SetP(key uint, val *string) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -31744,6 +34026,7 @@ func (t *MapUintString) SetP(key uint, val *string) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -31759,7 +34042,7 @@ func (t *MapUintString) GetP(key uint) (*string, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*string)(l.child), true
 	}
@@ -31783,17 +34066,17 @@ func (t *MapUintString) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuintstring) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuintstring)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*string)(c.child))
-// 	}
-// }
+func (c *nodeMapuintstring) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuintstring)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*string)(c.child))
+	}
+}
 
 // IterUintString The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -31973,14 +34256,18 @@ func (c *nodeMapuintuint) value() *uint {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuintuint) find(key uint) (uint, *nodeMapuintuint) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuintuint) find(key uint) (crit uint, child, parent *nodeMapuintuint) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUintUint) transformKey(key uint) uint {
@@ -31993,6 +34280,21 @@ func (t *MapUintUint) transformKey(key uint) uint {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUintUint) Rem(key uint) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -32008,7 +34310,7 @@ func (t *MapUintUint) SetP(key uint, val *uint) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -32024,6 +34326,7 @@ func (t *MapUintUint) SetP(key uint, val *uint) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -32039,7 +34342,7 @@ func (t *MapUintUint) GetP(key uint) (*uint, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uint)(l.child), true
 	}
@@ -32063,17 +34366,17 @@ func (t *MapUintUint) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuintuint) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuintuint)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint)(c.child))
-// 	}
-// }
+func (c *nodeMapuintuint) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuintuint)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint)(c.child))
+	}
+}
 
 // IterUintUint The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -32253,14 +34556,18 @@ func (c *nodeMapuintuint16) value() *uint16 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuintuint16) find(key uint) (uint, *nodeMapuintuint16) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuintuint16) find(key uint) (crit uint, child, parent *nodeMapuintuint16) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUintUint16) transformKey(key uint) uint {
@@ -32273,6 +34580,21 @@ func (t *MapUintUint16) transformKey(key uint) uint {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUintUint16) Rem(key uint) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -32288,7 +34610,7 @@ func (t *MapUintUint16) SetP(key uint, val *uint16) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -32304,6 +34626,7 @@ func (t *MapUintUint16) SetP(key uint, val *uint16) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -32319,7 +34642,7 @@ func (t *MapUintUint16) GetP(key uint) (*uint16, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uint16)(l.child), true
 	}
@@ -32343,17 +34666,17 @@ func (t *MapUintUint16) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuintuint16) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuintuint16)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint16)(c.child))
-// 	}
-// }
+func (c *nodeMapuintuint16) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuintuint16)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint16)(c.child))
+	}
+}
 
 // IterUintUint16 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -32533,14 +34856,18 @@ func (c *nodeMapuintuint32) value() *uint32 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuintuint32) find(key uint) (uint, *nodeMapuintuint32) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuintuint32) find(key uint) (crit uint, child, parent *nodeMapuintuint32) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUintUint32) transformKey(key uint) uint {
@@ -32553,6 +34880,21 @@ func (t *MapUintUint32) transformKey(key uint) uint {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUintUint32) Rem(key uint) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -32568,7 +34910,7 @@ func (t *MapUintUint32) SetP(key uint, val *uint32) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -32584,6 +34926,7 @@ func (t *MapUintUint32) SetP(key uint, val *uint32) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -32599,7 +34942,7 @@ func (t *MapUintUint32) GetP(key uint) (*uint32, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uint32)(l.child), true
 	}
@@ -32623,17 +34966,17 @@ func (t *MapUintUint32) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuintuint32) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuintuint32)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint32)(c.child))
-// 	}
-// }
+func (c *nodeMapuintuint32) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuintuint32)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint32)(c.child))
+	}
+}
 
 // IterUintUint32 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -32813,14 +35156,18 @@ func (c *nodeMapuintuint64) value() *uint64 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuintuint64) find(key uint) (uint, *nodeMapuintuint64) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuintuint64) find(key uint) (crit uint, child, parent *nodeMapuintuint64) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUintUint64) transformKey(key uint) uint {
@@ -32833,6 +35180,21 @@ func (t *MapUintUint64) transformKey(key uint) uint {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUintUint64) Rem(key uint) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -32848,7 +35210,7 @@ func (t *MapUintUint64) SetP(key uint, val *uint64) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -32864,6 +35226,7 @@ func (t *MapUintUint64) SetP(key uint, val *uint64) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -32879,7 +35242,7 @@ func (t *MapUintUint64) GetP(key uint) (*uint64, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uint64)(l.child), true
 	}
@@ -32903,17 +35266,17 @@ func (t *MapUintUint64) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuintuint64) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuintuint64)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint64)(c.child))
-// 	}
-// }
+func (c *nodeMapuintuint64) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuintuint64)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint64)(c.child))
+	}
+}
 
 // IterUintUint64 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -33093,14 +35456,18 @@ func (c *nodeMapuintuint8) value() *uint8 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuintuint8) find(key uint) (uint, *nodeMapuintuint8) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuintuint8) find(key uint) (crit uint, child, parent *nodeMapuintuint8) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUintUint8) transformKey(key uint) uint {
@@ -33113,6 +35480,21 @@ func (t *MapUintUint8) transformKey(key uint) uint {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUintUint8) Rem(key uint) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -33128,7 +35510,7 @@ func (t *MapUintUint8) SetP(key uint, val *uint8) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -33144,6 +35526,7 @@ func (t *MapUintUint8) SetP(key uint, val *uint8) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -33159,7 +35542,7 @@ func (t *MapUintUint8) GetP(key uint) (*uint8, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uint8)(l.child), true
 	}
@@ -33183,17 +35566,17 @@ func (t *MapUintUint8) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuintuint8) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuintuint8)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint8)(c.child))
-// 	}
-// }
+func (c *nodeMapuintuint8) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuintuint8)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint8)(c.child))
+	}
+}
 
 // IterUintUint8 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -33373,14 +35756,18 @@ func (c *nodeMapuintuintptr) value() *uintptr {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuintuintptr) find(key uint) (uint, *nodeMapuintuintptr) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuintuintptr) find(key uint) (crit uint, child, parent *nodeMapuintuintptr) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUintUintptr) transformKey(key uint) uint {
@@ -33393,6 +35780,21 @@ func (t *MapUintUintptr) transformKey(key uint) uint {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUintUintptr) Rem(key uint) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -33408,7 +35810,7 @@ func (t *MapUintUintptr) SetP(key uint, val *uintptr) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -33424,6 +35826,7 @@ func (t *MapUintUintptr) SetP(key uint, val *uintptr) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -33439,7 +35842,7 @@ func (t *MapUintUintptr) GetP(key uint) (*uintptr, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uintptr)(l.child), true
 	}
@@ -33463,17 +35866,17 @@ func (t *MapUintUintptr) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuintuintptr) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuintuintptr)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uintptr)(c.child))
-// 	}
-// }
+func (c *nodeMapuintuintptr) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuintuintptr)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uintptr)(c.child))
+	}
+}
 
 // IterUintUintptr The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -33653,14 +36056,18 @@ func (c *nodeMapuintptrbool) value() *bool {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuintptrbool) find(key uintptr) (uint, *nodeMapuintptrbool) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuintptrbool) find(key uintptr) (crit uint, child, parent *nodeMapuintptrbool) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUintptrBool) transformKey(key uintptr) uintptr {
@@ -33673,6 +36080,21 @@ func (t *MapUintptrBool) transformKey(key uintptr) uintptr {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUintptrBool) Rem(key uintptr) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -33688,7 +36110,7 @@ func (t *MapUintptrBool) SetP(key uintptr, val *bool) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -33704,6 +36126,7 @@ func (t *MapUintptrBool) SetP(key uintptr, val *bool) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -33719,7 +36142,7 @@ func (t *MapUintptrBool) GetP(key uintptr) (*bool, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*bool)(l.child), true
 	}
@@ -33743,17 +36166,17 @@ func (t *MapUintptrBool) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuintptrbool) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuintptrbool)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*bool)(c.child))
-// 	}
-// }
+func (c *nodeMapuintptrbool) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuintptrbool)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*bool)(c.child))
+	}
+}
 
 // IterUintptrBool The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -33933,14 +36356,18 @@ func (c *nodeMapuintptrbyte) value() *byte {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuintptrbyte) find(key uintptr) (uint, *nodeMapuintptrbyte) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuintptrbyte) find(key uintptr) (crit uint, child, parent *nodeMapuintptrbyte) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUintptrByte) transformKey(key uintptr) uintptr {
@@ -33953,6 +36380,21 @@ func (t *MapUintptrByte) transformKey(key uintptr) uintptr {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUintptrByte) Rem(key uintptr) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -33968,7 +36410,7 @@ func (t *MapUintptrByte) SetP(key uintptr, val *byte) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -33984,6 +36426,7 @@ func (t *MapUintptrByte) SetP(key uintptr, val *byte) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -33999,7 +36442,7 @@ func (t *MapUintptrByte) GetP(key uintptr) (*byte, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*byte)(l.child), true
 	}
@@ -34023,17 +36466,17 @@ func (t *MapUintptrByte) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuintptrbyte) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuintptrbyte)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*byte)(c.child))
-// 	}
-// }
+func (c *nodeMapuintptrbyte) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuintptrbyte)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*byte)(c.child))
+	}
+}
 
 // IterUintptrByte The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -34213,14 +36656,18 @@ func (c *nodeMapuintptrcomplex128) value() *complex128 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuintptrcomplex128) find(key uintptr) (uint, *nodeMapuintptrcomplex128) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuintptrcomplex128) find(key uintptr) (crit uint, child, parent *nodeMapuintptrcomplex128) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUintptrComplex128) transformKey(key uintptr) uintptr {
@@ -34233,6 +36680,21 @@ func (t *MapUintptrComplex128) transformKey(key uintptr) uintptr {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUintptrComplex128) Rem(key uintptr) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -34248,7 +36710,7 @@ func (t *MapUintptrComplex128) SetP(key uintptr, val *complex128) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -34264,6 +36726,7 @@ func (t *MapUintptrComplex128) SetP(key uintptr, val *complex128) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -34279,7 +36742,7 @@ func (t *MapUintptrComplex128) GetP(key uintptr) (*complex128, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*complex128)(l.child), true
 	}
@@ -34303,17 +36766,17 @@ func (t *MapUintptrComplex128) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuintptrcomplex128) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuintptrcomplex128)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*complex128)(c.child))
-// 	}
-// }
+func (c *nodeMapuintptrcomplex128) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuintptrcomplex128)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*complex128)(c.child))
+	}
+}
 
 // IterUintptrComplex128 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -34493,14 +36956,18 @@ func (c *nodeMapuintptrcomplex64) value() *complex64 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuintptrcomplex64) find(key uintptr) (uint, *nodeMapuintptrcomplex64) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuintptrcomplex64) find(key uintptr) (crit uint, child, parent *nodeMapuintptrcomplex64) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUintptrComplex64) transformKey(key uintptr) uintptr {
@@ -34513,6 +36980,21 @@ func (t *MapUintptrComplex64) transformKey(key uintptr) uintptr {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUintptrComplex64) Rem(key uintptr) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -34528,7 +37010,7 @@ func (t *MapUintptrComplex64) SetP(key uintptr, val *complex64) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -34544,6 +37026,7 @@ func (t *MapUintptrComplex64) SetP(key uintptr, val *complex64) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -34559,7 +37042,7 @@ func (t *MapUintptrComplex64) GetP(key uintptr) (*complex64, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*complex64)(l.child), true
 	}
@@ -34583,17 +37066,17 @@ func (t *MapUintptrComplex64) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuintptrcomplex64) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuintptrcomplex64)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*complex64)(c.child))
-// 	}
-// }
+func (c *nodeMapuintptrcomplex64) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuintptrcomplex64)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*complex64)(c.child))
+	}
+}
 
 // IterUintptrComplex64 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -34773,14 +37256,18 @@ func (c *nodeMapuintptrerror) value() *error {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuintptrerror) find(key uintptr) (uint, *nodeMapuintptrerror) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuintptrerror) find(key uintptr) (crit uint, child, parent *nodeMapuintptrerror) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUintptrError) transformKey(key uintptr) uintptr {
@@ -34793,6 +37280,21 @@ func (t *MapUintptrError) transformKey(key uintptr) uintptr {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUintptrError) Rem(key uintptr) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -34808,7 +37310,7 @@ func (t *MapUintptrError) SetP(key uintptr, val *error) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -34824,6 +37326,7 @@ func (t *MapUintptrError) SetP(key uintptr, val *error) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -34839,7 +37342,7 @@ func (t *MapUintptrError) GetP(key uintptr) (*error, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*error)(l.child), true
 	}
@@ -34863,17 +37366,17 @@ func (t *MapUintptrError) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuintptrerror) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuintptrerror)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*error)(c.child))
-// 	}
-// }
+func (c *nodeMapuintptrerror) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuintptrerror)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*error)(c.child))
+	}
+}
 
 // IterUintptrError The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -35053,14 +37556,18 @@ func (c *nodeMapuintptrfloat32) value() *float32 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuintptrfloat32) find(key uintptr) (uint, *nodeMapuintptrfloat32) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuintptrfloat32) find(key uintptr) (crit uint, child, parent *nodeMapuintptrfloat32) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUintptrFloat32) transformKey(key uintptr) uintptr {
@@ -35073,6 +37580,21 @@ func (t *MapUintptrFloat32) transformKey(key uintptr) uintptr {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUintptrFloat32) Rem(key uintptr) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -35088,7 +37610,7 @@ func (t *MapUintptrFloat32) SetP(key uintptr, val *float32) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -35104,6 +37626,7 @@ func (t *MapUintptrFloat32) SetP(key uintptr, val *float32) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -35119,7 +37642,7 @@ func (t *MapUintptrFloat32) GetP(key uintptr) (*float32, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*float32)(l.child), true
 	}
@@ -35143,17 +37666,17 @@ func (t *MapUintptrFloat32) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuintptrfloat32) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuintptrfloat32)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*float32)(c.child))
-// 	}
-// }
+func (c *nodeMapuintptrfloat32) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuintptrfloat32)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*float32)(c.child))
+	}
+}
 
 // IterUintptrFloat32 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -35333,14 +37856,18 @@ func (c *nodeMapuintptrfloat64) value() *float64 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuintptrfloat64) find(key uintptr) (uint, *nodeMapuintptrfloat64) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuintptrfloat64) find(key uintptr) (crit uint, child, parent *nodeMapuintptrfloat64) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUintptrFloat64) transformKey(key uintptr) uintptr {
@@ -35353,6 +37880,21 @@ func (t *MapUintptrFloat64) transformKey(key uintptr) uintptr {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUintptrFloat64) Rem(key uintptr) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -35368,7 +37910,7 @@ func (t *MapUintptrFloat64) SetP(key uintptr, val *float64) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -35384,6 +37926,7 @@ func (t *MapUintptrFloat64) SetP(key uintptr, val *float64) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -35399,7 +37942,7 @@ func (t *MapUintptrFloat64) GetP(key uintptr) (*float64, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*float64)(l.child), true
 	}
@@ -35423,17 +37966,17 @@ func (t *MapUintptrFloat64) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuintptrfloat64) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuintptrfloat64)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*float64)(c.child))
-// 	}
-// }
+func (c *nodeMapuintptrfloat64) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuintptrfloat64)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*float64)(c.child))
+	}
+}
 
 // IterUintptrFloat64 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -35613,14 +38156,18 @@ func (c *nodeMapuintptrint) value() *int {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuintptrint) find(key uintptr) (uint, *nodeMapuintptrint) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuintptrint) find(key uintptr) (crit uint, child, parent *nodeMapuintptrint) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUintptrInt) transformKey(key uintptr) uintptr {
@@ -35633,6 +38180,21 @@ func (t *MapUintptrInt) transformKey(key uintptr) uintptr {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUintptrInt) Rem(key uintptr) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -35648,7 +38210,7 @@ func (t *MapUintptrInt) SetP(key uintptr, val *int) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -35664,6 +38226,7 @@ func (t *MapUintptrInt) SetP(key uintptr, val *int) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -35679,7 +38242,7 @@ func (t *MapUintptrInt) GetP(key uintptr) (*int, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*int)(l.child), true
 	}
@@ -35703,17 +38266,17 @@ func (t *MapUintptrInt) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuintptrint) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuintptrint)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int)(c.child))
-// 	}
-// }
+func (c *nodeMapuintptrint) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuintptrint)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int)(c.child))
+	}
+}
 
 // IterUintptrInt The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -35893,14 +38456,18 @@ func (c *nodeMapuintptrint16) value() *int16 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuintptrint16) find(key uintptr) (uint, *nodeMapuintptrint16) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuintptrint16) find(key uintptr) (crit uint, child, parent *nodeMapuintptrint16) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUintptrInt16) transformKey(key uintptr) uintptr {
@@ -35913,6 +38480,21 @@ func (t *MapUintptrInt16) transformKey(key uintptr) uintptr {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUintptrInt16) Rem(key uintptr) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -35928,7 +38510,7 @@ func (t *MapUintptrInt16) SetP(key uintptr, val *int16) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -35944,6 +38526,7 @@ func (t *MapUintptrInt16) SetP(key uintptr, val *int16) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -35959,7 +38542,7 @@ func (t *MapUintptrInt16) GetP(key uintptr) (*int16, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*int16)(l.child), true
 	}
@@ -35983,17 +38566,17 @@ func (t *MapUintptrInt16) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuintptrint16) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuintptrint16)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int16)(c.child))
-// 	}
-// }
+func (c *nodeMapuintptrint16) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuintptrint16)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int16)(c.child))
+	}
+}
 
 // IterUintptrInt16 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -36173,14 +38756,18 @@ func (c *nodeMapuintptrint32) value() *int32 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuintptrint32) find(key uintptr) (uint, *nodeMapuintptrint32) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuintptrint32) find(key uintptr) (crit uint, child, parent *nodeMapuintptrint32) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUintptrInt32) transformKey(key uintptr) uintptr {
@@ -36193,6 +38780,21 @@ func (t *MapUintptrInt32) transformKey(key uintptr) uintptr {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUintptrInt32) Rem(key uintptr) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -36208,7 +38810,7 @@ func (t *MapUintptrInt32) SetP(key uintptr, val *int32) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -36224,6 +38826,7 @@ func (t *MapUintptrInt32) SetP(key uintptr, val *int32) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -36239,7 +38842,7 @@ func (t *MapUintptrInt32) GetP(key uintptr) (*int32, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*int32)(l.child), true
 	}
@@ -36263,17 +38866,17 @@ func (t *MapUintptrInt32) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuintptrint32) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuintptrint32)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int32)(c.child))
-// 	}
-// }
+func (c *nodeMapuintptrint32) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuintptrint32)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int32)(c.child))
+	}
+}
 
 // IterUintptrInt32 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -36453,14 +39056,18 @@ func (c *nodeMapuintptrint64) value() *int64 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuintptrint64) find(key uintptr) (uint, *nodeMapuintptrint64) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuintptrint64) find(key uintptr) (crit uint, child, parent *nodeMapuintptrint64) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUintptrInt64) transformKey(key uintptr) uintptr {
@@ -36473,6 +39080,21 @@ func (t *MapUintptrInt64) transformKey(key uintptr) uintptr {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUintptrInt64) Rem(key uintptr) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -36488,7 +39110,7 @@ func (t *MapUintptrInt64) SetP(key uintptr, val *int64) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -36504,6 +39126,7 @@ func (t *MapUintptrInt64) SetP(key uintptr, val *int64) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -36519,7 +39142,7 @@ func (t *MapUintptrInt64) GetP(key uintptr) (*int64, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*int64)(l.child), true
 	}
@@ -36543,17 +39166,17 @@ func (t *MapUintptrInt64) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuintptrint64) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuintptrint64)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int64)(c.child))
-// 	}
-// }
+func (c *nodeMapuintptrint64) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuintptrint64)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int64)(c.child))
+	}
+}
 
 // IterUintptrInt64 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -36733,14 +39356,18 @@ func (c *nodeMapuintptrint8) value() *int8 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuintptrint8) find(key uintptr) (uint, *nodeMapuintptrint8) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuintptrint8) find(key uintptr) (crit uint, child, parent *nodeMapuintptrint8) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUintptrInt8) transformKey(key uintptr) uintptr {
@@ -36753,6 +39380,21 @@ func (t *MapUintptrInt8) transformKey(key uintptr) uintptr {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUintptrInt8) Rem(key uintptr) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -36768,7 +39410,7 @@ func (t *MapUintptrInt8) SetP(key uintptr, val *int8) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -36784,6 +39426,7 @@ func (t *MapUintptrInt8) SetP(key uintptr, val *int8) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -36799,7 +39442,7 @@ func (t *MapUintptrInt8) GetP(key uintptr) (*int8, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*int8)(l.child), true
 	}
@@ -36823,17 +39466,17 @@ func (t *MapUintptrInt8) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuintptrint8) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuintptrint8)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int8)(c.child))
-// 	}
-// }
+func (c *nodeMapuintptrint8) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuintptrint8)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int8)(c.child))
+	}
+}
 
 // IterUintptrInt8 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -37013,14 +39656,18 @@ func (c *nodeMapuintptrrune) value() *rune {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuintptrrune) find(key uintptr) (uint, *nodeMapuintptrrune) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuintptrrune) find(key uintptr) (crit uint, child, parent *nodeMapuintptrrune) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUintptrRune) transformKey(key uintptr) uintptr {
@@ -37033,6 +39680,21 @@ func (t *MapUintptrRune) transformKey(key uintptr) uintptr {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUintptrRune) Rem(key uintptr) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -37048,7 +39710,7 @@ func (t *MapUintptrRune) SetP(key uintptr, val *rune) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -37064,6 +39726,7 @@ func (t *MapUintptrRune) SetP(key uintptr, val *rune) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -37079,7 +39742,7 @@ func (t *MapUintptrRune) GetP(key uintptr) (*rune, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*rune)(l.child), true
 	}
@@ -37103,17 +39766,17 @@ func (t *MapUintptrRune) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuintptrrune) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuintptrrune)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*rune)(c.child))
-// 	}
-// }
+func (c *nodeMapuintptrrune) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuintptrrune)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*rune)(c.child))
+	}
+}
 
 // IterUintptrRune The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -37293,14 +39956,18 @@ func (c *nodeMapuintptrstring) value() *string {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuintptrstring) find(key uintptr) (uint, *nodeMapuintptrstring) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuintptrstring) find(key uintptr) (crit uint, child, parent *nodeMapuintptrstring) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUintptrString) transformKey(key uintptr) uintptr {
@@ -37313,6 +39980,21 @@ func (t *MapUintptrString) transformKey(key uintptr) uintptr {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUintptrString) Rem(key uintptr) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -37328,7 +40010,7 @@ func (t *MapUintptrString) SetP(key uintptr, val *string) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -37344,6 +40026,7 @@ func (t *MapUintptrString) SetP(key uintptr, val *string) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -37359,7 +40042,7 @@ func (t *MapUintptrString) GetP(key uintptr) (*string, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*string)(l.child), true
 	}
@@ -37383,17 +40066,17 @@ func (t *MapUintptrString) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuintptrstring) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuintptrstring)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*string)(c.child))
-// 	}
-// }
+func (c *nodeMapuintptrstring) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuintptrstring)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*string)(c.child))
+	}
+}
 
 // IterUintptrString The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -37573,14 +40256,18 @@ func (c *nodeMapuintptruint) value() *uint {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuintptruint) find(key uintptr) (uint, *nodeMapuintptruint) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuintptruint) find(key uintptr) (crit uint, child, parent *nodeMapuintptruint) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUintptrUint) transformKey(key uintptr) uintptr {
@@ -37593,6 +40280,21 @@ func (t *MapUintptrUint) transformKey(key uintptr) uintptr {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUintptrUint) Rem(key uintptr) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -37608,7 +40310,7 @@ func (t *MapUintptrUint) SetP(key uintptr, val *uint) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -37624,6 +40326,7 @@ func (t *MapUintptrUint) SetP(key uintptr, val *uint) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -37639,7 +40342,7 @@ func (t *MapUintptrUint) GetP(key uintptr) (*uint, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uint)(l.child), true
 	}
@@ -37663,17 +40366,17 @@ func (t *MapUintptrUint) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuintptruint) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuintptruint)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint)(c.child))
-// 	}
-// }
+func (c *nodeMapuintptruint) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuintptruint)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint)(c.child))
+	}
+}
 
 // IterUintptrUint The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -37853,14 +40556,18 @@ func (c *nodeMapuintptruint16) value() *uint16 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuintptruint16) find(key uintptr) (uint, *nodeMapuintptruint16) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuintptruint16) find(key uintptr) (crit uint, child, parent *nodeMapuintptruint16) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUintptrUint16) transformKey(key uintptr) uintptr {
@@ -37873,6 +40580,21 @@ func (t *MapUintptrUint16) transformKey(key uintptr) uintptr {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUintptrUint16) Rem(key uintptr) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -37888,7 +40610,7 @@ func (t *MapUintptrUint16) SetP(key uintptr, val *uint16) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -37904,6 +40626,7 @@ func (t *MapUintptrUint16) SetP(key uintptr, val *uint16) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -37919,7 +40642,7 @@ func (t *MapUintptrUint16) GetP(key uintptr) (*uint16, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uint16)(l.child), true
 	}
@@ -37943,17 +40666,17 @@ func (t *MapUintptrUint16) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuintptruint16) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuintptruint16)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint16)(c.child))
-// 	}
-// }
+func (c *nodeMapuintptruint16) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuintptruint16)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint16)(c.child))
+	}
+}
 
 // IterUintptrUint16 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -38133,14 +40856,18 @@ func (c *nodeMapuintptruint32) value() *uint32 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuintptruint32) find(key uintptr) (uint, *nodeMapuintptruint32) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuintptruint32) find(key uintptr) (crit uint, child, parent *nodeMapuintptruint32) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUintptrUint32) transformKey(key uintptr) uintptr {
@@ -38153,6 +40880,21 @@ func (t *MapUintptrUint32) transformKey(key uintptr) uintptr {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUintptrUint32) Rem(key uintptr) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -38168,7 +40910,7 @@ func (t *MapUintptrUint32) SetP(key uintptr, val *uint32) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -38184,6 +40926,7 @@ func (t *MapUintptrUint32) SetP(key uintptr, val *uint32) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -38199,7 +40942,7 @@ func (t *MapUintptrUint32) GetP(key uintptr) (*uint32, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uint32)(l.child), true
 	}
@@ -38223,17 +40966,17 @@ func (t *MapUintptrUint32) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuintptruint32) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuintptruint32)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint32)(c.child))
-// 	}
-// }
+func (c *nodeMapuintptruint32) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuintptruint32)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint32)(c.child))
+	}
+}
 
 // IterUintptrUint32 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -38413,14 +41156,18 @@ func (c *nodeMapuintptruint64) value() *uint64 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuintptruint64) find(key uintptr) (uint, *nodeMapuintptruint64) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuintptruint64) find(key uintptr) (crit uint, child, parent *nodeMapuintptruint64) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUintptrUint64) transformKey(key uintptr) uintptr {
@@ -38433,6 +41180,21 @@ func (t *MapUintptrUint64) transformKey(key uintptr) uintptr {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUintptrUint64) Rem(key uintptr) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -38448,7 +41210,7 @@ func (t *MapUintptrUint64) SetP(key uintptr, val *uint64) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -38464,6 +41226,7 @@ func (t *MapUintptrUint64) SetP(key uintptr, val *uint64) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -38479,7 +41242,7 @@ func (t *MapUintptrUint64) GetP(key uintptr) (*uint64, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uint64)(l.child), true
 	}
@@ -38503,17 +41266,17 @@ func (t *MapUintptrUint64) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuintptruint64) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuintptruint64)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint64)(c.child))
-// 	}
-// }
+func (c *nodeMapuintptruint64) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuintptruint64)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint64)(c.child))
+	}
+}
 
 // IterUintptrUint64 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -38693,14 +41456,18 @@ func (c *nodeMapuintptruint8) value() *uint8 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuintptruint8) find(key uintptr) (uint, *nodeMapuintptruint8) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuintptruint8) find(key uintptr) (crit uint, child, parent *nodeMapuintptruint8) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUintptrUint8) transformKey(key uintptr) uintptr {
@@ -38713,6 +41480,21 @@ func (t *MapUintptrUint8) transformKey(key uintptr) uintptr {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUintptrUint8) Rem(key uintptr) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -38728,7 +41510,7 @@ func (t *MapUintptrUint8) SetP(key uintptr, val *uint8) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -38744,6 +41526,7 @@ func (t *MapUintptrUint8) SetP(key uintptr, val *uint8) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -38759,7 +41542,7 @@ func (t *MapUintptrUint8) GetP(key uintptr) (*uint8, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uint8)(l.child), true
 	}
@@ -38783,17 +41566,17 @@ func (t *MapUintptrUint8) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuintptruint8) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuintptruint8)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint8)(c.child))
-// 	}
-// }
+func (c *nodeMapuintptruint8) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuintptruint8)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint8)(c.child))
+	}
+}
 
 // IterUintptrUint8 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -38973,14 +41756,18 @@ func (c *nodeMapuintptruintptr) value() *uintptr {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuintptruintptr) find(key uintptr) (uint, *nodeMapuintptruintptr) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuintptruintptr) find(key uintptr) (crit uint, child, parent *nodeMapuintptruintptr) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUintptrUintptr) transformKey(key uintptr) uintptr {
@@ -38993,6 +41780,21 @@ func (t *MapUintptrUintptr) transformKey(key uintptr) uintptr {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUintptrUintptr) Rem(key uintptr) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -39008,7 +41810,7 @@ func (t *MapUintptrUintptr) SetP(key uintptr, val *uintptr) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -39024,6 +41826,7 @@ func (t *MapUintptrUintptr) SetP(key uintptr, val *uintptr) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -39039,7 +41842,7 @@ func (t *MapUintptrUintptr) GetP(key uintptr) (*uintptr, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uintptr)(l.child), true
 	}
@@ -39063,17 +41866,17 @@ func (t *MapUintptrUintptr) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuintptruintptr) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuintptruintptr)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uintptr)(c.child))
-// 	}
-// }
+func (c *nodeMapuintptruintptr) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuintptruintptr)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uintptr)(c.child))
+	}
+}
 
 // IterUintptrUintptr The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -39253,14 +42056,18 @@ func (c *nodeMapuint64bool) value() *bool {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint64bool) find(key uint64) (uint, *nodeMapuint64bool) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint64bool) find(key uint64) (crit uint, child, parent *nodeMapuint64bool) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint64Bool) transformKey(key uint64) uint64 {
@@ -39273,6 +42080,21 @@ func (t *MapUint64Bool) transformKey(key uint64) uint64 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint64Bool) Rem(key uint64) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -39288,7 +42110,7 @@ func (t *MapUint64Bool) SetP(key uint64, val *bool) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -39304,6 +42126,7 @@ func (t *MapUint64Bool) SetP(key uint64, val *bool) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -39319,7 +42142,7 @@ func (t *MapUint64Bool) GetP(key uint64) (*bool, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*bool)(l.child), true
 	}
@@ -39343,17 +42166,17 @@ func (t *MapUint64Bool) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint64bool) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint64bool)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*bool)(c.child))
-// 	}
-// }
+func (c *nodeMapuint64bool) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint64bool)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*bool)(c.child))
+	}
+}
 
 // IterUint64Bool The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -39533,14 +42356,18 @@ func (c *nodeMapuint64byte) value() *byte {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint64byte) find(key uint64) (uint, *nodeMapuint64byte) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint64byte) find(key uint64) (crit uint, child, parent *nodeMapuint64byte) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint64Byte) transformKey(key uint64) uint64 {
@@ -39553,6 +42380,21 @@ func (t *MapUint64Byte) transformKey(key uint64) uint64 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint64Byte) Rem(key uint64) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -39568,7 +42410,7 @@ func (t *MapUint64Byte) SetP(key uint64, val *byte) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -39584,6 +42426,7 @@ func (t *MapUint64Byte) SetP(key uint64, val *byte) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -39599,7 +42442,7 @@ func (t *MapUint64Byte) GetP(key uint64) (*byte, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*byte)(l.child), true
 	}
@@ -39623,17 +42466,17 @@ func (t *MapUint64Byte) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint64byte) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint64byte)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*byte)(c.child))
-// 	}
-// }
+func (c *nodeMapuint64byte) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint64byte)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*byte)(c.child))
+	}
+}
 
 // IterUint64Byte The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -39813,14 +42656,18 @@ func (c *nodeMapuint64complex128) value() *complex128 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint64complex128) find(key uint64) (uint, *nodeMapuint64complex128) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint64complex128) find(key uint64) (crit uint, child, parent *nodeMapuint64complex128) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint64Complex128) transformKey(key uint64) uint64 {
@@ -39833,6 +42680,21 @@ func (t *MapUint64Complex128) transformKey(key uint64) uint64 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint64Complex128) Rem(key uint64) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -39848,7 +42710,7 @@ func (t *MapUint64Complex128) SetP(key uint64, val *complex128) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -39864,6 +42726,7 @@ func (t *MapUint64Complex128) SetP(key uint64, val *complex128) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -39879,7 +42742,7 @@ func (t *MapUint64Complex128) GetP(key uint64) (*complex128, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*complex128)(l.child), true
 	}
@@ -39903,17 +42766,17 @@ func (t *MapUint64Complex128) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint64complex128) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint64complex128)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*complex128)(c.child))
-// 	}
-// }
+func (c *nodeMapuint64complex128) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint64complex128)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*complex128)(c.child))
+	}
+}
 
 // IterUint64Complex128 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -40093,14 +42956,18 @@ func (c *nodeMapuint64complex64) value() *complex64 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint64complex64) find(key uint64) (uint, *nodeMapuint64complex64) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint64complex64) find(key uint64) (crit uint, child, parent *nodeMapuint64complex64) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint64Complex64) transformKey(key uint64) uint64 {
@@ -40113,6 +42980,21 @@ func (t *MapUint64Complex64) transformKey(key uint64) uint64 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint64Complex64) Rem(key uint64) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -40128,7 +43010,7 @@ func (t *MapUint64Complex64) SetP(key uint64, val *complex64) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -40144,6 +43026,7 @@ func (t *MapUint64Complex64) SetP(key uint64, val *complex64) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -40159,7 +43042,7 @@ func (t *MapUint64Complex64) GetP(key uint64) (*complex64, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*complex64)(l.child), true
 	}
@@ -40183,17 +43066,17 @@ func (t *MapUint64Complex64) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint64complex64) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint64complex64)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*complex64)(c.child))
-// 	}
-// }
+func (c *nodeMapuint64complex64) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint64complex64)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*complex64)(c.child))
+	}
+}
 
 // IterUint64Complex64 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -40373,14 +43256,18 @@ func (c *nodeMapuint64error) value() *error {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint64error) find(key uint64) (uint, *nodeMapuint64error) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint64error) find(key uint64) (crit uint, child, parent *nodeMapuint64error) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint64Error) transformKey(key uint64) uint64 {
@@ -40393,6 +43280,21 @@ func (t *MapUint64Error) transformKey(key uint64) uint64 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint64Error) Rem(key uint64) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -40408,7 +43310,7 @@ func (t *MapUint64Error) SetP(key uint64, val *error) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -40424,6 +43326,7 @@ func (t *MapUint64Error) SetP(key uint64, val *error) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -40439,7 +43342,7 @@ func (t *MapUint64Error) GetP(key uint64) (*error, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*error)(l.child), true
 	}
@@ -40463,17 +43366,17 @@ func (t *MapUint64Error) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint64error) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint64error)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*error)(c.child))
-// 	}
-// }
+func (c *nodeMapuint64error) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint64error)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*error)(c.child))
+	}
+}
 
 // IterUint64Error The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -40653,14 +43556,18 @@ func (c *nodeMapuint64float32) value() *float32 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint64float32) find(key uint64) (uint, *nodeMapuint64float32) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint64float32) find(key uint64) (crit uint, child, parent *nodeMapuint64float32) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint64Float32) transformKey(key uint64) uint64 {
@@ -40673,6 +43580,21 @@ func (t *MapUint64Float32) transformKey(key uint64) uint64 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint64Float32) Rem(key uint64) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -40688,7 +43610,7 @@ func (t *MapUint64Float32) SetP(key uint64, val *float32) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -40704,6 +43626,7 @@ func (t *MapUint64Float32) SetP(key uint64, val *float32) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -40719,7 +43642,7 @@ func (t *MapUint64Float32) GetP(key uint64) (*float32, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*float32)(l.child), true
 	}
@@ -40743,17 +43666,17 @@ func (t *MapUint64Float32) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint64float32) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint64float32)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*float32)(c.child))
-// 	}
-// }
+func (c *nodeMapuint64float32) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint64float32)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*float32)(c.child))
+	}
+}
 
 // IterUint64Float32 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -40933,14 +43856,18 @@ func (c *nodeMapuint64float64) value() *float64 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint64float64) find(key uint64) (uint, *nodeMapuint64float64) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint64float64) find(key uint64) (crit uint, child, parent *nodeMapuint64float64) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint64Float64) transformKey(key uint64) uint64 {
@@ -40953,6 +43880,21 @@ func (t *MapUint64Float64) transformKey(key uint64) uint64 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint64Float64) Rem(key uint64) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -40968,7 +43910,7 @@ func (t *MapUint64Float64) SetP(key uint64, val *float64) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -40984,6 +43926,7 @@ func (t *MapUint64Float64) SetP(key uint64, val *float64) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -40999,7 +43942,7 @@ func (t *MapUint64Float64) GetP(key uint64) (*float64, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*float64)(l.child), true
 	}
@@ -41023,17 +43966,17 @@ func (t *MapUint64Float64) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint64float64) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint64float64)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*float64)(c.child))
-// 	}
-// }
+func (c *nodeMapuint64float64) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint64float64)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*float64)(c.child))
+	}
+}
 
 // IterUint64Float64 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -41213,14 +44156,18 @@ func (c *nodeMapuint64int) value() *int {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint64int) find(key uint64) (uint, *nodeMapuint64int) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint64int) find(key uint64) (crit uint, child, parent *nodeMapuint64int) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint64Int) transformKey(key uint64) uint64 {
@@ -41233,6 +44180,21 @@ func (t *MapUint64Int) transformKey(key uint64) uint64 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint64Int) Rem(key uint64) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -41248,7 +44210,7 @@ func (t *MapUint64Int) SetP(key uint64, val *int) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -41264,6 +44226,7 @@ func (t *MapUint64Int) SetP(key uint64, val *int) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -41279,7 +44242,7 @@ func (t *MapUint64Int) GetP(key uint64) (*int, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*int)(l.child), true
 	}
@@ -41303,17 +44266,17 @@ func (t *MapUint64Int) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint64int) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint64int)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int)(c.child))
-// 	}
-// }
+func (c *nodeMapuint64int) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint64int)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int)(c.child))
+	}
+}
 
 // IterUint64Int The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -41493,14 +44456,18 @@ func (c *nodeMapuint64int16) value() *int16 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint64int16) find(key uint64) (uint, *nodeMapuint64int16) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint64int16) find(key uint64) (crit uint, child, parent *nodeMapuint64int16) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint64Int16) transformKey(key uint64) uint64 {
@@ -41513,6 +44480,21 @@ func (t *MapUint64Int16) transformKey(key uint64) uint64 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint64Int16) Rem(key uint64) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -41528,7 +44510,7 @@ func (t *MapUint64Int16) SetP(key uint64, val *int16) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -41544,6 +44526,7 @@ func (t *MapUint64Int16) SetP(key uint64, val *int16) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -41559,7 +44542,7 @@ func (t *MapUint64Int16) GetP(key uint64) (*int16, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*int16)(l.child), true
 	}
@@ -41583,17 +44566,17 @@ func (t *MapUint64Int16) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint64int16) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint64int16)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int16)(c.child))
-// 	}
-// }
+func (c *nodeMapuint64int16) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint64int16)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int16)(c.child))
+	}
+}
 
 // IterUint64Int16 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -41773,14 +44756,18 @@ func (c *nodeMapuint64int32) value() *int32 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint64int32) find(key uint64) (uint, *nodeMapuint64int32) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint64int32) find(key uint64) (crit uint, child, parent *nodeMapuint64int32) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint64Int32) transformKey(key uint64) uint64 {
@@ -41793,6 +44780,21 @@ func (t *MapUint64Int32) transformKey(key uint64) uint64 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint64Int32) Rem(key uint64) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -41808,7 +44810,7 @@ func (t *MapUint64Int32) SetP(key uint64, val *int32) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -41824,6 +44826,7 @@ func (t *MapUint64Int32) SetP(key uint64, val *int32) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -41839,7 +44842,7 @@ func (t *MapUint64Int32) GetP(key uint64) (*int32, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*int32)(l.child), true
 	}
@@ -41863,17 +44866,17 @@ func (t *MapUint64Int32) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint64int32) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint64int32)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int32)(c.child))
-// 	}
-// }
+func (c *nodeMapuint64int32) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint64int32)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int32)(c.child))
+	}
+}
 
 // IterUint64Int32 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -42053,14 +45056,18 @@ func (c *nodeMapuint64int64) value() *int64 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint64int64) find(key uint64) (uint, *nodeMapuint64int64) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint64int64) find(key uint64) (crit uint, child, parent *nodeMapuint64int64) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint64Int64) transformKey(key uint64) uint64 {
@@ -42073,6 +45080,21 @@ func (t *MapUint64Int64) transformKey(key uint64) uint64 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint64Int64) Rem(key uint64) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -42088,7 +45110,7 @@ func (t *MapUint64Int64) SetP(key uint64, val *int64) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -42104,6 +45126,7 @@ func (t *MapUint64Int64) SetP(key uint64, val *int64) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -42119,7 +45142,7 @@ func (t *MapUint64Int64) GetP(key uint64) (*int64, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*int64)(l.child), true
 	}
@@ -42143,17 +45166,17 @@ func (t *MapUint64Int64) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint64int64) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint64int64)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int64)(c.child))
-// 	}
-// }
+func (c *nodeMapuint64int64) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint64int64)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int64)(c.child))
+	}
+}
 
 // IterUint64Int64 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -42333,14 +45356,18 @@ func (c *nodeMapuint64int8) value() *int8 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint64int8) find(key uint64) (uint, *nodeMapuint64int8) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint64int8) find(key uint64) (crit uint, child, parent *nodeMapuint64int8) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint64Int8) transformKey(key uint64) uint64 {
@@ -42353,6 +45380,21 @@ func (t *MapUint64Int8) transformKey(key uint64) uint64 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint64Int8) Rem(key uint64) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -42368,7 +45410,7 @@ func (t *MapUint64Int8) SetP(key uint64, val *int8) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -42384,6 +45426,7 @@ func (t *MapUint64Int8) SetP(key uint64, val *int8) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -42399,7 +45442,7 @@ func (t *MapUint64Int8) GetP(key uint64) (*int8, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*int8)(l.child), true
 	}
@@ -42423,17 +45466,17 @@ func (t *MapUint64Int8) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint64int8) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint64int8)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int8)(c.child))
-// 	}
-// }
+func (c *nodeMapuint64int8) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint64int8)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int8)(c.child))
+	}
+}
 
 // IterUint64Int8 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -42613,14 +45656,18 @@ func (c *nodeMapuint64rune) value() *rune {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint64rune) find(key uint64) (uint, *nodeMapuint64rune) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint64rune) find(key uint64) (crit uint, child, parent *nodeMapuint64rune) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint64Rune) transformKey(key uint64) uint64 {
@@ -42633,6 +45680,21 @@ func (t *MapUint64Rune) transformKey(key uint64) uint64 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint64Rune) Rem(key uint64) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -42648,7 +45710,7 @@ func (t *MapUint64Rune) SetP(key uint64, val *rune) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -42664,6 +45726,7 @@ func (t *MapUint64Rune) SetP(key uint64, val *rune) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -42679,7 +45742,7 @@ func (t *MapUint64Rune) GetP(key uint64) (*rune, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*rune)(l.child), true
 	}
@@ -42703,17 +45766,17 @@ func (t *MapUint64Rune) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint64rune) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint64rune)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*rune)(c.child))
-// 	}
-// }
+func (c *nodeMapuint64rune) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint64rune)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*rune)(c.child))
+	}
+}
 
 // IterUint64Rune The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -42893,14 +45956,18 @@ func (c *nodeMapuint64string) value() *string {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint64string) find(key uint64) (uint, *nodeMapuint64string) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint64string) find(key uint64) (crit uint, child, parent *nodeMapuint64string) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint64String) transformKey(key uint64) uint64 {
@@ -42913,6 +45980,21 @@ func (t *MapUint64String) transformKey(key uint64) uint64 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint64String) Rem(key uint64) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -42928,7 +46010,7 @@ func (t *MapUint64String) SetP(key uint64, val *string) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -42944,6 +46026,7 @@ func (t *MapUint64String) SetP(key uint64, val *string) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -42959,7 +46042,7 @@ func (t *MapUint64String) GetP(key uint64) (*string, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*string)(l.child), true
 	}
@@ -42983,17 +46066,17 @@ func (t *MapUint64String) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint64string) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint64string)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*string)(c.child))
-// 	}
-// }
+func (c *nodeMapuint64string) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint64string)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*string)(c.child))
+	}
+}
 
 // IterUint64String The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -43173,14 +46256,18 @@ func (c *nodeMapuint64uint) value() *uint {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint64uint) find(key uint64) (uint, *nodeMapuint64uint) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint64uint) find(key uint64) (crit uint, child, parent *nodeMapuint64uint) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint64Uint) transformKey(key uint64) uint64 {
@@ -43193,6 +46280,21 @@ func (t *MapUint64Uint) transformKey(key uint64) uint64 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint64Uint) Rem(key uint64) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -43208,7 +46310,7 @@ func (t *MapUint64Uint) SetP(key uint64, val *uint) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -43224,6 +46326,7 @@ func (t *MapUint64Uint) SetP(key uint64, val *uint) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -43239,7 +46342,7 @@ func (t *MapUint64Uint) GetP(key uint64) (*uint, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uint)(l.child), true
 	}
@@ -43263,17 +46366,17 @@ func (t *MapUint64Uint) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint64uint) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint64uint)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint)(c.child))
-// 	}
-// }
+func (c *nodeMapuint64uint) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint64uint)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint)(c.child))
+	}
+}
 
 // IterUint64Uint The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -43453,14 +46556,18 @@ func (c *nodeMapuint64uint16) value() *uint16 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint64uint16) find(key uint64) (uint, *nodeMapuint64uint16) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint64uint16) find(key uint64) (crit uint, child, parent *nodeMapuint64uint16) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint64Uint16) transformKey(key uint64) uint64 {
@@ -43473,6 +46580,21 @@ func (t *MapUint64Uint16) transformKey(key uint64) uint64 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint64Uint16) Rem(key uint64) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -43488,7 +46610,7 @@ func (t *MapUint64Uint16) SetP(key uint64, val *uint16) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -43504,6 +46626,7 @@ func (t *MapUint64Uint16) SetP(key uint64, val *uint16) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -43519,7 +46642,7 @@ func (t *MapUint64Uint16) GetP(key uint64) (*uint16, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uint16)(l.child), true
 	}
@@ -43543,17 +46666,17 @@ func (t *MapUint64Uint16) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint64uint16) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint64uint16)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint16)(c.child))
-// 	}
-// }
+func (c *nodeMapuint64uint16) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint64uint16)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint16)(c.child))
+	}
+}
 
 // IterUint64Uint16 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -43733,14 +46856,18 @@ func (c *nodeMapuint64uint32) value() *uint32 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint64uint32) find(key uint64) (uint, *nodeMapuint64uint32) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint64uint32) find(key uint64) (crit uint, child, parent *nodeMapuint64uint32) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint64Uint32) transformKey(key uint64) uint64 {
@@ -43753,6 +46880,21 @@ func (t *MapUint64Uint32) transformKey(key uint64) uint64 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint64Uint32) Rem(key uint64) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -43768,7 +46910,7 @@ func (t *MapUint64Uint32) SetP(key uint64, val *uint32) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -43784,6 +46926,7 @@ func (t *MapUint64Uint32) SetP(key uint64, val *uint32) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -43799,7 +46942,7 @@ func (t *MapUint64Uint32) GetP(key uint64) (*uint32, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uint32)(l.child), true
 	}
@@ -43823,17 +46966,17 @@ func (t *MapUint64Uint32) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint64uint32) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint64uint32)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint32)(c.child))
-// 	}
-// }
+func (c *nodeMapuint64uint32) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint64uint32)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint32)(c.child))
+	}
+}
 
 // IterUint64Uint32 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -44013,14 +47156,18 @@ func (c *nodeMapuint64uint64) value() *uint64 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint64uint64) find(key uint64) (uint, *nodeMapuint64uint64) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint64uint64) find(key uint64) (crit uint, child, parent *nodeMapuint64uint64) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint64Uint64) transformKey(key uint64) uint64 {
@@ -44033,6 +47180,21 @@ func (t *MapUint64Uint64) transformKey(key uint64) uint64 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint64Uint64) Rem(key uint64) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -44048,7 +47210,7 @@ func (t *MapUint64Uint64) SetP(key uint64, val *uint64) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -44064,6 +47226,7 @@ func (t *MapUint64Uint64) SetP(key uint64, val *uint64) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -44079,7 +47242,7 @@ func (t *MapUint64Uint64) GetP(key uint64) (*uint64, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uint64)(l.child), true
 	}
@@ -44103,17 +47266,17 @@ func (t *MapUint64Uint64) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint64uint64) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint64uint64)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint64)(c.child))
-// 	}
-// }
+func (c *nodeMapuint64uint64) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint64uint64)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint64)(c.child))
+	}
+}
 
 // IterUint64Uint64 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -44293,14 +47456,18 @@ func (c *nodeMapuint64uint8) value() *uint8 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint64uint8) find(key uint64) (uint, *nodeMapuint64uint8) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint64uint8) find(key uint64) (crit uint, child, parent *nodeMapuint64uint8) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint64Uint8) transformKey(key uint64) uint64 {
@@ -44313,6 +47480,21 @@ func (t *MapUint64Uint8) transformKey(key uint64) uint64 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint64Uint8) Rem(key uint64) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -44328,7 +47510,7 @@ func (t *MapUint64Uint8) SetP(key uint64, val *uint8) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -44344,6 +47526,7 @@ func (t *MapUint64Uint8) SetP(key uint64, val *uint8) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -44359,7 +47542,7 @@ func (t *MapUint64Uint8) GetP(key uint64) (*uint8, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uint8)(l.child), true
 	}
@@ -44383,17 +47566,17 @@ func (t *MapUint64Uint8) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint64uint8) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint64uint8)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint8)(c.child))
-// 	}
-// }
+func (c *nodeMapuint64uint8) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint64uint8)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint8)(c.child))
+	}
+}
 
 // IterUint64Uint8 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -44573,14 +47756,18 @@ func (c *nodeMapuint64uintptr) value() *uintptr {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint64uintptr) find(key uint64) (uint, *nodeMapuint64uintptr) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint64uintptr) find(key uint64) (crit uint, child, parent *nodeMapuint64uintptr) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint64Uintptr) transformKey(key uint64) uint64 {
@@ -44593,6 +47780,21 @@ func (t *MapUint64Uintptr) transformKey(key uint64) uint64 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint64Uintptr) Rem(key uint64) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -44608,7 +47810,7 @@ func (t *MapUint64Uintptr) SetP(key uint64, val *uintptr) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -44624,6 +47826,7 @@ func (t *MapUint64Uintptr) SetP(key uint64, val *uintptr) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -44639,7 +47842,7 @@ func (t *MapUint64Uintptr) GetP(key uint64) (*uintptr, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uintptr)(l.child), true
 	}
@@ -44663,17 +47866,17 @@ func (t *MapUint64Uintptr) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint64uintptr) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint64uintptr)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uintptr)(c.child))
-// 	}
-// }
+func (c *nodeMapuint64uintptr) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint64uintptr)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uintptr)(c.child))
+	}
+}
 
 // IterUint64Uintptr The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -44853,14 +48056,18 @@ func (c *nodeMapuint32bool) value() *bool {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint32bool) find(key uint32) (uint, *nodeMapuint32bool) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint32bool) find(key uint32) (crit uint, child, parent *nodeMapuint32bool) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint32Bool) transformKey(key uint32) uint32 {
@@ -44873,6 +48080,21 @@ func (t *MapUint32Bool) transformKey(key uint32) uint32 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint32Bool) Rem(key uint32) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -44888,7 +48110,7 @@ func (t *MapUint32Bool) SetP(key uint32, val *bool) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -44904,6 +48126,7 @@ func (t *MapUint32Bool) SetP(key uint32, val *bool) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -44919,7 +48142,7 @@ func (t *MapUint32Bool) GetP(key uint32) (*bool, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*bool)(l.child), true
 	}
@@ -44943,17 +48166,17 @@ func (t *MapUint32Bool) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint32bool) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint32bool)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*bool)(c.child))
-// 	}
-// }
+func (c *nodeMapuint32bool) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint32bool)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*bool)(c.child))
+	}
+}
 
 // IterUint32Bool The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -45133,14 +48356,18 @@ func (c *nodeMapuint32byte) value() *byte {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint32byte) find(key uint32) (uint, *nodeMapuint32byte) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint32byte) find(key uint32) (crit uint, child, parent *nodeMapuint32byte) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint32Byte) transformKey(key uint32) uint32 {
@@ -45153,6 +48380,21 @@ func (t *MapUint32Byte) transformKey(key uint32) uint32 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint32Byte) Rem(key uint32) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -45168,7 +48410,7 @@ func (t *MapUint32Byte) SetP(key uint32, val *byte) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -45184,6 +48426,7 @@ func (t *MapUint32Byte) SetP(key uint32, val *byte) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -45199,7 +48442,7 @@ func (t *MapUint32Byte) GetP(key uint32) (*byte, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*byte)(l.child), true
 	}
@@ -45223,17 +48466,17 @@ func (t *MapUint32Byte) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint32byte) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint32byte)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*byte)(c.child))
-// 	}
-// }
+func (c *nodeMapuint32byte) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint32byte)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*byte)(c.child))
+	}
+}
 
 // IterUint32Byte The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -45413,14 +48656,18 @@ func (c *nodeMapuint32complex128) value() *complex128 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint32complex128) find(key uint32) (uint, *nodeMapuint32complex128) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint32complex128) find(key uint32) (crit uint, child, parent *nodeMapuint32complex128) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint32Complex128) transformKey(key uint32) uint32 {
@@ -45433,6 +48680,21 @@ func (t *MapUint32Complex128) transformKey(key uint32) uint32 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint32Complex128) Rem(key uint32) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -45448,7 +48710,7 @@ func (t *MapUint32Complex128) SetP(key uint32, val *complex128) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -45464,6 +48726,7 @@ func (t *MapUint32Complex128) SetP(key uint32, val *complex128) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -45479,7 +48742,7 @@ func (t *MapUint32Complex128) GetP(key uint32) (*complex128, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*complex128)(l.child), true
 	}
@@ -45503,17 +48766,17 @@ func (t *MapUint32Complex128) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint32complex128) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint32complex128)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*complex128)(c.child))
-// 	}
-// }
+func (c *nodeMapuint32complex128) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint32complex128)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*complex128)(c.child))
+	}
+}
 
 // IterUint32Complex128 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -45693,14 +48956,18 @@ func (c *nodeMapuint32complex64) value() *complex64 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint32complex64) find(key uint32) (uint, *nodeMapuint32complex64) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint32complex64) find(key uint32) (crit uint, child, parent *nodeMapuint32complex64) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint32Complex64) transformKey(key uint32) uint32 {
@@ -45713,6 +48980,21 @@ func (t *MapUint32Complex64) transformKey(key uint32) uint32 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint32Complex64) Rem(key uint32) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -45728,7 +49010,7 @@ func (t *MapUint32Complex64) SetP(key uint32, val *complex64) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -45744,6 +49026,7 @@ func (t *MapUint32Complex64) SetP(key uint32, val *complex64) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -45759,7 +49042,7 @@ func (t *MapUint32Complex64) GetP(key uint32) (*complex64, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*complex64)(l.child), true
 	}
@@ -45783,17 +49066,17 @@ func (t *MapUint32Complex64) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint32complex64) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint32complex64)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*complex64)(c.child))
-// 	}
-// }
+func (c *nodeMapuint32complex64) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint32complex64)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*complex64)(c.child))
+	}
+}
 
 // IterUint32Complex64 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -45973,14 +49256,18 @@ func (c *nodeMapuint32error) value() *error {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint32error) find(key uint32) (uint, *nodeMapuint32error) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint32error) find(key uint32) (crit uint, child, parent *nodeMapuint32error) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint32Error) transformKey(key uint32) uint32 {
@@ -45993,6 +49280,21 @@ func (t *MapUint32Error) transformKey(key uint32) uint32 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint32Error) Rem(key uint32) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -46008,7 +49310,7 @@ func (t *MapUint32Error) SetP(key uint32, val *error) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -46024,6 +49326,7 @@ func (t *MapUint32Error) SetP(key uint32, val *error) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -46039,7 +49342,7 @@ func (t *MapUint32Error) GetP(key uint32) (*error, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*error)(l.child), true
 	}
@@ -46063,17 +49366,17 @@ func (t *MapUint32Error) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint32error) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint32error)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*error)(c.child))
-// 	}
-// }
+func (c *nodeMapuint32error) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint32error)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*error)(c.child))
+	}
+}
 
 // IterUint32Error The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -46253,14 +49556,18 @@ func (c *nodeMapuint32float32) value() *float32 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint32float32) find(key uint32) (uint, *nodeMapuint32float32) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint32float32) find(key uint32) (crit uint, child, parent *nodeMapuint32float32) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint32Float32) transformKey(key uint32) uint32 {
@@ -46273,6 +49580,21 @@ func (t *MapUint32Float32) transformKey(key uint32) uint32 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint32Float32) Rem(key uint32) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -46288,7 +49610,7 @@ func (t *MapUint32Float32) SetP(key uint32, val *float32) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -46304,6 +49626,7 @@ func (t *MapUint32Float32) SetP(key uint32, val *float32) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -46319,7 +49642,7 @@ func (t *MapUint32Float32) GetP(key uint32) (*float32, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*float32)(l.child), true
 	}
@@ -46343,17 +49666,17 @@ func (t *MapUint32Float32) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint32float32) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint32float32)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*float32)(c.child))
-// 	}
-// }
+func (c *nodeMapuint32float32) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint32float32)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*float32)(c.child))
+	}
+}
 
 // IterUint32Float32 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -46533,14 +49856,18 @@ func (c *nodeMapuint32float64) value() *float64 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint32float64) find(key uint32) (uint, *nodeMapuint32float64) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint32float64) find(key uint32) (crit uint, child, parent *nodeMapuint32float64) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint32Float64) transformKey(key uint32) uint32 {
@@ -46553,6 +49880,21 @@ func (t *MapUint32Float64) transformKey(key uint32) uint32 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint32Float64) Rem(key uint32) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -46568,7 +49910,7 @@ func (t *MapUint32Float64) SetP(key uint32, val *float64) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -46584,6 +49926,7 @@ func (t *MapUint32Float64) SetP(key uint32, val *float64) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -46599,7 +49942,7 @@ func (t *MapUint32Float64) GetP(key uint32) (*float64, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*float64)(l.child), true
 	}
@@ -46623,17 +49966,17 @@ func (t *MapUint32Float64) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint32float64) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint32float64)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*float64)(c.child))
-// 	}
-// }
+func (c *nodeMapuint32float64) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint32float64)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*float64)(c.child))
+	}
+}
 
 // IterUint32Float64 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -46813,14 +50156,18 @@ func (c *nodeMapuint32int) value() *int {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint32int) find(key uint32) (uint, *nodeMapuint32int) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint32int) find(key uint32) (crit uint, child, parent *nodeMapuint32int) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint32Int) transformKey(key uint32) uint32 {
@@ -46833,6 +50180,21 @@ func (t *MapUint32Int) transformKey(key uint32) uint32 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint32Int) Rem(key uint32) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -46848,7 +50210,7 @@ func (t *MapUint32Int) SetP(key uint32, val *int) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -46864,6 +50226,7 @@ func (t *MapUint32Int) SetP(key uint32, val *int) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -46879,7 +50242,7 @@ func (t *MapUint32Int) GetP(key uint32) (*int, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*int)(l.child), true
 	}
@@ -46903,17 +50266,17 @@ func (t *MapUint32Int) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint32int) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint32int)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int)(c.child))
-// 	}
-// }
+func (c *nodeMapuint32int) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint32int)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int)(c.child))
+	}
+}
 
 // IterUint32Int The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -47093,14 +50456,18 @@ func (c *nodeMapuint32int16) value() *int16 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint32int16) find(key uint32) (uint, *nodeMapuint32int16) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint32int16) find(key uint32) (crit uint, child, parent *nodeMapuint32int16) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint32Int16) transformKey(key uint32) uint32 {
@@ -47113,6 +50480,21 @@ func (t *MapUint32Int16) transformKey(key uint32) uint32 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint32Int16) Rem(key uint32) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -47128,7 +50510,7 @@ func (t *MapUint32Int16) SetP(key uint32, val *int16) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -47144,6 +50526,7 @@ func (t *MapUint32Int16) SetP(key uint32, val *int16) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -47159,7 +50542,7 @@ func (t *MapUint32Int16) GetP(key uint32) (*int16, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*int16)(l.child), true
 	}
@@ -47183,17 +50566,17 @@ func (t *MapUint32Int16) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint32int16) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint32int16)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int16)(c.child))
-// 	}
-// }
+func (c *nodeMapuint32int16) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint32int16)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int16)(c.child))
+	}
+}
 
 // IterUint32Int16 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -47373,14 +50756,18 @@ func (c *nodeMapuint32int32) value() *int32 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint32int32) find(key uint32) (uint, *nodeMapuint32int32) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint32int32) find(key uint32) (crit uint, child, parent *nodeMapuint32int32) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint32Int32) transformKey(key uint32) uint32 {
@@ -47393,6 +50780,21 @@ func (t *MapUint32Int32) transformKey(key uint32) uint32 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint32Int32) Rem(key uint32) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -47408,7 +50810,7 @@ func (t *MapUint32Int32) SetP(key uint32, val *int32) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -47424,6 +50826,7 @@ func (t *MapUint32Int32) SetP(key uint32, val *int32) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -47439,7 +50842,7 @@ func (t *MapUint32Int32) GetP(key uint32) (*int32, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*int32)(l.child), true
 	}
@@ -47463,17 +50866,17 @@ func (t *MapUint32Int32) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint32int32) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint32int32)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int32)(c.child))
-// 	}
-// }
+func (c *nodeMapuint32int32) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint32int32)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int32)(c.child))
+	}
+}
 
 // IterUint32Int32 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -47653,14 +51056,18 @@ func (c *nodeMapuint32int64) value() *int64 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint32int64) find(key uint32) (uint, *nodeMapuint32int64) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint32int64) find(key uint32) (crit uint, child, parent *nodeMapuint32int64) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint32Int64) transformKey(key uint32) uint32 {
@@ -47673,6 +51080,21 @@ func (t *MapUint32Int64) transformKey(key uint32) uint32 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint32Int64) Rem(key uint32) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -47688,7 +51110,7 @@ func (t *MapUint32Int64) SetP(key uint32, val *int64) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -47704,6 +51126,7 @@ func (t *MapUint32Int64) SetP(key uint32, val *int64) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -47719,7 +51142,7 @@ func (t *MapUint32Int64) GetP(key uint32) (*int64, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*int64)(l.child), true
 	}
@@ -47743,17 +51166,17 @@ func (t *MapUint32Int64) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint32int64) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint32int64)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int64)(c.child))
-// 	}
-// }
+func (c *nodeMapuint32int64) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint32int64)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int64)(c.child))
+	}
+}
 
 // IterUint32Int64 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -47933,14 +51356,18 @@ func (c *nodeMapuint32int8) value() *int8 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint32int8) find(key uint32) (uint, *nodeMapuint32int8) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint32int8) find(key uint32) (crit uint, child, parent *nodeMapuint32int8) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint32Int8) transformKey(key uint32) uint32 {
@@ -47953,6 +51380,21 @@ func (t *MapUint32Int8) transformKey(key uint32) uint32 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint32Int8) Rem(key uint32) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -47968,7 +51410,7 @@ func (t *MapUint32Int8) SetP(key uint32, val *int8) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -47984,6 +51426,7 @@ func (t *MapUint32Int8) SetP(key uint32, val *int8) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -47999,7 +51442,7 @@ func (t *MapUint32Int8) GetP(key uint32) (*int8, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*int8)(l.child), true
 	}
@@ -48023,17 +51466,17 @@ func (t *MapUint32Int8) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint32int8) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint32int8)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int8)(c.child))
-// 	}
-// }
+func (c *nodeMapuint32int8) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint32int8)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int8)(c.child))
+	}
+}
 
 // IterUint32Int8 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -48213,14 +51656,18 @@ func (c *nodeMapuint32rune) value() *rune {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint32rune) find(key uint32) (uint, *nodeMapuint32rune) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint32rune) find(key uint32) (crit uint, child, parent *nodeMapuint32rune) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint32Rune) transformKey(key uint32) uint32 {
@@ -48233,6 +51680,21 @@ func (t *MapUint32Rune) transformKey(key uint32) uint32 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint32Rune) Rem(key uint32) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -48248,7 +51710,7 @@ func (t *MapUint32Rune) SetP(key uint32, val *rune) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -48264,6 +51726,7 @@ func (t *MapUint32Rune) SetP(key uint32, val *rune) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -48279,7 +51742,7 @@ func (t *MapUint32Rune) GetP(key uint32) (*rune, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*rune)(l.child), true
 	}
@@ -48303,17 +51766,17 @@ func (t *MapUint32Rune) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint32rune) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint32rune)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*rune)(c.child))
-// 	}
-// }
+func (c *nodeMapuint32rune) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint32rune)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*rune)(c.child))
+	}
+}
 
 // IterUint32Rune The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -48493,14 +51956,18 @@ func (c *nodeMapuint32string) value() *string {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint32string) find(key uint32) (uint, *nodeMapuint32string) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint32string) find(key uint32) (crit uint, child, parent *nodeMapuint32string) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint32String) transformKey(key uint32) uint32 {
@@ -48513,6 +51980,21 @@ func (t *MapUint32String) transformKey(key uint32) uint32 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint32String) Rem(key uint32) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -48528,7 +52010,7 @@ func (t *MapUint32String) SetP(key uint32, val *string) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -48544,6 +52026,7 @@ func (t *MapUint32String) SetP(key uint32, val *string) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -48559,7 +52042,7 @@ func (t *MapUint32String) GetP(key uint32) (*string, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*string)(l.child), true
 	}
@@ -48583,17 +52066,17 @@ func (t *MapUint32String) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint32string) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint32string)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*string)(c.child))
-// 	}
-// }
+func (c *nodeMapuint32string) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint32string)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*string)(c.child))
+	}
+}
 
 // IterUint32String The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -48773,14 +52256,18 @@ func (c *nodeMapuint32uint) value() *uint {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint32uint) find(key uint32) (uint, *nodeMapuint32uint) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint32uint) find(key uint32) (crit uint, child, parent *nodeMapuint32uint) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint32Uint) transformKey(key uint32) uint32 {
@@ -48793,6 +52280,21 @@ func (t *MapUint32Uint) transformKey(key uint32) uint32 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint32Uint) Rem(key uint32) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -48808,7 +52310,7 @@ func (t *MapUint32Uint) SetP(key uint32, val *uint) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -48824,6 +52326,7 @@ func (t *MapUint32Uint) SetP(key uint32, val *uint) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -48839,7 +52342,7 @@ func (t *MapUint32Uint) GetP(key uint32) (*uint, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uint)(l.child), true
 	}
@@ -48863,17 +52366,17 @@ func (t *MapUint32Uint) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint32uint) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint32uint)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint)(c.child))
-// 	}
-// }
+func (c *nodeMapuint32uint) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint32uint)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint)(c.child))
+	}
+}
 
 // IterUint32Uint The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -49053,14 +52556,18 @@ func (c *nodeMapuint32uint16) value() *uint16 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint32uint16) find(key uint32) (uint, *nodeMapuint32uint16) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint32uint16) find(key uint32) (crit uint, child, parent *nodeMapuint32uint16) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint32Uint16) transformKey(key uint32) uint32 {
@@ -49073,6 +52580,21 @@ func (t *MapUint32Uint16) transformKey(key uint32) uint32 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint32Uint16) Rem(key uint32) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -49088,7 +52610,7 @@ func (t *MapUint32Uint16) SetP(key uint32, val *uint16) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -49104,6 +52626,7 @@ func (t *MapUint32Uint16) SetP(key uint32, val *uint16) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -49119,7 +52642,7 @@ func (t *MapUint32Uint16) GetP(key uint32) (*uint16, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uint16)(l.child), true
 	}
@@ -49143,17 +52666,17 @@ func (t *MapUint32Uint16) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint32uint16) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint32uint16)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint16)(c.child))
-// 	}
-// }
+func (c *nodeMapuint32uint16) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint32uint16)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint16)(c.child))
+	}
+}
 
 // IterUint32Uint16 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -49333,14 +52856,18 @@ func (c *nodeMapuint32uint32) value() *uint32 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint32uint32) find(key uint32) (uint, *nodeMapuint32uint32) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint32uint32) find(key uint32) (crit uint, child, parent *nodeMapuint32uint32) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint32Uint32) transformKey(key uint32) uint32 {
@@ -49353,6 +52880,21 @@ func (t *MapUint32Uint32) transformKey(key uint32) uint32 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint32Uint32) Rem(key uint32) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -49368,7 +52910,7 @@ func (t *MapUint32Uint32) SetP(key uint32, val *uint32) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -49384,6 +52926,7 @@ func (t *MapUint32Uint32) SetP(key uint32, val *uint32) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -49399,7 +52942,7 @@ func (t *MapUint32Uint32) GetP(key uint32) (*uint32, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uint32)(l.child), true
 	}
@@ -49423,17 +52966,17 @@ func (t *MapUint32Uint32) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint32uint32) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint32uint32)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint32)(c.child))
-// 	}
-// }
+func (c *nodeMapuint32uint32) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint32uint32)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint32)(c.child))
+	}
+}
 
 // IterUint32Uint32 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -49613,14 +53156,18 @@ func (c *nodeMapuint32uint64) value() *uint64 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint32uint64) find(key uint32) (uint, *nodeMapuint32uint64) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint32uint64) find(key uint32) (crit uint, child, parent *nodeMapuint32uint64) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint32Uint64) transformKey(key uint32) uint32 {
@@ -49633,6 +53180,21 @@ func (t *MapUint32Uint64) transformKey(key uint32) uint32 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint32Uint64) Rem(key uint32) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -49648,7 +53210,7 @@ func (t *MapUint32Uint64) SetP(key uint32, val *uint64) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -49664,6 +53226,7 @@ func (t *MapUint32Uint64) SetP(key uint32, val *uint64) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -49679,7 +53242,7 @@ func (t *MapUint32Uint64) GetP(key uint32) (*uint64, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uint64)(l.child), true
 	}
@@ -49703,17 +53266,17 @@ func (t *MapUint32Uint64) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint32uint64) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint32uint64)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint64)(c.child))
-// 	}
-// }
+func (c *nodeMapuint32uint64) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint32uint64)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint64)(c.child))
+	}
+}
 
 // IterUint32Uint64 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -49893,14 +53456,18 @@ func (c *nodeMapuint32uint8) value() *uint8 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint32uint8) find(key uint32) (uint, *nodeMapuint32uint8) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint32uint8) find(key uint32) (crit uint, child, parent *nodeMapuint32uint8) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint32Uint8) transformKey(key uint32) uint32 {
@@ -49913,6 +53480,21 @@ func (t *MapUint32Uint8) transformKey(key uint32) uint32 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint32Uint8) Rem(key uint32) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -49928,7 +53510,7 @@ func (t *MapUint32Uint8) SetP(key uint32, val *uint8) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -49944,6 +53526,7 @@ func (t *MapUint32Uint8) SetP(key uint32, val *uint8) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -49959,7 +53542,7 @@ func (t *MapUint32Uint8) GetP(key uint32) (*uint8, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uint8)(l.child), true
 	}
@@ -49983,17 +53566,17 @@ func (t *MapUint32Uint8) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint32uint8) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint32uint8)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint8)(c.child))
-// 	}
-// }
+func (c *nodeMapuint32uint8) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint32uint8)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint8)(c.child))
+	}
+}
 
 // IterUint32Uint8 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -50173,14 +53756,18 @@ func (c *nodeMapuint32uintptr) value() *uintptr {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint32uintptr) find(key uint32) (uint, *nodeMapuint32uintptr) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint32uintptr) find(key uint32) (crit uint, child, parent *nodeMapuint32uintptr) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint32Uintptr) transformKey(key uint32) uint32 {
@@ -50193,6 +53780,21 @@ func (t *MapUint32Uintptr) transformKey(key uint32) uint32 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint32Uintptr) Rem(key uint32) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -50208,7 +53810,7 @@ func (t *MapUint32Uintptr) SetP(key uint32, val *uintptr) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -50224,6 +53826,7 @@ func (t *MapUint32Uintptr) SetP(key uint32, val *uintptr) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -50239,7 +53842,7 @@ func (t *MapUint32Uintptr) GetP(key uint32) (*uintptr, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uintptr)(l.child), true
 	}
@@ -50263,17 +53866,17 @@ func (t *MapUint32Uintptr) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint32uintptr) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint32uintptr)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uintptr)(c.child))
-// 	}
-// }
+func (c *nodeMapuint32uintptr) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint32uintptr)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uintptr)(c.child))
+	}
+}
 
 // IterUint32Uintptr The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -50453,14 +54056,18 @@ func (c *nodeMapuint16bool) value() *bool {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint16bool) find(key uint16) (uint, *nodeMapuint16bool) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint16bool) find(key uint16) (crit uint, child, parent *nodeMapuint16bool) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint16Bool) transformKey(key uint16) uint16 {
@@ -50473,6 +54080,21 @@ func (t *MapUint16Bool) transformKey(key uint16) uint16 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint16Bool) Rem(key uint16) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -50488,7 +54110,7 @@ func (t *MapUint16Bool) SetP(key uint16, val *bool) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -50504,6 +54126,7 @@ func (t *MapUint16Bool) SetP(key uint16, val *bool) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -50519,7 +54142,7 @@ func (t *MapUint16Bool) GetP(key uint16) (*bool, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*bool)(l.child), true
 	}
@@ -50543,17 +54166,17 @@ func (t *MapUint16Bool) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint16bool) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint16bool)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*bool)(c.child))
-// 	}
-// }
+func (c *nodeMapuint16bool) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint16bool)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*bool)(c.child))
+	}
+}
 
 // IterUint16Bool The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -50733,14 +54356,18 @@ func (c *nodeMapuint16byte) value() *byte {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint16byte) find(key uint16) (uint, *nodeMapuint16byte) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint16byte) find(key uint16) (crit uint, child, parent *nodeMapuint16byte) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint16Byte) transformKey(key uint16) uint16 {
@@ -50753,6 +54380,21 @@ func (t *MapUint16Byte) transformKey(key uint16) uint16 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint16Byte) Rem(key uint16) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -50768,7 +54410,7 @@ func (t *MapUint16Byte) SetP(key uint16, val *byte) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -50784,6 +54426,7 @@ func (t *MapUint16Byte) SetP(key uint16, val *byte) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -50799,7 +54442,7 @@ func (t *MapUint16Byte) GetP(key uint16) (*byte, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*byte)(l.child), true
 	}
@@ -50823,17 +54466,17 @@ func (t *MapUint16Byte) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint16byte) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint16byte)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*byte)(c.child))
-// 	}
-// }
+func (c *nodeMapuint16byte) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint16byte)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*byte)(c.child))
+	}
+}
 
 // IterUint16Byte The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -51013,14 +54656,18 @@ func (c *nodeMapuint16complex128) value() *complex128 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint16complex128) find(key uint16) (uint, *nodeMapuint16complex128) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint16complex128) find(key uint16) (crit uint, child, parent *nodeMapuint16complex128) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint16Complex128) transformKey(key uint16) uint16 {
@@ -51033,6 +54680,21 @@ func (t *MapUint16Complex128) transformKey(key uint16) uint16 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint16Complex128) Rem(key uint16) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -51048,7 +54710,7 @@ func (t *MapUint16Complex128) SetP(key uint16, val *complex128) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -51064,6 +54726,7 @@ func (t *MapUint16Complex128) SetP(key uint16, val *complex128) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -51079,7 +54742,7 @@ func (t *MapUint16Complex128) GetP(key uint16) (*complex128, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*complex128)(l.child), true
 	}
@@ -51103,17 +54766,17 @@ func (t *MapUint16Complex128) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint16complex128) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint16complex128)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*complex128)(c.child))
-// 	}
-// }
+func (c *nodeMapuint16complex128) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint16complex128)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*complex128)(c.child))
+	}
+}
 
 // IterUint16Complex128 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -51293,14 +54956,18 @@ func (c *nodeMapuint16complex64) value() *complex64 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint16complex64) find(key uint16) (uint, *nodeMapuint16complex64) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint16complex64) find(key uint16) (crit uint, child, parent *nodeMapuint16complex64) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint16Complex64) transformKey(key uint16) uint16 {
@@ -51313,6 +54980,21 @@ func (t *MapUint16Complex64) transformKey(key uint16) uint16 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint16Complex64) Rem(key uint16) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -51328,7 +55010,7 @@ func (t *MapUint16Complex64) SetP(key uint16, val *complex64) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -51344,6 +55026,7 @@ func (t *MapUint16Complex64) SetP(key uint16, val *complex64) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -51359,7 +55042,7 @@ func (t *MapUint16Complex64) GetP(key uint16) (*complex64, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*complex64)(l.child), true
 	}
@@ -51383,17 +55066,17 @@ func (t *MapUint16Complex64) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint16complex64) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint16complex64)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*complex64)(c.child))
-// 	}
-// }
+func (c *nodeMapuint16complex64) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint16complex64)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*complex64)(c.child))
+	}
+}
 
 // IterUint16Complex64 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -51573,14 +55256,18 @@ func (c *nodeMapuint16error) value() *error {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint16error) find(key uint16) (uint, *nodeMapuint16error) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint16error) find(key uint16) (crit uint, child, parent *nodeMapuint16error) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint16Error) transformKey(key uint16) uint16 {
@@ -51593,6 +55280,21 @@ func (t *MapUint16Error) transformKey(key uint16) uint16 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint16Error) Rem(key uint16) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -51608,7 +55310,7 @@ func (t *MapUint16Error) SetP(key uint16, val *error) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -51624,6 +55326,7 @@ func (t *MapUint16Error) SetP(key uint16, val *error) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -51639,7 +55342,7 @@ func (t *MapUint16Error) GetP(key uint16) (*error, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*error)(l.child), true
 	}
@@ -51663,17 +55366,17 @@ func (t *MapUint16Error) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint16error) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint16error)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*error)(c.child))
-// 	}
-// }
+func (c *nodeMapuint16error) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint16error)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*error)(c.child))
+	}
+}
 
 // IterUint16Error The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -51853,14 +55556,18 @@ func (c *nodeMapuint16float32) value() *float32 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint16float32) find(key uint16) (uint, *nodeMapuint16float32) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint16float32) find(key uint16) (crit uint, child, parent *nodeMapuint16float32) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint16Float32) transformKey(key uint16) uint16 {
@@ -51873,6 +55580,21 @@ func (t *MapUint16Float32) transformKey(key uint16) uint16 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint16Float32) Rem(key uint16) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -51888,7 +55610,7 @@ func (t *MapUint16Float32) SetP(key uint16, val *float32) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -51904,6 +55626,7 @@ func (t *MapUint16Float32) SetP(key uint16, val *float32) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -51919,7 +55642,7 @@ func (t *MapUint16Float32) GetP(key uint16) (*float32, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*float32)(l.child), true
 	}
@@ -51943,17 +55666,17 @@ func (t *MapUint16Float32) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint16float32) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint16float32)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*float32)(c.child))
-// 	}
-// }
+func (c *nodeMapuint16float32) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint16float32)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*float32)(c.child))
+	}
+}
 
 // IterUint16Float32 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -52133,14 +55856,18 @@ func (c *nodeMapuint16float64) value() *float64 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint16float64) find(key uint16) (uint, *nodeMapuint16float64) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint16float64) find(key uint16) (crit uint, child, parent *nodeMapuint16float64) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint16Float64) transformKey(key uint16) uint16 {
@@ -52153,6 +55880,21 @@ func (t *MapUint16Float64) transformKey(key uint16) uint16 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint16Float64) Rem(key uint16) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -52168,7 +55910,7 @@ func (t *MapUint16Float64) SetP(key uint16, val *float64) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -52184,6 +55926,7 @@ func (t *MapUint16Float64) SetP(key uint16, val *float64) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -52199,7 +55942,7 @@ func (t *MapUint16Float64) GetP(key uint16) (*float64, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*float64)(l.child), true
 	}
@@ -52223,17 +55966,17 @@ func (t *MapUint16Float64) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint16float64) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint16float64)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*float64)(c.child))
-// 	}
-// }
+func (c *nodeMapuint16float64) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint16float64)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*float64)(c.child))
+	}
+}
 
 // IterUint16Float64 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -52413,14 +56156,18 @@ func (c *nodeMapuint16int) value() *int {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint16int) find(key uint16) (uint, *nodeMapuint16int) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint16int) find(key uint16) (crit uint, child, parent *nodeMapuint16int) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint16Int) transformKey(key uint16) uint16 {
@@ -52433,6 +56180,21 @@ func (t *MapUint16Int) transformKey(key uint16) uint16 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint16Int) Rem(key uint16) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -52448,7 +56210,7 @@ func (t *MapUint16Int) SetP(key uint16, val *int) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -52464,6 +56226,7 @@ func (t *MapUint16Int) SetP(key uint16, val *int) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -52479,7 +56242,7 @@ func (t *MapUint16Int) GetP(key uint16) (*int, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*int)(l.child), true
 	}
@@ -52503,17 +56266,17 @@ func (t *MapUint16Int) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint16int) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint16int)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int)(c.child))
-// 	}
-// }
+func (c *nodeMapuint16int) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint16int)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int)(c.child))
+	}
+}
 
 // IterUint16Int The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -52693,14 +56456,18 @@ func (c *nodeMapuint16int16) value() *int16 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint16int16) find(key uint16) (uint, *nodeMapuint16int16) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint16int16) find(key uint16) (crit uint, child, parent *nodeMapuint16int16) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint16Int16) transformKey(key uint16) uint16 {
@@ -52713,6 +56480,21 @@ func (t *MapUint16Int16) transformKey(key uint16) uint16 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint16Int16) Rem(key uint16) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -52728,7 +56510,7 @@ func (t *MapUint16Int16) SetP(key uint16, val *int16) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -52744,6 +56526,7 @@ func (t *MapUint16Int16) SetP(key uint16, val *int16) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -52759,7 +56542,7 @@ func (t *MapUint16Int16) GetP(key uint16) (*int16, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*int16)(l.child), true
 	}
@@ -52783,17 +56566,17 @@ func (t *MapUint16Int16) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint16int16) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint16int16)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int16)(c.child))
-// 	}
-// }
+func (c *nodeMapuint16int16) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint16int16)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int16)(c.child))
+	}
+}
 
 // IterUint16Int16 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -52973,14 +56756,18 @@ func (c *nodeMapuint16int32) value() *int32 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint16int32) find(key uint16) (uint, *nodeMapuint16int32) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint16int32) find(key uint16) (crit uint, child, parent *nodeMapuint16int32) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint16Int32) transformKey(key uint16) uint16 {
@@ -52993,6 +56780,21 @@ func (t *MapUint16Int32) transformKey(key uint16) uint16 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint16Int32) Rem(key uint16) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -53008,7 +56810,7 @@ func (t *MapUint16Int32) SetP(key uint16, val *int32) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -53024,6 +56826,7 @@ func (t *MapUint16Int32) SetP(key uint16, val *int32) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -53039,7 +56842,7 @@ func (t *MapUint16Int32) GetP(key uint16) (*int32, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*int32)(l.child), true
 	}
@@ -53063,17 +56866,17 @@ func (t *MapUint16Int32) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint16int32) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint16int32)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int32)(c.child))
-// 	}
-// }
+func (c *nodeMapuint16int32) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint16int32)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int32)(c.child))
+	}
+}
 
 // IterUint16Int32 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -53253,14 +57056,18 @@ func (c *nodeMapuint16int64) value() *int64 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint16int64) find(key uint16) (uint, *nodeMapuint16int64) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint16int64) find(key uint16) (crit uint, child, parent *nodeMapuint16int64) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint16Int64) transformKey(key uint16) uint16 {
@@ -53273,6 +57080,21 @@ func (t *MapUint16Int64) transformKey(key uint16) uint16 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint16Int64) Rem(key uint16) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -53288,7 +57110,7 @@ func (t *MapUint16Int64) SetP(key uint16, val *int64) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -53304,6 +57126,7 @@ func (t *MapUint16Int64) SetP(key uint16, val *int64) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -53319,7 +57142,7 @@ func (t *MapUint16Int64) GetP(key uint16) (*int64, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*int64)(l.child), true
 	}
@@ -53343,17 +57166,17 @@ func (t *MapUint16Int64) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint16int64) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint16int64)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int64)(c.child))
-// 	}
-// }
+func (c *nodeMapuint16int64) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint16int64)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int64)(c.child))
+	}
+}
 
 // IterUint16Int64 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -53533,14 +57356,18 @@ func (c *nodeMapuint16int8) value() *int8 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint16int8) find(key uint16) (uint, *nodeMapuint16int8) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint16int8) find(key uint16) (crit uint, child, parent *nodeMapuint16int8) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint16Int8) transformKey(key uint16) uint16 {
@@ -53553,6 +57380,21 @@ func (t *MapUint16Int8) transformKey(key uint16) uint16 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint16Int8) Rem(key uint16) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -53568,7 +57410,7 @@ func (t *MapUint16Int8) SetP(key uint16, val *int8) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -53584,6 +57426,7 @@ func (t *MapUint16Int8) SetP(key uint16, val *int8) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -53599,7 +57442,7 @@ func (t *MapUint16Int8) GetP(key uint16) (*int8, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*int8)(l.child), true
 	}
@@ -53623,17 +57466,17 @@ func (t *MapUint16Int8) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint16int8) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint16int8)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int8)(c.child))
-// 	}
-// }
+func (c *nodeMapuint16int8) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint16int8)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int8)(c.child))
+	}
+}
 
 // IterUint16Int8 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -53813,14 +57656,18 @@ func (c *nodeMapuint16rune) value() *rune {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint16rune) find(key uint16) (uint, *nodeMapuint16rune) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint16rune) find(key uint16) (crit uint, child, parent *nodeMapuint16rune) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint16Rune) transformKey(key uint16) uint16 {
@@ -53833,6 +57680,21 @@ func (t *MapUint16Rune) transformKey(key uint16) uint16 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint16Rune) Rem(key uint16) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -53848,7 +57710,7 @@ func (t *MapUint16Rune) SetP(key uint16, val *rune) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -53864,6 +57726,7 @@ func (t *MapUint16Rune) SetP(key uint16, val *rune) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -53879,7 +57742,7 @@ func (t *MapUint16Rune) GetP(key uint16) (*rune, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*rune)(l.child), true
 	}
@@ -53903,17 +57766,17 @@ func (t *MapUint16Rune) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint16rune) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint16rune)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*rune)(c.child))
-// 	}
-// }
+func (c *nodeMapuint16rune) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint16rune)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*rune)(c.child))
+	}
+}
 
 // IterUint16Rune The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -54093,14 +57956,18 @@ func (c *nodeMapuint16string) value() *string {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint16string) find(key uint16) (uint, *nodeMapuint16string) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint16string) find(key uint16) (crit uint, child, parent *nodeMapuint16string) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint16String) transformKey(key uint16) uint16 {
@@ -54113,6 +57980,21 @@ func (t *MapUint16String) transformKey(key uint16) uint16 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint16String) Rem(key uint16) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -54128,7 +58010,7 @@ func (t *MapUint16String) SetP(key uint16, val *string) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -54144,6 +58026,7 @@ func (t *MapUint16String) SetP(key uint16, val *string) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -54159,7 +58042,7 @@ func (t *MapUint16String) GetP(key uint16) (*string, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*string)(l.child), true
 	}
@@ -54183,17 +58066,17 @@ func (t *MapUint16String) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint16string) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint16string)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*string)(c.child))
-// 	}
-// }
+func (c *nodeMapuint16string) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint16string)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*string)(c.child))
+	}
+}
 
 // IterUint16String The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -54373,14 +58256,18 @@ func (c *nodeMapuint16uint) value() *uint {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint16uint) find(key uint16) (uint, *nodeMapuint16uint) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint16uint) find(key uint16) (crit uint, child, parent *nodeMapuint16uint) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint16Uint) transformKey(key uint16) uint16 {
@@ -54393,6 +58280,21 @@ func (t *MapUint16Uint) transformKey(key uint16) uint16 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint16Uint) Rem(key uint16) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -54408,7 +58310,7 @@ func (t *MapUint16Uint) SetP(key uint16, val *uint) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -54424,6 +58326,7 @@ func (t *MapUint16Uint) SetP(key uint16, val *uint) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -54439,7 +58342,7 @@ func (t *MapUint16Uint) GetP(key uint16) (*uint, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uint)(l.child), true
 	}
@@ -54463,17 +58366,17 @@ func (t *MapUint16Uint) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint16uint) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint16uint)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint)(c.child))
-// 	}
-// }
+func (c *nodeMapuint16uint) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint16uint)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint)(c.child))
+	}
+}
 
 // IterUint16Uint The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -54653,14 +58556,18 @@ func (c *nodeMapuint16uint16) value() *uint16 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint16uint16) find(key uint16) (uint, *nodeMapuint16uint16) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint16uint16) find(key uint16) (crit uint, child, parent *nodeMapuint16uint16) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint16Uint16) transformKey(key uint16) uint16 {
@@ -54673,6 +58580,21 @@ func (t *MapUint16Uint16) transformKey(key uint16) uint16 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint16Uint16) Rem(key uint16) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -54688,7 +58610,7 @@ func (t *MapUint16Uint16) SetP(key uint16, val *uint16) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -54704,6 +58626,7 @@ func (t *MapUint16Uint16) SetP(key uint16, val *uint16) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -54719,7 +58642,7 @@ func (t *MapUint16Uint16) GetP(key uint16) (*uint16, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uint16)(l.child), true
 	}
@@ -54743,17 +58666,17 @@ func (t *MapUint16Uint16) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint16uint16) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint16uint16)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint16)(c.child))
-// 	}
-// }
+func (c *nodeMapuint16uint16) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint16uint16)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint16)(c.child))
+	}
+}
 
 // IterUint16Uint16 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -54933,14 +58856,18 @@ func (c *nodeMapuint16uint32) value() *uint32 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint16uint32) find(key uint16) (uint, *nodeMapuint16uint32) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint16uint32) find(key uint16) (crit uint, child, parent *nodeMapuint16uint32) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint16Uint32) transformKey(key uint16) uint16 {
@@ -54953,6 +58880,21 @@ func (t *MapUint16Uint32) transformKey(key uint16) uint16 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint16Uint32) Rem(key uint16) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -54968,7 +58910,7 @@ func (t *MapUint16Uint32) SetP(key uint16, val *uint32) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -54984,6 +58926,7 @@ func (t *MapUint16Uint32) SetP(key uint16, val *uint32) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -54999,7 +58942,7 @@ func (t *MapUint16Uint32) GetP(key uint16) (*uint32, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uint32)(l.child), true
 	}
@@ -55023,17 +58966,17 @@ func (t *MapUint16Uint32) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint16uint32) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint16uint32)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint32)(c.child))
-// 	}
-// }
+func (c *nodeMapuint16uint32) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint16uint32)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint32)(c.child))
+	}
+}
 
 // IterUint16Uint32 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -55213,14 +59156,18 @@ func (c *nodeMapuint16uint64) value() *uint64 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint16uint64) find(key uint16) (uint, *nodeMapuint16uint64) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint16uint64) find(key uint16) (crit uint, child, parent *nodeMapuint16uint64) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint16Uint64) transformKey(key uint16) uint16 {
@@ -55233,6 +59180,21 @@ func (t *MapUint16Uint64) transformKey(key uint16) uint16 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint16Uint64) Rem(key uint16) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -55248,7 +59210,7 @@ func (t *MapUint16Uint64) SetP(key uint16, val *uint64) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -55264,6 +59226,7 @@ func (t *MapUint16Uint64) SetP(key uint16, val *uint64) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -55279,7 +59242,7 @@ func (t *MapUint16Uint64) GetP(key uint16) (*uint64, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uint64)(l.child), true
 	}
@@ -55303,17 +59266,17 @@ func (t *MapUint16Uint64) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint16uint64) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint16uint64)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint64)(c.child))
-// 	}
-// }
+func (c *nodeMapuint16uint64) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint16uint64)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint64)(c.child))
+	}
+}
 
 // IterUint16Uint64 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -55493,14 +59456,18 @@ func (c *nodeMapuint16uint8) value() *uint8 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint16uint8) find(key uint16) (uint, *nodeMapuint16uint8) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint16uint8) find(key uint16) (crit uint, child, parent *nodeMapuint16uint8) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint16Uint8) transformKey(key uint16) uint16 {
@@ -55513,6 +59480,21 @@ func (t *MapUint16Uint8) transformKey(key uint16) uint16 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint16Uint8) Rem(key uint16) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -55528,7 +59510,7 @@ func (t *MapUint16Uint8) SetP(key uint16, val *uint8) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -55544,6 +59526,7 @@ func (t *MapUint16Uint8) SetP(key uint16, val *uint8) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -55559,7 +59542,7 @@ func (t *MapUint16Uint8) GetP(key uint16) (*uint8, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uint8)(l.child), true
 	}
@@ -55583,17 +59566,17 @@ func (t *MapUint16Uint8) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint16uint8) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint16uint8)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint8)(c.child))
-// 	}
-// }
+func (c *nodeMapuint16uint8) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint16uint8)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint8)(c.child))
+	}
+}
 
 // IterUint16Uint8 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -55773,14 +59756,18 @@ func (c *nodeMapuint16uintptr) value() *uintptr {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint16uintptr) find(key uint16) (uint, *nodeMapuint16uintptr) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint16uintptr) find(key uint16) (crit uint, child, parent *nodeMapuint16uintptr) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint16Uintptr) transformKey(key uint16) uint16 {
@@ -55793,6 +59780,21 @@ func (t *MapUint16Uintptr) transformKey(key uint16) uint16 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint16Uintptr) Rem(key uint16) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -55808,7 +59810,7 @@ func (t *MapUint16Uintptr) SetP(key uint16, val *uintptr) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -55824,6 +59826,7 @@ func (t *MapUint16Uintptr) SetP(key uint16, val *uintptr) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -55839,7 +59842,7 @@ func (t *MapUint16Uintptr) GetP(key uint16) (*uintptr, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uintptr)(l.child), true
 	}
@@ -55863,17 +59866,17 @@ func (t *MapUint16Uintptr) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint16uintptr) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint16uintptr)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uintptr)(c.child))
-// 	}
-// }
+func (c *nodeMapuint16uintptr) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint16uintptr)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uintptr)(c.child))
+	}
+}
 
 // IterUint16Uintptr The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -56053,14 +60056,18 @@ func (c *nodeMapuint8bool) value() *bool {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint8bool) find(key uint8) (uint, *nodeMapuint8bool) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint8bool) find(key uint8) (crit uint, child, parent *nodeMapuint8bool) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint8Bool) transformKey(key uint8) uint8 {
@@ -56073,6 +60080,21 @@ func (t *MapUint8Bool) transformKey(key uint8) uint8 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint8Bool) Rem(key uint8) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -56088,7 +60110,7 @@ func (t *MapUint8Bool) SetP(key uint8, val *bool) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -56104,6 +60126,7 @@ func (t *MapUint8Bool) SetP(key uint8, val *bool) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -56119,7 +60142,7 @@ func (t *MapUint8Bool) GetP(key uint8) (*bool, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*bool)(l.child), true
 	}
@@ -56143,17 +60166,17 @@ func (t *MapUint8Bool) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint8bool) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint8bool)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*bool)(c.child))
-// 	}
-// }
+func (c *nodeMapuint8bool) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint8bool)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*bool)(c.child))
+	}
+}
 
 // IterUint8Bool The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -56333,14 +60356,18 @@ func (c *nodeMapuint8byte) value() *byte {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint8byte) find(key uint8) (uint, *nodeMapuint8byte) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint8byte) find(key uint8) (crit uint, child, parent *nodeMapuint8byte) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint8Byte) transformKey(key uint8) uint8 {
@@ -56353,6 +60380,21 @@ func (t *MapUint8Byte) transformKey(key uint8) uint8 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint8Byte) Rem(key uint8) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -56368,7 +60410,7 @@ func (t *MapUint8Byte) SetP(key uint8, val *byte) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -56384,6 +60426,7 @@ func (t *MapUint8Byte) SetP(key uint8, val *byte) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -56399,7 +60442,7 @@ func (t *MapUint8Byte) GetP(key uint8) (*byte, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*byte)(l.child), true
 	}
@@ -56423,17 +60466,17 @@ func (t *MapUint8Byte) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint8byte) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint8byte)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*byte)(c.child))
-// 	}
-// }
+func (c *nodeMapuint8byte) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint8byte)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*byte)(c.child))
+	}
+}
 
 // IterUint8Byte The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -56613,14 +60656,18 @@ func (c *nodeMapuint8complex128) value() *complex128 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint8complex128) find(key uint8) (uint, *nodeMapuint8complex128) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint8complex128) find(key uint8) (crit uint, child, parent *nodeMapuint8complex128) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint8Complex128) transformKey(key uint8) uint8 {
@@ -56633,6 +60680,21 @@ func (t *MapUint8Complex128) transformKey(key uint8) uint8 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint8Complex128) Rem(key uint8) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -56648,7 +60710,7 @@ func (t *MapUint8Complex128) SetP(key uint8, val *complex128) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -56664,6 +60726,7 @@ func (t *MapUint8Complex128) SetP(key uint8, val *complex128) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -56679,7 +60742,7 @@ func (t *MapUint8Complex128) GetP(key uint8) (*complex128, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*complex128)(l.child), true
 	}
@@ -56703,17 +60766,17 @@ func (t *MapUint8Complex128) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint8complex128) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint8complex128)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*complex128)(c.child))
-// 	}
-// }
+func (c *nodeMapuint8complex128) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint8complex128)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*complex128)(c.child))
+	}
+}
 
 // IterUint8Complex128 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -56893,14 +60956,18 @@ func (c *nodeMapuint8complex64) value() *complex64 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint8complex64) find(key uint8) (uint, *nodeMapuint8complex64) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint8complex64) find(key uint8) (crit uint, child, parent *nodeMapuint8complex64) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint8Complex64) transformKey(key uint8) uint8 {
@@ -56913,6 +60980,21 @@ func (t *MapUint8Complex64) transformKey(key uint8) uint8 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint8Complex64) Rem(key uint8) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -56928,7 +61010,7 @@ func (t *MapUint8Complex64) SetP(key uint8, val *complex64) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -56944,6 +61026,7 @@ func (t *MapUint8Complex64) SetP(key uint8, val *complex64) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -56959,7 +61042,7 @@ func (t *MapUint8Complex64) GetP(key uint8) (*complex64, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*complex64)(l.child), true
 	}
@@ -56983,17 +61066,17 @@ func (t *MapUint8Complex64) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint8complex64) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint8complex64)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*complex64)(c.child))
-// 	}
-// }
+func (c *nodeMapuint8complex64) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint8complex64)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*complex64)(c.child))
+	}
+}
 
 // IterUint8Complex64 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -57173,14 +61256,18 @@ func (c *nodeMapuint8error) value() *error {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint8error) find(key uint8) (uint, *nodeMapuint8error) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint8error) find(key uint8) (crit uint, child, parent *nodeMapuint8error) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint8Error) transformKey(key uint8) uint8 {
@@ -57193,6 +61280,21 @@ func (t *MapUint8Error) transformKey(key uint8) uint8 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint8Error) Rem(key uint8) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -57208,7 +61310,7 @@ func (t *MapUint8Error) SetP(key uint8, val *error) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -57224,6 +61326,7 @@ func (t *MapUint8Error) SetP(key uint8, val *error) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -57239,7 +61342,7 @@ func (t *MapUint8Error) GetP(key uint8) (*error, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*error)(l.child), true
 	}
@@ -57263,17 +61366,17 @@ func (t *MapUint8Error) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint8error) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint8error)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*error)(c.child))
-// 	}
-// }
+func (c *nodeMapuint8error) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint8error)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*error)(c.child))
+	}
+}
 
 // IterUint8Error The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -57453,14 +61556,18 @@ func (c *nodeMapuint8float32) value() *float32 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint8float32) find(key uint8) (uint, *nodeMapuint8float32) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint8float32) find(key uint8) (crit uint, child, parent *nodeMapuint8float32) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint8Float32) transformKey(key uint8) uint8 {
@@ -57473,6 +61580,21 @@ func (t *MapUint8Float32) transformKey(key uint8) uint8 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint8Float32) Rem(key uint8) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -57488,7 +61610,7 @@ func (t *MapUint8Float32) SetP(key uint8, val *float32) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -57504,6 +61626,7 @@ func (t *MapUint8Float32) SetP(key uint8, val *float32) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -57519,7 +61642,7 @@ func (t *MapUint8Float32) GetP(key uint8) (*float32, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*float32)(l.child), true
 	}
@@ -57543,17 +61666,17 @@ func (t *MapUint8Float32) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint8float32) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint8float32)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*float32)(c.child))
-// 	}
-// }
+func (c *nodeMapuint8float32) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint8float32)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*float32)(c.child))
+	}
+}
 
 // IterUint8Float32 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -57733,14 +61856,18 @@ func (c *nodeMapuint8float64) value() *float64 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint8float64) find(key uint8) (uint, *nodeMapuint8float64) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint8float64) find(key uint8) (crit uint, child, parent *nodeMapuint8float64) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint8Float64) transformKey(key uint8) uint8 {
@@ -57753,6 +61880,21 @@ func (t *MapUint8Float64) transformKey(key uint8) uint8 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint8Float64) Rem(key uint8) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -57768,7 +61910,7 @@ func (t *MapUint8Float64) SetP(key uint8, val *float64) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -57784,6 +61926,7 @@ func (t *MapUint8Float64) SetP(key uint8, val *float64) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -57799,7 +61942,7 @@ func (t *MapUint8Float64) GetP(key uint8) (*float64, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*float64)(l.child), true
 	}
@@ -57823,17 +61966,17 @@ func (t *MapUint8Float64) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint8float64) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint8float64)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*float64)(c.child))
-// 	}
-// }
+func (c *nodeMapuint8float64) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint8float64)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*float64)(c.child))
+	}
+}
 
 // IterUint8Float64 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -58013,14 +62156,18 @@ func (c *nodeMapuint8int) value() *int {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint8int) find(key uint8) (uint, *nodeMapuint8int) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint8int) find(key uint8) (crit uint, child, parent *nodeMapuint8int) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint8Int) transformKey(key uint8) uint8 {
@@ -58033,6 +62180,21 @@ func (t *MapUint8Int) transformKey(key uint8) uint8 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint8Int) Rem(key uint8) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -58048,7 +62210,7 @@ func (t *MapUint8Int) SetP(key uint8, val *int) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -58064,6 +62226,7 @@ func (t *MapUint8Int) SetP(key uint8, val *int) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -58079,7 +62242,7 @@ func (t *MapUint8Int) GetP(key uint8) (*int, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*int)(l.child), true
 	}
@@ -58103,17 +62266,17 @@ func (t *MapUint8Int) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint8int) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint8int)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int)(c.child))
-// 	}
-// }
+func (c *nodeMapuint8int) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint8int)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int)(c.child))
+	}
+}
 
 // IterUint8Int The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -58293,14 +62456,18 @@ func (c *nodeMapuint8int16) value() *int16 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint8int16) find(key uint8) (uint, *nodeMapuint8int16) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint8int16) find(key uint8) (crit uint, child, parent *nodeMapuint8int16) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint8Int16) transformKey(key uint8) uint8 {
@@ -58313,6 +62480,21 @@ func (t *MapUint8Int16) transformKey(key uint8) uint8 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint8Int16) Rem(key uint8) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -58328,7 +62510,7 @@ func (t *MapUint8Int16) SetP(key uint8, val *int16) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -58344,6 +62526,7 @@ func (t *MapUint8Int16) SetP(key uint8, val *int16) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -58359,7 +62542,7 @@ func (t *MapUint8Int16) GetP(key uint8) (*int16, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*int16)(l.child), true
 	}
@@ -58383,17 +62566,17 @@ func (t *MapUint8Int16) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint8int16) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint8int16)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int16)(c.child))
-// 	}
-// }
+func (c *nodeMapuint8int16) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint8int16)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int16)(c.child))
+	}
+}
 
 // IterUint8Int16 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -58573,14 +62756,18 @@ func (c *nodeMapuint8int32) value() *int32 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint8int32) find(key uint8) (uint, *nodeMapuint8int32) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint8int32) find(key uint8) (crit uint, child, parent *nodeMapuint8int32) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint8Int32) transformKey(key uint8) uint8 {
@@ -58593,6 +62780,21 @@ func (t *MapUint8Int32) transformKey(key uint8) uint8 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint8Int32) Rem(key uint8) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -58608,7 +62810,7 @@ func (t *MapUint8Int32) SetP(key uint8, val *int32) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -58624,6 +62826,7 @@ func (t *MapUint8Int32) SetP(key uint8, val *int32) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -58639,7 +62842,7 @@ func (t *MapUint8Int32) GetP(key uint8) (*int32, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*int32)(l.child), true
 	}
@@ -58663,17 +62866,17 @@ func (t *MapUint8Int32) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint8int32) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint8int32)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int32)(c.child))
-// 	}
-// }
+func (c *nodeMapuint8int32) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint8int32)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int32)(c.child))
+	}
+}
 
 // IterUint8Int32 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -58853,14 +63056,18 @@ func (c *nodeMapuint8int64) value() *int64 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint8int64) find(key uint8) (uint, *nodeMapuint8int64) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint8int64) find(key uint8) (crit uint, child, parent *nodeMapuint8int64) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint8Int64) transformKey(key uint8) uint8 {
@@ -58873,6 +63080,21 @@ func (t *MapUint8Int64) transformKey(key uint8) uint8 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint8Int64) Rem(key uint8) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -58888,7 +63110,7 @@ func (t *MapUint8Int64) SetP(key uint8, val *int64) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -58904,6 +63126,7 @@ func (t *MapUint8Int64) SetP(key uint8, val *int64) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -58919,7 +63142,7 @@ func (t *MapUint8Int64) GetP(key uint8) (*int64, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*int64)(l.child), true
 	}
@@ -58943,17 +63166,17 @@ func (t *MapUint8Int64) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint8int64) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint8int64)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int64)(c.child))
-// 	}
-// }
+func (c *nodeMapuint8int64) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint8int64)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int64)(c.child))
+	}
+}
 
 // IterUint8Int64 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -59133,14 +63356,18 @@ func (c *nodeMapuint8int8) value() *int8 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint8int8) find(key uint8) (uint, *nodeMapuint8int8) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint8int8) find(key uint8) (crit uint, child, parent *nodeMapuint8int8) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint8Int8) transformKey(key uint8) uint8 {
@@ -59153,6 +63380,21 @@ func (t *MapUint8Int8) transformKey(key uint8) uint8 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint8Int8) Rem(key uint8) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -59168,7 +63410,7 @@ func (t *MapUint8Int8) SetP(key uint8, val *int8) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -59184,6 +63426,7 @@ func (t *MapUint8Int8) SetP(key uint8, val *int8) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -59199,7 +63442,7 @@ func (t *MapUint8Int8) GetP(key uint8) (*int8, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*int8)(l.child), true
 	}
@@ -59223,17 +63466,17 @@ func (t *MapUint8Int8) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint8int8) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint8int8)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int8)(c.child))
-// 	}
-// }
+func (c *nodeMapuint8int8) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint8int8)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*int8)(c.child))
+	}
+}
 
 // IterUint8Int8 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -59413,14 +63656,18 @@ func (c *nodeMapuint8rune) value() *rune {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint8rune) find(key uint8) (uint, *nodeMapuint8rune) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint8rune) find(key uint8) (crit uint, child, parent *nodeMapuint8rune) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint8Rune) transformKey(key uint8) uint8 {
@@ -59433,6 +63680,21 @@ func (t *MapUint8Rune) transformKey(key uint8) uint8 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint8Rune) Rem(key uint8) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -59448,7 +63710,7 @@ func (t *MapUint8Rune) SetP(key uint8, val *rune) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -59464,6 +63726,7 @@ func (t *MapUint8Rune) SetP(key uint8, val *rune) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -59479,7 +63742,7 @@ func (t *MapUint8Rune) GetP(key uint8) (*rune, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*rune)(l.child), true
 	}
@@ -59503,17 +63766,17 @@ func (t *MapUint8Rune) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint8rune) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint8rune)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*rune)(c.child))
-// 	}
-// }
+func (c *nodeMapuint8rune) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint8rune)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*rune)(c.child))
+	}
+}
 
 // IterUint8Rune The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -59693,14 +63956,18 @@ func (c *nodeMapuint8string) value() *string {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint8string) find(key uint8) (uint, *nodeMapuint8string) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint8string) find(key uint8) (crit uint, child, parent *nodeMapuint8string) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint8String) transformKey(key uint8) uint8 {
@@ -59713,6 +63980,21 @@ func (t *MapUint8String) transformKey(key uint8) uint8 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint8String) Rem(key uint8) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -59728,7 +64010,7 @@ func (t *MapUint8String) SetP(key uint8, val *string) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -59744,6 +64026,7 @@ func (t *MapUint8String) SetP(key uint8, val *string) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -59759,7 +64042,7 @@ func (t *MapUint8String) GetP(key uint8) (*string, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*string)(l.child), true
 	}
@@ -59783,17 +64066,17 @@ func (t *MapUint8String) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint8string) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint8string)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*string)(c.child))
-// 	}
-// }
+func (c *nodeMapuint8string) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint8string)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*string)(c.child))
+	}
+}
 
 // IterUint8String The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -59973,14 +64256,18 @@ func (c *nodeMapuint8uint) value() *uint {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint8uint) find(key uint8) (uint, *nodeMapuint8uint) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint8uint) find(key uint8) (crit uint, child, parent *nodeMapuint8uint) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint8Uint) transformKey(key uint8) uint8 {
@@ -59993,6 +64280,21 @@ func (t *MapUint8Uint) transformKey(key uint8) uint8 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint8Uint) Rem(key uint8) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -60008,7 +64310,7 @@ func (t *MapUint8Uint) SetP(key uint8, val *uint) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -60024,6 +64326,7 @@ func (t *MapUint8Uint) SetP(key uint8, val *uint) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -60039,7 +64342,7 @@ func (t *MapUint8Uint) GetP(key uint8) (*uint, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uint)(l.child), true
 	}
@@ -60063,17 +64366,17 @@ func (t *MapUint8Uint) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint8uint) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint8uint)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint)(c.child))
-// 	}
-// }
+func (c *nodeMapuint8uint) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint8uint)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint)(c.child))
+	}
+}
 
 // IterUint8Uint The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -60253,14 +64556,18 @@ func (c *nodeMapuint8uint16) value() *uint16 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint8uint16) find(key uint8) (uint, *nodeMapuint8uint16) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint8uint16) find(key uint8) (crit uint, child, parent *nodeMapuint8uint16) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint8Uint16) transformKey(key uint8) uint8 {
@@ -60273,6 +64580,21 @@ func (t *MapUint8Uint16) transformKey(key uint8) uint8 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint8Uint16) Rem(key uint8) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -60288,7 +64610,7 @@ func (t *MapUint8Uint16) SetP(key uint8, val *uint16) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -60304,6 +64626,7 @@ func (t *MapUint8Uint16) SetP(key uint8, val *uint16) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -60319,7 +64642,7 @@ func (t *MapUint8Uint16) GetP(key uint8) (*uint16, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uint16)(l.child), true
 	}
@@ -60343,17 +64666,17 @@ func (t *MapUint8Uint16) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint8uint16) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint8uint16)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint16)(c.child))
-// 	}
-// }
+func (c *nodeMapuint8uint16) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint8uint16)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint16)(c.child))
+	}
+}
 
 // IterUint8Uint16 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -60533,14 +64856,18 @@ func (c *nodeMapuint8uint32) value() *uint32 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint8uint32) find(key uint8) (uint, *nodeMapuint8uint32) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint8uint32) find(key uint8) (crit uint, child, parent *nodeMapuint8uint32) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint8Uint32) transformKey(key uint8) uint8 {
@@ -60553,6 +64880,21 @@ func (t *MapUint8Uint32) transformKey(key uint8) uint8 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint8Uint32) Rem(key uint8) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -60568,7 +64910,7 @@ func (t *MapUint8Uint32) SetP(key uint8, val *uint32) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -60584,6 +64926,7 @@ func (t *MapUint8Uint32) SetP(key uint8, val *uint32) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -60599,7 +64942,7 @@ func (t *MapUint8Uint32) GetP(key uint8) (*uint32, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uint32)(l.child), true
 	}
@@ -60623,17 +64966,17 @@ func (t *MapUint8Uint32) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint8uint32) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint8uint32)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint32)(c.child))
-// 	}
-// }
+func (c *nodeMapuint8uint32) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint8uint32)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint32)(c.child))
+	}
+}
 
 // IterUint8Uint32 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -60813,14 +65156,18 @@ func (c *nodeMapuint8uint64) value() *uint64 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint8uint64) find(key uint8) (uint, *nodeMapuint8uint64) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint8uint64) find(key uint8) (crit uint, child, parent *nodeMapuint8uint64) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint8Uint64) transformKey(key uint8) uint8 {
@@ -60833,6 +65180,21 @@ func (t *MapUint8Uint64) transformKey(key uint8) uint8 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint8Uint64) Rem(key uint8) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -60848,7 +65210,7 @@ func (t *MapUint8Uint64) SetP(key uint8, val *uint64) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -60864,6 +65226,7 @@ func (t *MapUint8Uint64) SetP(key uint8, val *uint64) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -60879,7 +65242,7 @@ func (t *MapUint8Uint64) GetP(key uint8) (*uint64, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uint64)(l.child), true
 	}
@@ -60903,17 +65266,17 @@ func (t *MapUint8Uint64) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint8uint64) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint8uint64)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint64)(c.child))
-// 	}
-// }
+func (c *nodeMapuint8uint64) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint8uint64)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint64)(c.child))
+	}
+}
 
 // IterUint8Uint64 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -61093,14 +65456,18 @@ func (c *nodeMapuint8uint8) value() *uint8 {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint8uint8) find(key uint8) (uint, *nodeMapuint8uint8) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint8uint8) find(key uint8) (crit uint, child, parent *nodeMapuint8uint8) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint8Uint8) transformKey(key uint8) uint8 {
@@ -61113,6 +65480,21 @@ func (t *MapUint8Uint8) transformKey(key uint8) uint8 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint8Uint8) Rem(key uint8) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -61128,7 +65510,7 @@ func (t *MapUint8Uint8) SetP(key uint8, val *uint8) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -61144,6 +65526,7 @@ func (t *MapUint8Uint8) SetP(key uint8, val *uint8) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -61159,7 +65542,7 @@ func (t *MapUint8Uint8) GetP(key uint8) (*uint8, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uint8)(l.child), true
 	}
@@ -61183,17 +65566,17 @@ func (t *MapUint8Uint8) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint8uint8) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint8uint8)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint8)(c.child))
-// 	}
-// }
+func (c *nodeMapuint8uint8) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint8uint8)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uint8)(c.child))
+	}
+}
 
 // IterUint8Uint8 The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
@@ -61373,14 +65756,18 @@ func (c *nodeMapuint8uintptr) value() *uintptr {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapuint8uintptr) find(key uint8) (uint, *nodeMapuint8uintptr) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapuint8uintptr) find(key uint8) (crit uint, child, parent *nodeMapuint8uintptr) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapUint8Uintptr) transformKey(key uint8) uint8 {
@@ -61393,6 +65780,21 @@ func (t *MapUint8Uintptr) transformKey(key uint8) uint8 {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapUint8Uintptr) Rem(key uint8) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -61408,7 +65810,7 @@ func (t *MapUint8Uintptr) SetP(key uint8, val *uintptr) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -61424,6 +65826,7 @@ func (t *MapUint8Uintptr) SetP(key uint8, val *uintptr) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -61439,7 +65842,7 @@ func (t *MapUint8Uintptr) GetP(key uint8) (*uintptr, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*uintptr)(l.child), true
 	}
@@ -61463,17 +65866,17 @@ func (t *MapUint8Uintptr) Length() int {
 	return t.length
 }
 
-// func (c *nodeMapuint8uintptr) dbg(p string) {
-// 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
-// 		p += "  "
-// var children = (*[2]nodeMapuint8uintptr)(c.child)
-// 		children[0].dbg(p)
-// 		children[1].dbg(p)
-// 	} else {
-// fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uintptr)(c.child))
-// 	}
-// }
+func (c *nodeMapuint8uintptr) dbg(p string) {
+	if c.crit != ^uint(0) {
+		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
+		p += "  "
+		var children = (*[2]nodeMapuint8uintptr)(c.child)
+		children[0].dbg(p)
+		children[1].dbg(p)
+	} else {
+		fmt.Printf(p+"Leaf: %08b %d\n", c.key, *(*uintptr)(c.child))
+	}
+}
 
 // IterUint8Uintptr The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.

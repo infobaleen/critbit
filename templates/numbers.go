@@ -56,14 +56,18 @@ func (c *nodeMapKeyTypeValueType) value() *ValueType {
 
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
-func (c *nodeMapKeyTypeValueType) find(key KeyType) (uint, *nodeMapKeyTypeValueType) {
-	var crit = c.findCrit(key)
-	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
-	for c.crit != ^uint(0) && c.crit == crit {
-		c = &(c.children())[c.dir(key)]
-		crit = c.findCrit(key)
+// As third value, the parent of the child is returned. If the child is the receiver of the method
+// parent is nil.
+func (c *nodeMapKeyTypeValueType) find(key KeyType) (crit uint, child, parent *nodeMapKeyTypeValueType) {
+	child = c
+	crit = child.findCrit(key)
+	// Keep going deeper until a leaf or an incompatible range is found.
+	for child.crit != ^uint(0) && child.crit == crit {
+		parent = child
+		child = &(child.children())[child.dir(key)]
+		crit = child.findCrit(key)
 	}
-	return crit, c
+	return
 }
 
 func (t *MapKeyTypeValueType) transformKey(key KeyType) KeyType {
@@ -76,6 +80,21 @@ func (t *MapKeyTypeValueType) transformKey(key KeyType) KeyType {
 		return key ^ mask
 	}
 	return key
+}
+
+// Rem removes the value associated with the specified key from the map.
+func (t *MapKeyTypeValueType) Rem(key KeyType) {
+	if t.length == 0 {
+		return
+	}
+	key = t.transformKey(key)
+	var crit, _, parent = t.root.find(key)
+	if crit == ^uint(0) {
+		if parent != nil {
+			*parent = parent.children()[1-parent.dir(key)]
+		}
+		t.length--
+	}
 }
 
 // SetP inserts or replaces the value associated with the specified key.
@@ -91,7 +110,7 @@ func (t *MapKeyTypeValueType) SetP(key KeyType, val *ValueType) {
 		return
 	}
 	// Find node with longest shared prefix and critical bit
-	var crit, n = t.root.find(key)
+	var crit, n, _ = t.root.find(key)
 	// Replace value if the node is a leaf with the same key
 	if crit == ^uint(0) {
 		n.child = unsafe.Pointer(val)
@@ -107,6 +126,7 @@ func (t *MapKeyTypeValueType) SetP(key KeyType, val *ValueType) {
 	children[dir].key = key
 	children[dir].crit = ^uint(0)
 	children[dir].child = unsafe.Pointer(val)
+	t.length++
 }
 
 // Set inserts or replaces the value associated with the specified key.
@@ -122,7 +142,7 @@ func (t *MapKeyTypeValueType) GetP(key KeyType) (*ValueType, bool) {
 		return nil, false
 	}
 	// Find leaf node
-	var crit, l = t.root.find(key)
+	var crit, l, _ = t.root.find(key)
 	if crit == ^uint(0) {
 		return (*ValueType)(l.child), true
 	}
@@ -148,7 +168,7 @@ func (t *MapKeyTypeValueType) Length() int {
 
 // func (c *nodeMapKeyTypeValueType) dbg(p string) {
 // 	if c.crit != ^uint(0) {
-// 		fmt.Printf(p+"Node: %08b %d\n", c.key, c.crit)
+// 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
 // 		p += "  "
 // 		var children = (*[2]nodeMapKeyTypeValueType)(c.child)
 // 		children[0].dbg(p)
