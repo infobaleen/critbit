@@ -13,7 +13,7 @@ func (s UintSlice) Len() int           { return len(s) }
 func (s UintSlice) Less(i, j int) bool { return s[i] < s[j] }
 
 func TestBasic(t *testing.T) {
-	const L = 1000
+	const L = 10000
 	var iRef = make([]int, L)
 	var uRef = make([]uint, L)
 	var iMap MapIntInt
@@ -32,7 +32,7 @@ func TestBasic(t *testing.T) {
 		iMap.Set(el, el)
 	}
 
-	// Check Get
+	// Check contents
 	for _, r := range uRef {
 		if el, ok := uMap.Get(r); !ok || r != el {
 			t.Fatal("Unsigned entry not found or wrong value", r, el, ok)
@@ -49,7 +49,7 @@ func TestBasic(t *testing.T) {
 	sort.Sort(UintSlice(uRef))
 	for i := uMap.Iterator(); i.Next(); uRef = uRef[1:] {
 		if r := uRef[0]; r != i.Key || r != *i.Value {
-			t.Fatal("Wrong unsigned key or value", r, i.Key, *i.Value)
+			t.Fatal("Wrong unsigned key or value", r, i.Key, i.Value)
 		}
 	}
 	if l := len(uRef); l > 0 {
@@ -57,7 +57,7 @@ func TestBasic(t *testing.T) {
 	}
 	for i := iMap.Iterator(); i.Next(); iRef = iRef[1:] {
 		if r := iRef[0]; r != i.Key || r != *i.Value {
-			t.Fatal("Wrong signed key or value", r, i.Key, *i.Value)
+			t.Fatal("Wrong signed key or value", r, i.Key, i.Value)
 		}
 	}
 	if l := len(iRef); l > 0 {
@@ -67,21 +67,31 @@ func TestBasic(t *testing.T) {
 
 func TestSeek(t *testing.T) {
 	var m MapUintUint
-	var uRef = UintSlice{0, 1, 4, 5, 7, 8}
+	var uRef = UintSlice{8, 4, 0, 5, 7, 1}
 	for _, v := range uRef {
 		m.Set(v, v)
 	}
 	var it = m.Iterator()
 	for _, r := range uRef {
-		it.Seek(0)
+		it.Seek(r)
 		it.Next()
-		if it.Found != true || it.Key != 0 || *it.Value != 0 {
-			t.Fatal("Wrong key or value", r, it.Found, it.Key, *it.Value)
+		if it.Found != true || it.Key != r || *it.Value != r {
+			t.Fatal("Wrong key or value from Next after Seek", r, it.Found, it.Key, it.Value)
+		}
+		it.Seek(r)
+		it.Prev()
+		if it.Found != true || it.Key != r || *it.Value != r {
+			t.Fatal("Wrong key or value from Prev after Seek", r, it.Found, it.Key, it.Value)
 		}
 	}
 	it.Seek(2)
 	it.Next()
 	if it.Found != true || it.Key != 4 || *it.Value != 4 {
-		t.Fatal("Wrong key or value", 4, it.Found, it.Key, *it.Value)
+		t.Fatal("Wrong key or value from Next after Seek with non-existent key", 4, it.Found, it.Key, it.Value)
+	}
+	it.Seek(2)
+	it.Prev()
+	if it.Found != true || it.Key != 1 || *it.Value != 1 {
+		t.Fatal("Wrong key or value from Prev after Seek with non-existent key", 4, it.Found, it.Key, it.Value)
 	}
 }

@@ -56,15 +56,12 @@ func (c *nodeMapKeyTypeValueType) value() *ValueType {
 // If a leaf with the same key is found, ^uint(0) and leaf node are returned.
 // Otherwise, the critical bit and the first child with differing prefix are returned.
 func (c *nodeMapKeyTypeValueType) find(key KeyType) (uint, *nodeMapKeyTypeValueType) {
-	//fmt.Println("  Find start", key)
 	var crit = c.findCrit(key)
 	// Keep going deeper until !(c.crit != ^uint(0) && c.crit == crit).
 	for c.crit != ^uint(0) && c.crit == crit {
-		//fmt.Printf("    Go deeper. Prefix: %08b, Key: %08b, Crit: %d, Dir: %d\n", c.key, key, crit, c.dir(key))
 		c = &(c.children())[c.dir(key)]
 		crit = c.findCrit(key)
 	}
-	//fmt.Println("    Find end", crit, key, c.key)
 	return crit, c
 }
 
@@ -84,8 +81,6 @@ func (t *MapKeyTypeValueType) transformKey(key KeyType) KeyType {
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapKeyTypeValueType) SetP(key KeyType, val *ValueType) {
 	key = t.transformKey(key)
-	//fmt.Println("Set", key, val)
-	//defer t.root.dbg("  ")
 	// Make leaf node if tree is empty
 	if t.length == 0 {
 		t.length++
@@ -122,7 +117,6 @@ func (t *MapKeyTypeValueType) Set(key KeyType, val ValueType) {
 // Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
 func (t *MapKeyTypeValueType) GetP(key KeyType) (*ValueType, bool) {
 	key = t.transformKey(key)
-	//fmt.Println("Get", key)
 	if t.length == 0 {
 		return nil, false
 	}
@@ -166,11 +160,12 @@ func (t *MapKeyTypeValueType) Length() int {
 // IterKeyTypeValueType The iterator becomes invalid
 // if a new value is inserted in the underlying map, until the Reset or Jump method is called.
 type IterKeyTypeValueType struct {
-	t     *MapKeyTypeValueType
-	nodes []*nodeMapKeyTypeValueType
-	Found bool       // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
-	Key   KeyType    // Key found by last call to Next, Prev.
-	Value *ValueType // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	t       *MapKeyTypeValueType
+	nodes   []*nodeMapKeyTypeValueType
+	lastDir int
+	Found   bool       // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
+	Key     KeyType    // Key found by last call to Next, Prev.
+	Value   *ValueType // Pointer to value associated with key found by most last call to Next, Prev or Jump
 }
 
 // Iterator returns a new IterKeyTypeValueType.
@@ -181,9 +176,9 @@ func (t *MapKeyTypeValueType) Iterator() *IterKeyTypeValueType {
 	return &i
 }
 
-// Jump advances the iterator to the specified key, independent of current state. If the exact key is found
-// it returns true, otherwise false. Independent of whether the key is found or not, the next call to Prev or Next
-// will advance the iterator to the next lower or higher key if there is one.
+// Seek initializes the iterator in a state that will be advanced to the specified key
+// on the next call to Prev or Next. If the key does not exist, the next call to Prev or Next
+// will advance the iterator to the next lower or higher key respectively (or the respective end of the map).
 func (i *IterKeyTypeValueType) Seek(key KeyType) {
 	key = i.t.transformKey(key)
 	i.Reset()
@@ -191,27 +186,36 @@ func (i *IterKeyTypeValueType) Seek(key KeyType) {
 		return
 	}
 	var last = &i.t.root
-	//var crit = c.findCrit(key)
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
 	if last.crit != ^uint(0) || key != last.key {
-		i.nodes = i.nodes[0 : len(i.nodes)-1]
+		// Key not found.
+		if len(i.nodes) == 1 {
+			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
+			i.lastDir = 1
+			if key > last.key {
+				i.lastDir = 0
+			}
+			i.nodes = i.nodes[0:0]
+		}
+	} else {
+		// Key found
+		i.nodes = append(i.nodes, last)
 	}
 }
 
-// Reset restores the initial state.
+// Reset restores the iterator to the initial state.
 func (i *IterKeyTypeValueType) Reset() {
 	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
+	i.lastDir = 2
 	if i.nodes == nil {
 		i.nodes = make([]*nodeMapKeyTypeValueType, 0, 64)
-	}
-	if i.t.length > 0 {
-		i.nodes = i.nodes[0:1]
-		i.nodes[0] = &i.t.root
+	} else {
+		i.nodes = i.nodes[0:0]
 	}
 }
 
@@ -223,36 +227,63 @@ func (i *IterKeyTypeValueType) Next() bool {
 	return i.Found
 }
 
+// Next advances the iterator to the next higher key and populates the iterators public Fields.
+// If the iterator is in the initial state, the first call to Next will set the iterator to the lowest key.
+// The return value is True unless there is no next higher key to advance to.
+func (i *IterKeyTypeValueType) Prev() bool {
+	i.step(0)
+	return i.Found
+}
+
 func (i *IterKeyTypeValueType) step(dir int) {
-	// Comments describe behavior with dir == 1 (iterate from left to right).
-	i.Found = false
-	if len(i.nodes) == 0 { // Invalid
-		return
-	}
-	// Go left until next leaf is found
-	var next *nodeMapKeyTypeValueType = i.nodes[len(i.nodes)-1]
-	for next.crit != ^uint(0) {
-		next = &(*[2]nodeMapKeyTypeValueType)(next.child)[1-dir]
-		i.nodes = append(i.nodes, next)
-	}
-	// Found leaf. Store data.
-	i.Key = i.t.transformKey(next.key)
-	i.Value = (*ValueType)(next.child)
-	i.Found = true
-	// Go up until a left node is found. Then one to the right if there is one.
-	var d = len(i.nodes)
-	var last = i.nodes[d-1]
-	for d > 1 {
-		var previous = i.nodes[d-2]
-		if &(*[2]nodeMapKeyTypeValueType)(previous.child)[1-dir] == last {
-			// Found left node. Replace with right node.
-			i.nodes[d-1] = &(*[2]nodeMapKeyTypeValueType)(previous.child)[dir]
-			i.nodes = i.nodes[0:d]
+	// Check if iterator is at some node from a Seek, a leaf from step or at an end
+	if len(i.nodes) == 0 {
+		// Iterator is at end of map.
+		if i.lastDir != dir && i.t.length > 0 {
+			// Direction changed or not defined yet. Use root as starting point.
+			i.lastDir = dir
+			i.nodes = append(i.nodes, &i.t.root)
+		} else {
+			// End of map.
+			i.Found = false
 			return
 		}
-		last = previous
-		i.nodes[d-1] = nil // Help gc
-		d--
+	} else if i.lastDir == 2 {
+		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
+			i.nodes = append(i.nodes, &current.children()[dir])
+		}
+	} else {
+		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
+		// Go up until we are at a left child. Then go to the sibling.
+		for {
+			// Check if there is a parent
+			if len(i.nodes) == 1 {
+				// No parent. Set end of map state.
+				i.nodes = i.nodes[0:0]
+				i.Found = false
+				return
+			}
+			// If current node is left, replace it with the right one and stop going up.
+			var rigthChild = &i.nodes[len(i.nodes)-2].children()[dir]
+			if rigthChild != i.nodes[len(i.nodes)-1] {
+				i.nodes[len(i.nodes)-1] = rigthChild
+				break
+			}
+			// Go up
+			i.nodes[len(i.nodes)-1] = nil // Help gc
+			i.nodes = i.nodes[0 : len(i.nodes)-1]
+		}
 	}
-	i.nodes = i.nodes[0:0]
+	// Find next leaf by walking in correct direction. Comments describe behavior with dir == 1 (left to right).
+	// Go left until next leaf is found.
+	var current = i.nodes[len(i.nodes)-1]
+	for current.crit != ^uint(0) {
+		current = &current.children()[1-dir]
+		i.nodes = append(i.nodes, current)
+	}
+	// Found leaf. Store data.
+	i.Key = i.t.transformKey(current.key)
+	i.Value = current.value()
+	i.Found = true
 }
