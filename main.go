@@ -1,3 +1,3 @@
 package critbit
 
-//go:generate genny -in templates/numbers.go -out generated.go gen "KeyType=int,int64,int32,int16,int8,uint,uintptr,uint64,uint32,uint16,uint8 ValueType=BUILTINS"
+//go:generate genny -in integer/map.go -out integerMaps.go gen "KeyType=int,int64,int32,int16,int8,uint,uintptr,uint64,uint32,uint16,uint8 ValueType=BUILTINS"
