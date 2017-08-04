@@ -83,23 +83,23 @@ func TestSeek(t *testing.T) {
 	for _, r := range uRef {
 		it.Seek(r)
 		it.Next()
-		if it.Found != true || it.Key != r || *it.Value != r {
-			t.Fatal("Wrong key or value from Next after Seek", r, it.Found, it.Key, it.Value)
+		if it.Key != r || it.Value == nil || *it.Value != r {
+			t.Fatal("Wrong key or value from Next after Seek", r, it.Key, it.Value)
 		}
 		it.Seek(r)
 		it.Prev()
-		if it.Found != true || it.Key != r || *it.Value != r {
-			t.Fatal("Wrong key or value from Prev after Seek", r, it.Found, it.Key, it.Value)
+		if it.Key != r || it.Value == nil || *it.Value != r {
+			t.Fatal("Wrong key or value from Prev after Seek", r, it.Key, it.Value)
 		}
 	}
 	it.Seek(2)
 	it.Next()
-	if it.Found != true || it.Key != 4 || *it.Value != 4 {
-		t.Fatal("Wrong key or value from Next after Seek with non-existent key", 4, it.Found, it.Key, it.Value)
+	if it.Key != 4 || it.Value == nil || *it.Value != 4 {
+		t.Fatal("Wrong key or value from Next after Seek with non-existent key", 4, it.Key, it.Value)
 	}
 	it.Seek(2)
 	it.Prev()
-	if it.Found != true || it.Key != 1 || *it.Value != 1 {
-		t.Fatal("Wrong key or value from Prev after Seek with non-existent key", 4, it.Found, it.Key, it.Value)
+	if it.Key != 1 || it.Value == nil || *it.Value != 1 {
+		t.Fatal("Wrong key or value from Prev after Seek with non-existent key", 4, it.Key, it.Value)
 	}
 }

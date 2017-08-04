@@ -100,6 +100,10 @@ func (t *MapKeyTypeValueType) Rem(key KeyType) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapKeyTypeValueType) SetP(key KeyType, val *ValueType) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -134,31 +138,30 @@ func (t *MapKeyTypeValueType) Set(key KeyType, val ValueType) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapKeyTypeValueType) GetP(key KeyType) (*ValueType, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapKeyTypeValueType) GetP(key KeyType) *ValueType {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*ValueType)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*ValueType)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapKeyTypeValueType) Get(key KeyType) (ValueType, bool) {
-	var v ValueType
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero ValueType
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -184,9 +187,8 @@ type IterKeyTypeValueType struct {
 	t       *MapKeyTypeValueType
 	nodes   []*nodeMapKeyTypeValueType
 	lastDir int
-	Found   bool       // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     KeyType    // Key found by last call to Next, Prev.
-	Value   *ValueType // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *ValueType // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterKeyTypeValueType.
@@ -229,7 +231,6 @@ func (i *IterKeyTypeValueType) Seek(key KeyType) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterKeyTypeValueType) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -245,7 +246,7 @@ func (i *IterKeyTypeValueType) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterKeyTypeValueType) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -253,7 +254,7 @@ func (i *IterKeyTypeValueType) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterKeyTypeValueType) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterKeyTypeValueType) step(dir int) {
@@ -266,7 +267,7 @@ func (i *IterKeyTypeValueType) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -282,7 +283,7 @@ func (i *IterKeyTypeValueType) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -306,5 +307,4 @@ func (i *IterKeyTypeValueType) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }

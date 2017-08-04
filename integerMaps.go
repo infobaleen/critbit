@@ -97,6 +97,10 @@ func (t *MapIntBool) Rem(key int) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapIntBool) SetP(key int, val *bool) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -131,31 +135,30 @@ func (t *MapIntBool) Set(key int, val bool) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapIntBool) GetP(key int) (*bool, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapIntBool) GetP(key int) *bool {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*bool)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*bool)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapIntBool) Get(key int) (bool, bool) {
-	var v bool
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero bool
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -181,9 +184,8 @@ type IterIntBool struct {
 	t       *MapIntBool
 	nodes   []*nodeMapintbool
 	lastDir int
-	Found   bool  // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int   // Key found by last call to Next, Prev.
-	Value   *bool // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *bool // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterIntBool.
@@ -226,7 +228,6 @@ func (i *IterIntBool) Seek(key int) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterIntBool) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -242,7 +243,7 @@ func (i *IterIntBool) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterIntBool) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -250,7 +251,7 @@ func (i *IterIntBool) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterIntBool) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterIntBool) step(dir int) {
@@ -263,7 +264,7 @@ func (i *IterIntBool) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -279,7 +280,7 @@ func (i *IterIntBool) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -303,7 +304,6 @@ func (i *IterIntBool) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapIntByte implements an associative array of byte indexed by int.
@@ -397,6 +397,10 @@ func (t *MapIntByte) Rem(key int) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapIntByte) SetP(key int, val *byte) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -431,31 +435,30 @@ func (t *MapIntByte) Set(key int, val byte) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapIntByte) GetP(key int) (*byte, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapIntByte) GetP(key int) *byte {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*byte)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*byte)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapIntByte) Get(key int) (byte, bool) {
-	var v byte
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero byte
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -481,9 +484,8 @@ type IterIntByte struct {
 	t       *MapIntByte
 	nodes   []*nodeMapintbyte
 	lastDir int
-	Found   bool  // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int   // Key found by last call to Next, Prev.
-	Value   *byte // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *byte // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterIntByte.
@@ -526,7 +528,6 @@ func (i *IterIntByte) Seek(key int) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterIntByte) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -542,7 +543,7 @@ func (i *IterIntByte) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterIntByte) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -550,7 +551,7 @@ func (i *IterIntByte) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterIntByte) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterIntByte) step(dir int) {
@@ -563,7 +564,7 @@ func (i *IterIntByte) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -579,7 +580,7 @@ func (i *IterIntByte) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -603,7 +604,6 @@ func (i *IterIntByte) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapIntComplex128 implements an associative array of complex128 indexed by int.
@@ -697,6 +697,10 @@ func (t *MapIntComplex128) Rem(key int) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapIntComplex128) SetP(key int, val *complex128) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -731,31 +735,30 @@ func (t *MapIntComplex128) Set(key int, val complex128) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapIntComplex128) GetP(key int) (*complex128, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapIntComplex128) GetP(key int) *complex128 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*complex128)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*complex128)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapIntComplex128) Get(key int) (complex128, bool) {
-	var v complex128
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero complex128
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -781,9 +784,8 @@ type IterIntComplex128 struct {
 	t       *MapIntComplex128
 	nodes   []*nodeMapintcomplex128
 	lastDir int
-	Found   bool        // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int         // Key found by last call to Next, Prev.
-	Value   *complex128 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *complex128 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterIntComplex128.
@@ -826,7 +828,6 @@ func (i *IterIntComplex128) Seek(key int) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterIntComplex128) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -842,7 +843,7 @@ func (i *IterIntComplex128) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterIntComplex128) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -850,7 +851,7 @@ func (i *IterIntComplex128) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterIntComplex128) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterIntComplex128) step(dir int) {
@@ -863,7 +864,7 @@ func (i *IterIntComplex128) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -879,7 +880,7 @@ func (i *IterIntComplex128) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -903,7 +904,6 @@ func (i *IterIntComplex128) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapIntComplex64 implements an associative array of complex64 indexed by int.
@@ -997,6 +997,10 @@ func (t *MapIntComplex64) Rem(key int) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapIntComplex64) SetP(key int, val *complex64) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -1031,31 +1035,30 @@ func (t *MapIntComplex64) Set(key int, val complex64) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapIntComplex64) GetP(key int) (*complex64, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapIntComplex64) GetP(key int) *complex64 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*complex64)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*complex64)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapIntComplex64) Get(key int) (complex64, bool) {
-	var v complex64
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero complex64
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -1081,9 +1084,8 @@ type IterIntComplex64 struct {
 	t       *MapIntComplex64
 	nodes   []*nodeMapintcomplex64
 	lastDir int
-	Found   bool       // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int        // Key found by last call to Next, Prev.
-	Value   *complex64 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *complex64 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterIntComplex64.
@@ -1126,7 +1128,6 @@ func (i *IterIntComplex64) Seek(key int) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterIntComplex64) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -1142,7 +1143,7 @@ func (i *IterIntComplex64) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterIntComplex64) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -1150,7 +1151,7 @@ func (i *IterIntComplex64) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterIntComplex64) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterIntComplex64) step(dir int) {
@@ -1163,7 +1164,7 @@ func (i *IterIntComplex64) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -1179,7 +1180,7 @@ func (i *IterIntComplex64) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -1203,7 +1204,6 @@ func (i *IterIntComplex64) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapIntError implements an associative array of error indexed by int.
@@ -1297,6 +1297,10 @@ func (t *MapIntError) Rem(key int) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapIntError) SetP(key int, val *error) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -1331,31 +1335,30 @@ func (t *MapIntError) Set(key int, val error) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapIntError) GetP(key int) (*error, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapIntError) GetP(key int) *error {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*error)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*error)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapIntError) Get(key int) (error, bool) {
-	var v error
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero error
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -1381,9 +1384,8 @@ type IterIntError struct {
 	t       *MapIntError
 	nodes   []*nodeMapinterror
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int    // Key found by last call to Next, Prev.
-	Value   *error // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *error // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterIntError.
@@ -1426,7 +1428,6 @@ func (i *IterIntError) Seek(key int) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterIntError) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -1442,7 +1443,7 @@ func (i *IterIntError) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterIntError) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -1450,7 +1451,7 @@ func (i *IterIntError) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterIntError) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterIntError) step(dir int) {
@@ -1463,7 +1464,7 @@ func (i *IterIntError) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -1479,7 +1480,7 @@ func (i *IterIntError) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -1503,7 +1504,6 @@ func (i *IterIntError) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapIntFloat32 implements an associative array of float32 indexed by int.
@@ -1597,6 +1597,10 @@ func (t *MapIntFloat32) Rem(key int) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapIntFloat32) SetP(key int, val *float32) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -1631,31 +1635,30 @@ func (t *MapIntFloat32) Set(key int, val float32) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapIntFloat32) GetP(key int) (*float32, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapIntFloat32) GetP(key int) *float32 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*float32)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*float32)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapIntFloat32) Get(key int) (float32, bool) {
-	var v float32
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero float32
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -1681,9 +1684,8 @@ type IterIntFloat32 struct {
 	t       *MapIntFloat32
 	nodes   []*nodeMapintfloat32
 	lastDir int
-	Found   bool     // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int      // Key found by last call to Next, Prev.
-	Value   *float32 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *float32 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterIntFloat32.
@@ -1726,7 +1728,6 @@ func (i *IterIntFloat32) Seek(key int) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterIntFloat32) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -1742,7 +1743,7 @@ func (i *IterIntFloat32) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterIntFloat32) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -1750,7 +1751,7 @@ func (i *IterIntFloat32) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterIntFloat32) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterIntFloat32) step(dir int) {
@@ -1763,7 +1764,7 @@ func (i *IterIntFloat32) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -1779,7 +1780,7 @@ func (i *IterIntFloat32) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -1803,7 +1804,6 @@ func (i *IterIntFloat32) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapIntFloat64 implements an associative array of float64 indexed by int.
@@ -1897,6 +1897,10 @@ func (t *MapIntFloat64) Rem(key int) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapIntFloat64) SetP(key int, val *float64) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -1931,31 +1935,30 @@ func (t *MapIntFloat64) Set(key int, val float64) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapIntFloat64) GetP(key int) (*float64, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapIntFloat64) GetP(key int) *float64 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*float64)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*float64)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapIntFloat64) Get(key int) (float64, bool) {
-	var v float64
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero float64
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -1981,9 +1984,8 @@ type IterIntFloat64 struct {
 	t       *MapIntFloat64
 	nodes   []*nodeMapintfloat64
 	lastDir int
-	Found   bool     // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int      // Key found by last call to Next, Prev.
-	Value   *float64 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *float64 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterIntFloat64.
@@ -2026,7 +2028,6 @@ func (i *IterIntFloat64) Seek(key int) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterIntFloat64) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -2042,7 +2043,7 @@ func (i *IterIntFloat64) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterIntFloat64) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -2050,7 +2051,7 @@ func (i *IterIntFloat64) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterIntFloat64) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterIntFloat64) step(dir int) {
@@ -2063,7 +2064,7 @@ func (i *IterIntFloat64) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -2079,7 +2080,7 @@ func (i *IterIntFloat64) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -2103,7 +2104,6 @@ func (i *IterIntFloat64) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapIntInt implements an associative array of int indexed by int.
@@ -2197,6 +2197,10 @@ func (t *MapIntInt) Rem(key int) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapIntInt) SetP(key int, val *int) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -2231,31 +2235,30 @@ func (t *MapIntInt) Set(key int, val int) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapIntInt) GetP(key int) (*int, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapIntInt) GetP(key int) *int {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*int)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*int)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapIntInt) Get(key int) (int, bool) {
-	var v int
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero int
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -2281,9 +2284,8 @@ type IterIntInt struct {
 	t       *MapIntInt
 	nodes   []*nodeMapintint
 	lastDir int
-	Found   bool // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int  // Key found by last call to Next, Prev.
-	Value   *int // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *int // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterIntInt.
@@ -2326,7 +2328,6 @@ func (i *IterIntInt) Seek(key int) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterIntInt) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -2342,7 +2343,7 @@ func (i *IterIntInt) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterIntInt) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -2350,7 +2351,7 @@ func (i *IterIntInt) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterIntInt) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterIntInt) step(dir int) {
@@ -2363,7 +2364,7 @@ func (i *IterIntInt) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -2379,7 +2380,7 @@ func (i *IterIntInt) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -2403,7 +2404,6 @@ func (i *IterIntInt) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapIntInt16 implements an associative array of int16 indexed by int.
@@ -2497,6 +2497,10 @@ func (t *MapIntInt16) Rem(key int) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapIntInt16) SetP(key int, val *int16) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -2531,31 +2535,30 @@ func (t *MapIntInt16) Set(key int, val int16) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapIntInt16) GetP(key int) (*int16, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapIntInt16) GetP(key int) *int16 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*int16)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*int16)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapIntInt16) Get(key int) (int16, bool) {
-	var v int16
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero int16
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -2581,9 +2584,8 @@ type IterIntInt16 struct {
 	t       *MapIntInt16
 	nodes   []*nodeMapintint16
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int    // Key found by last call to Next, Prev.
-	Value   *int16 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *int16 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterIntInt16.
@@ -2626,7 +2628,6 @@ func (i *IterIntInt16) Seek(key int) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterIntInt16) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -2642,7 +2643,7 @@ func (i *IterIntInt16) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterIntInt16) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -2650,7 +2651,7 @@ func (i *IterIntInt16) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterIntInt16) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterIntInt16) step(dir int) {
@@ -2663,7 +2664,7 @@ func (i *IterIntInt16) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -2679,7 +2680,7 @@ func (i *IterIntInt16) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -2703,7 +2704,6 @@ func (i *IterIntInt16) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapIntInt32 implements an associative array of int32 indexed by int.
@@ -2797,6 +2797,10 @@ func (t *MapIntInt32) Rem(key int) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapIntInt32) SetP(key int, val *int32) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -2831,31 +2835,30 @@ func (t *MapIntInt32) Set(key int, val int32) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapIntInt32) GetP(key int) (*int32, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapIntInt32) GetP(key int) *int32 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*int32)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*int32)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapIntInt32) Get(key int) (int32, bool) {
-	var v int32
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero int32
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -2881,9 +2884,8 @@ type IterIntInt32 struct {
 	t       *MapIntInt32
 	nodes   []*nodeMapintint32
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int    // Key found by last call to Next, Prev.
-	Value   *int32 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *int32 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterIntInt32.
@@ -2926,7 +2928,6 @@ func (i *IterIntInt32) Seek(key int) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterIntInt32) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -2942,7 +2943,7 @@ func (i *IterIntInt32) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterIntInt32) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -2950,7 +2951,7 @@ func (i *IterIntInt32) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterIntInt32) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterIntInt32) step(dir int) {
@@ -2963,7 +2964,7 @@ func (i *IterIntInt32) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -2979,7 +2980,7 @@ func (i *IterIntInt32) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -3003,7 +3004,6 @@ func (i *IterIntInt32) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapIntInt64 implements an associative array of int64 indexed by int.
@@ -3097,6 +3097,10 @@ func (t *MapIntInt64) Rem(key int) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapIntInt64) SetP(key int, val *int64) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -3131,31 +3135,30 @@ func (t *MapIntInt64) Set(key int, val int64) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapIntInt64) GetP(key int) (*int64, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapIntInt64) GetP(key int) *int64 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*int64)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*int64)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapIntInt64) Get(key int) (int64, bool) {
-	var v int64
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero int64
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -3181,9 +3184,8 @@ type IterIntInt64 struct {
 	t       *MapIntInt64
 	nodes   []*nodeMapintint64
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int    // Key found by last call to Next, Prev.
-	Value   *int64 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *int64 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterIntInt64.
@@ -3226,7 +3228,6 @@ func (i *IterIntInt64) Seek(key int) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterIntInt64) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -3242,7 +3243,7 @@ func (i *IterIntInt64) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterIntInt64) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -3250,7 +3251,7 @@ func (i *IterIntInt64) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterIntInt64) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterIntInt64) step(dir int) {
@@ -3263,7 +3264,7 @@ func (i *IterIntInt64) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -3279,7 +3280,7 @@ func (i *IterIntInt64) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -3303,7 +3304,6 @@ func (i *IterIntInt64) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapIntInt8 implements an associative array of int8 indexed by int.
@@ -3397,6 +3397,10 @@ func (t *MapIntInt8) Rem(key int) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapIntInt8) SetP(key int, val *int8) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -3431,31 +3435,30 @@ func (t *MapIntInt8) Set(key int, val int8) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapIntInt8) GetP(key int) (*int8, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapIntInt8) GetP(key int) *int8 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*int8)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*int8)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapIntInt8) Get(key int) (int8, bool) {
-	var v int8
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero int8
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -3481,9 +3484,8 @@ type IterIntInt8 struct {
 	t       *MapIntInt8
 	nodes   []*nodeMapintint8
 	lastDir int
-	Found   bool  // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int   // Key found by last call to Next, Prev.
-	Value   *int8 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *int8 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterIntInt8.
@@ -3526,7 +3528,6 @@ func (i *IterIntInt8) Seek(key int) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterIntInt8) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -3542,7 +3543,7 @@ func (i *IterIntInt8) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterIntInt8) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -3550,7 +3551,7 @@ func (i *IterIntInt8) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterIntInt8) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterIntInt8) step(dir int) {
@@ -3563,7 +3564,7 @@ func (i *IterIntInt8) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -3579,7 +3580,7 @@ func (i *IterIntInt8) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -3603,7 +3604,6 @@ func (i *IterIntInt8) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapIntRune implements an associative array of rune indexed by int.
@@ -3697,6 +3697,10 @@ func (t *MapIntRune) Rem(key int) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapIntRune) SetP(key int, val *rune) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -3731,31 +3735,30 @@ func (t *MapIntRune) Set(key int, val rune) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapIntRune) GetP(key int) (*rune, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapIntRune) GetP(key int) *rune {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*rune)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*rune)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapIntRune) Get(key int) (rune, bool) {
-	var v rune
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero rune
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -3781,9 +3784,8 @@ type IterIntRune struct {
 	t       *MapIntRune
 	nodes   []*nodeMapintrune
 	lastDir int
-	Found   bool  // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int   // Key found by last call to Next, Prev.
-	Value   *rune // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *rune // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterIntRune.
@@ -3826,7 +3828,6 @@ func (i *IterIntRune) Seek(key int) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterIntRune) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -3842,7 +3843,7 @@ func (i *IterIntRune) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterIntRune) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -3850,7 +3851,7 @@ func (i *IterIntRune) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterIntRune) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterIntRune) step(dir int) {
@@ -3863,7 +3864,7 @@ func (i *IterIntRune) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -3879,7 +3880,7 @@ func (i *IterIntRune) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -3903,7 +3904,6 @@ func (i *IterIntRune) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapIntString implements an associative array of string indexed by int.
@@ -3997,6 +3997,10 @@ func (t *MapIntString) Rem(key int) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapIntString) SetP(key int, val *string) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -4031,31 +4035,30 @@ func (t *MapIntString) Set(key int, val string) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapIntString) GetP(key int) (*string, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapIntString) GetP(key int) *string {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*string)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*string)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapIntString) Get(key int) (string, bool) {
-	var v string
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero string
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -4081,9 +4084,8 @@ type IterIntString struct {
 	t       *MapIntString
 	nodes   []*nodeMapintstring
 	lastDir int
-	Found   bool    // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int     // Key found by last call to Next, Prev.
-	Value   *string // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *string // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterIntString.
@@ -4126,7 +4128,6 @@ func (i *IterIntString) Seek(key int) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterIntString) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -4142,7 +4143,7 @@ func (i *IterIntString) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterIntString) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -4150,7 +4151,7 @@ func (i *IterIntString) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterIntString) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterIntString) step(dir int) {
@@ -4163,7 +4164,7 @@ func (i *IterIntString) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -4179,7 +4180,7 @@ func (i *IterIntString) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -4203,7 +4204,6 @@ func (i *IterIntString) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapIntUint implements an associative array of uint indexed by int.
@@ -4297,6 +4297,10 @@ func (t *MapIntUint) Rem(key int) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapIntUint) SetP(key int, val *uint) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -4331,31 +4335,30 @@ func (t *MapIntUint) Set(key int, val uint) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapIntUint) GetP(key int) (*uint, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapIntUint) GetP(key int) *uint {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uint)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uint)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapIntUint) Get(key int) (uint, bool) {
-	var v uint
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uint
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -4381,9 +4384,8 @@ type IterIntUint struct {
 	t       *MapIntUint
 	nodes   []*nodeMapintuint
 	lastDir int
-	Found   bool  // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int   // Key found by last call to Next, Prev.
-	Value   *uint // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uint // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterIntUint.
@@ -4426,7 +4428,6 @@ func (i *IterIntUint) Seek(key int) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterIntUint) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -4442,7 +4443,7 @@ func (i *IterIntUint) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterIntUint) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -4450,7 +4451,7 @@ func (i *IterIntUint) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterIntUint) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterIntUint) step(dir int) {
@@ -4463,7 +4464,7 @@ func (i *IterIntUint) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -4479,7 +4480,7 @@ func (i *IterIntUint) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -4503,7 +4504,6 @@ func (i *IterIntUint) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapIntUint16 implements an associative array of uint16 indexed by int.
@@ -4597,6 +4597,10 @@ func (t *MapIntUint16) Rem(key int) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapIntUint16) SetP(key int, val *uint16) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -4631,31 +4635,30 @@ func (t *MapIntUint16) Set(key int, val uint16) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapIntUint16) GetP(key int) (*uint16, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapIntUint16) GetP(key int) *uint16 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uint16)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uint16)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapIntUint16) Get(key int) (uint16, bool) {
-	var v uint16
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uint16
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -4681,9 +4684,8 @@ type IterIntUint16 struct {
 	t       *MapIntUint16
 	nodes   []*nodeMapintuint16
 	lastDir int
-	Found   bool    // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int     // Key found by last call to Next, Prev.
-	Value   *uint16 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uint16 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterIntUint16.
@@ -4726,7 +4728,6 @@ func (i *IterIntUint16) Seek(key int) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterIntUint16) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -4742,7 +4743,7 @@ func (i *IterIntUint16) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterIntUint16) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -4750,7 +4751,7 @@ func (i *IterIntUint16) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterIntUint16) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterIntUint16) step(dir int) {
@@ -4763,7 +4764,7 @@ func (i *IterIntUint16) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -4779,7 +4780,7 @@ func (i *IterIntUint16) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -4803,7 +4804,6 @@ func (i *IterIntUint16) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapIntUint32 implements an associative array of uint32 indexed by int.
@@ -4897,6 +4897,10 @@ func (t *MapIntUint32) Rem(key int) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapIntUint32) SetP(key int, val *uint32) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -4931,31 +4935,30 @@ func (t *MapIntUint32) Set(key int, val uint32) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapIntUint32) GetP(key int) (*uint32, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapIntUint32) GetP(key int) *uint32 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uint32)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uint32)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapIntUint32) Get(key int) (uint32, bool) {
-	var v uint32
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uint32
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -4981,9 +4984,8 @@ type IterIntUint32 struct {
 	t       *MapIntUint32
 	nodes   []*nodeMapintuint32
 	lastDir int
-	Found   bool    // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int     // Key found by last call to Next, Prev.
-	Value   *uint32 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uint32 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterIntUint32.
@@ -5026,7 +5028,6 @@ func (i *IterIntUint32) Seek(key int) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterIntUint32) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -5042,7 +5043,7 @@ func (i *IterIntUint32) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterIntUint32) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -5050,7 +5051,7 @@ func (i *IterIntUint32) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterIntUint32) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterIntUint32) step(dir int) {
@@ -5063,7 +5064,7 @@ func (i *IterIntUint32) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -5079,7 +5080,7 @@ func (i *IterIntUint32) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -5103,7 +5104,6 @@ func (i *IterIntUint32) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapIntUint64 implements an associative array of uint64 indexed by int.
@@ -5197,6 +5197,10 @@ func (t *MapIntUint64) Rem(key int) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapIntUint64) SetP(key int, val *uint64) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -5231,31 +5235,30 @@ func (t *MapIntUint64) Set(key int, val uint64) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapIntUint64) GetP(key int) (*uint64, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapIntUint64) GetP(key int) *uint64 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uint64)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uint64)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapIntUint64) Get(key int) (uint64, bool) {
-	var v uint64
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uint64
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -5281,9 +5284,8 @@ type IterIntUint64 struct {
 	t       *MapIntUint64
 	nodes   []*nodeMapintuint64
 	lastDir int
-	Found   bool    // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int     // Key found by last call to Next, Prev.
-	Value   *uint64 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uint64 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterIntUint64.
@@ -5326,7 +5328,6 @@ func (i *IterIntUint64) Seek(key int) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterIntUint64) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -5342,7 +5343,7 @@ func (i *IterIntUint64) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterIntUint64) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -5350,7 +5351,7 @@ func (i *IterIntUint64) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterIntUint64) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterIntUint64) step(dir int) {
@@ -5363,7 +5364,7 @@ func (i *IterIntUint64) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -5379,7 +5380,7 @@ func (i *IterIntUint64) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -5403,7 +5404,6 @@ func (i *IterIntUint64) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapIntUint8 implements an associative array of uint8 indexed by int.
@@ -5497,6 +5497,10 @@ func (t *MapIntUint8) Rem(key int) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapIntUint8) SetP(key int, val *uint8) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -5531,31 +5535,30 @@ func (t *MapIntUint8) Set(key int, val uint8) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapIntUint8) GetP(key int) (*uint8, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapIntUint8) GetP(key int) *uint8 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uint8)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uint8)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapIntUint8) Get(key int) (uint8, bool) {
-	var v uint8
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uint8
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -5581,9 +5584,8 @@ type IterIntUint8 struct {
 	t       *MapIntUint8
 	nodes   []*nodeMapintuint8
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int    // Key found by last call to Next, Prev.
-	Value   *uint8 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uint8 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterIntUint8.
@@ -5626,7 +5628,6 @@ func (i *IterIntUint8) Seek(key int) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterIntUint8) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -5642,7 +5643,7 @@ func (i *IterIntUint8) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterIntUint8) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -5650,7 +5651,7 @@ func (i *IterIntUint8) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterIntUint8) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterIntUint8) step(dir int) {
@@ -5663,7 +5664,7 @@ func (i *IterIntUint8) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -5679,7 +5680,7 @@ func (i *IterIntUint8) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -5703,7 +5704,6 @@ func (i *IterIntUint8) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapIntUintptr implements an associative array of uintptr indexed by int.
@@ -5797,6 +5797,10 @@ func (t *MapIntUintptr) Rem(key int) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapIntUintptr) SetP(key int, val *uintptr) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -5831,31 +5835,30 @@ func (t *MapIntUintptr) Set(key int, val uintptr) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapIntUintptr) GetP(key int) (*uintptr, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapIntUintptr) GetP(key int) *uintptr {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uintptr)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uintptr)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapIntUintptr) Get(key int) (uintptr, bool) {
-	var v uintptr
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uintptr
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -5881,9 +5884,8 @@ type IterIntUintptr struct {
 	t       *MapIntUintptr
 	nodes   []*nodeMapintuintptr
 	lastDir int
-	Found   bool     // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int      // Key found by last call to Next, Prev.
-	Value   *uintptr // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uintptr // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterIntUintptr.
@@ -5926,7 +5928,6 @@ func (i *IterIntUintptr) Seek(key int) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterIntUintptr) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -5942,7 +5943,7 @@ func (i *IterIntUintptr) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterIntUintptr) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -5950,7 +5951,7 @@ func (i *IterIntUintptr) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterIntUintptr) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterIntUintptr) step(dir int) {
@@ -5963,7 +5964,7 @@ func (i *IterIntUintptr) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -5979,7 +5980,7 @@ func (i *IterIntUintptr) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -6003,7 +6004,6 @@ func (i *IterIntUintptr) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt64Bool implements an associative array of bool indexed by int64.
@@ -6097,6 +6097,10 @@ func (t *MapInt64Bool) Rem(key int64) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt64Bool) SetP(key int64, val *bool) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -6131,31 +6135,30 @@ func (t *MapInt64Bool) Set(key int64, val bool) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt64Bool) GetP(key int64) (*bool, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt64Bool) GetP(key int64) *bool {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*bool)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*bool)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt64Bool) Get(key int64) (bool, bool) {
-	var v bool
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero bool
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -6181,9 +6184,8 @@ type IterInt64Bool struct {
 	t       *MapInt64Bool
 	nodes   []*nodeMapint64bool
 	lastDir int
-	Found   bool  // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int64 // Key found by last call to Next, Prev.
-	Value   *bool // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *bool // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt64Bool.
@@ -6226,7 +6228,6 @@ func (i *IterInt64Bool) Seek(key int64) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt64Bool) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -6242,7 +6243,7 @@ func (i *IterInt64Bool) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt64Bool) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -6250,7 +6251,7 @@ func (i *IterInt64Bool) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt64Bool) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt64Bool) step(dir int) {
@@ -6263,7 +6264,7 @@ func (i *IterInt64Bool) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -6279,7 +6280,7 @@ func (i *IterInt64Bool) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -6303,7 +6304,6 @@ func (i *IterInt64Bool) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt64Byte implements an associative array of byte indexed by int64.
@@ -6397,6 +6397,10 @@ func (t *MapInt64Byte) Rem(key int64) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt64Byte) SetP(key int64, val *byte) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -6431,31 +6435,30 @@ func (t *MapInt64Byte) Set(key int64, val byte) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt64Byte) GetP(key int64) (*byte, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt64Byte) GetP(key int64) *byte {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*byte)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*byte)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt64Byte) Get(key int64) (byte, bool) {
-	var v byte
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero byte
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -6481,9 +6484,8 @@ type IterInt64Byte struct {
 	t       *MapInt64Byte
 	nodes   []*nodeMapint64byte
 	lastDir int
-	Found   bool  // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int64 // Key found by last call to Next, Prev.
-	Value   *byte // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *byte // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt64Byte.
@@ -6526,7 +6528,6 @@ func (i *IterInt64Byte) Seek(key int64) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt64Byte) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -6542,7 +6543,7 @@ func (i *IterInt64Byte) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt64Byte) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -6550,7 +6551,7 @@ func (i *IterInt64Byte) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt64Byte) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt64Byte) step(dir int) {
@@ -6563,7 +6564,7 @@ func (i *IterInt64Byte) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -6579,7 +6580,7 @@ func (i *IterInt64Byte) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -6603,7 +6604,6 @@ func (i *IterInt64Byte) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt64Complex128 implements an associative array of complex128 indexed by int64.
@@ -6697,6 +6697,10 @@ func (t *MapInt64Complex128) Rem(key int64) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt64Complex128) SetP(key int64, val *complex128) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -6731,31 +6735,30 @@ func (t *MapInt64Complex128) Set(key int64, val complex128) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt64Complex128) GetP(key int64) (*complex128, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt64Complex128) GetP(key int64) *complex128 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*complex128)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*complex128)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt64Complex128) Get(key int64) (complex128, bool) {
-	var v complex128
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero complex128
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -6781,9 +6784,8 @@ type IterInt64Complex128 struct {
 	t       *MapInt64Complex128
 	nodes   []*nodeMapint64complex128
 	lastDir int
-	Found   bool        // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int64       // Key found by last call to Next, Prev.
-	Value   *complex128 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *complex128 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt64Complex128.
@@ -6826,7 +6828,6 @@ func (i *IterInt64Complex128) Seek(key int64) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt64Complex128) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -6842,7 +6843,7 @@ func (i *IterInt64Complex128) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt64Complex128) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -6850,7 +6851,7 @@ func (i *IterInt64Complex128) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt64Complex128) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt64Complex128) step(dir int) {
@@ -6863,7 +6864,7 @@ func (i *IterInt64Complex128) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -6879,7 +6880,7 @@ func (i *IterInt64Complex128) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -6903,7 +6904,6 @@ func (i *IterInt64Complex128) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt64Complex64 implements an associative array of complex64 indexed by int64.
@@ -6997,6 +6997,10 @@ func (t *MapInt64Complex64) Rem(key int64) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt64Complex64) SetP(key int64, val *complex64) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -7031,31 +7035,30 @@ func (t *MapInt64Complex64) Set(key int64, val complex64) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt64Complex64) GetP(key int64) (*complex64, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt64Complex64) GetP(key int64) *complex64 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*complex64)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*complex64)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt64Complex64) Get(key int64) (complex64, bool) {
-	var v complex64
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero complex64
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -7081,9 +7084,8 @@ type IterInt64Complex64 struct {
 	t       *MapInt64Complex64
 	nodes   []*nodeMapint64complex64
 	lastDir int
-	Found   bool       // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int64      // Key found by last call to Next, Prev.
-	Value   *complex64 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *complex64 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt64Complex64.
@@ -7126,7 +7128,6 @@ func (i *IterInt64Complex64) Seek(key int64) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt64Complex64) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -7142,7 +7143,7 @@ func (i *IterInt64Complex64) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt64Complex64) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -7150,7 +7151,7 @@ func (i *IterInt64Complex64) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt64Complex64) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt64Complex64) step(dir int) {
@@ -7163,7 +7164,7 @@ func (i *IterInt64Complex64) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -7179,7 +7180,7 @@ func (i *IterInt64Complex64) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -7203,7 +7204,6 @@ func (i *IterInt64Complex64) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt64Error implements an associative array of error indexed by int64.
@@ -7297,6 +7297,10 @@ func (t *MapInt64Error) Rem(key int64) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt64Error) SetP(key int64, val *error) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -7331,31 +7335,30 @@ func (t *MapInt64Error) Set(key int64, val error) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt64Error) GetP(key int64) (*error, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt64Error) GetP(key int64) *error {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*error)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*error)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt64Error) Get(key int64) (error, bool) {
-	var v error
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero error
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -7381,9 +7384,8 @@ type IterInt64Error struct {
 	t       *MapInt64Error
 	nodes   []*nodeMapint64error
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int64  // Key found by last call to Next, Prev.
-	Value   *error // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *error // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt64Error.
@@ -7426,7 +7428,6 @@ func (i *IterInt64Error) Seek(key int64) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt64Error) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -7442,7 +7443,7 @@ func (i *IterInt64Error) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt64Error) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -7450,7 +7451,7 @@ func (i *IterInt64Error) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt64Error) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt64Error) step(dir int) {
@@ -7463,7 +7464,7 @@ func (i *IterInt64Error) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -7479,7 +7480,7 @@ func (i *IterInt64Error) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -7503,7 +7504,6 @@ func (i *IterInt64Error) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt64Float32 implements an associative array of float32 indexed by int64.
@@ -7597,6 +7597,10 @@ func (t *MapInt64Float32) Rem(key int64) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt64Float32) SetP(key int64, val *float32) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -7631,31 +7635,30 @@ func (t *MapInt64Float32) Set(key int64, val float32) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt64Float32) GetP(key int64) (*float32, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt64Float32) GetP(key int64) *float32 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*float32)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*float32)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt64Float32) Get(key int64) (float32, bool) {
-	var v float32
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero float32
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -7681,9 +7684,8 @@ type IterInt64Float32 struct {
 	t       *MapInt64Float32
 	nodes   []*nodeMapint64float32
 	lastDir int
-	Found   bool     // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int64    // Key found by last call to Next, Prev.
-	Value   *float32 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *float32 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt64Float32.
@@ -7726,7 +7728,6 @@ func (i *IterInt64Float32) Seek(key int64) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt64Float32) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -7742,7 +7743,7 @@ func (i *IterInt64Float32) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt64Float32) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -7750,7 +7751,7 @@ func (i *IterInt64Float32) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt64Float32) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt64Float32) step(dir int) {
@@ -7763,7 +7764,7 @@ func (i *IterInt64Float32) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -7779,7 +7780,7 @@ func (i *IterInt64Float32) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -7803,7 +7804,6 @@ func (i *IterInt64Float32) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt64Float64 implements an associative array of float64 indexed by int64.
@@ -7897,6 +7897,10 @@ func (t *MapInt64Float64) Rem(key int64) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt64Float64) SetP(key int64, val *float64) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -7931,31 +7935,30 @@ func (t *MapInt64Float64) Set(key int64, val float64) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt64Float64) GetP(key int64) (*float64, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt64Float64) GetP(key int64) *float64 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*float64)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*float64)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt64Float64) Get(key int64) (float64, bool) {
-	var v float64
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero float64
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -7981,9 +7984,8 @@ type IterInt64Float64 struct {
 	t       *MapInt64Float64
 	nodes   []*nodeMapint64float64
 	lastDir int
-	Found   bool     // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int64    // Key found by last call to Next, Prev.
-	Value   *float64 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *float64 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt64Float64.
@@ -8026,7 +8028,6 @@ func (i *IterInt64Float64) Seek(key int64) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt64Float64) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -8042,7 +8043,7 @@ func (i *IterInt64Float64) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt64Float64) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -8050,7 +8051,7 @@ func (i *IterInt64Float64) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt64Float64) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt64Float64) step(dir int) {
@@ -8063,7 +8064,7 @@ func (i *IterInt64Float64) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -8079,7 +8080,7 @@ func (i *IterInt64Float64) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -8103,7 +8104,6 @@ func (i *IterInt64Float64) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt64Int implements an associative array of int indexed by int64.
@@ -8197,6 +8197,10 @@ func (t *MapInt64Int) Rem(key int64) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt64Int) SetP(key int64, val *int) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -8231,31 +8235,30 @@ func (t *MapInt64Int) Set(key int64, val int) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt64Int) GetP(key int64) (*int, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt64Int) GetP(key int64) *int {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*int)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*int)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt64Int) Get(key int64) (int, bool) {
-	var v int
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero int
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -8281,9 +8284,8 @@ type IterInt64Int struct {
 	t       *MapInt64Int
 	nodes   []*nodeMapint64int
 	lastDir int
-	Found   bool  // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int64 // Key found by last call to Next, Prev.
-	Value   *int  // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *int  // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt64Int.
@@ -8326,7 +8328,6 @@ func (i *IterInt64Int) Seek(key int64) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt64Int) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -8342,7 +8343,7 @@ func (i *IterInt64Int) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt64Int) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -8350,7 +8351,7 @@ func (i *IterInt64Int) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt64Int) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt64Int) step(dir int) {
@@ -8363,7 +8364,7 @@ func (i *IterInt64Int) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -8379,7 +8380,7 @@ func (i *IterInt64Int) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -8403,7 +8404,6 @@ func (i *IterInt64Int) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt64Int16 implements an associative array of int16 indexed by int64.
@@ -8497,6 +8497,10 @@ func (t *MapInt64Int16) Rem(key int64) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt64Int16) SetP(key int64, val *int16) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -8531,31 +8535,30 @@ func (t *MapInt64Int16) Set(key int64, val int16) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt64Int16) GetP(key int64) (*int16, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt64Int16) GetP(key int64) *int16 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*int16)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*int16)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt64Int16) Get(key int64) (int16, bool) {
-	var v int16
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero int16
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -8581,9 +8584,8 @@ type IterInt64Int16 struct {
 	t       *MapInt64Int16
 	nodes   []*nodeMapint64int16
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int64  // Key found by last call to Next, Prev.
-	Value   *int16 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *int16 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt64Int16.
@@ -8626,7 +8628,6 @@ func (i *IterInt64Int16) Seek(key int64) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt64Int16) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -8642,7 +8643,7 @@ func (i *IterInt64Int16) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt64Int16) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -8650,7 +8651,7 @@ func (i *IterInt64Int16) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt64Int16) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt64Int16) step(dir int) {
@@ -8663,7 +8664,7 @@ func (i *IterInt64Int16) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -8679,7 +8680,7 @@ func (i *IterInt64Int16) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -8703,7 +8704,6 @@ func (i *IterInt64Int16) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt64Int32 implements an associative array of int32 indexed by int64.
@@ -8797,6 +8797,10 @@ func (t *MapInt64Int32) Rem(key int64) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt64Int32) SetP(key int64, val *int32) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -8831,31 +8835,30 @@ func (t *MapInt64Int32) Set(key int64, val int32) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt64Int32) GetP(key int64) (*int32, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt64Int32) GetP(key int64) *int32 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*int32)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*int32)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt64Int32) Get(key int64) (int32, bool) {
-	var v int32
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero int32
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -8881,9 +8884,8 @@ type IterInt64Int32 struct {
 	t       *MapInt64Int32
 	nodes   []*nodeMapint64int32
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int64  // Key found by last call to Next, Prev.
-	Value   *int32 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *int32 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt64Int32.
@@ -8926,7 +8928,6 @@ func (i *IterInt64Int32) Seek(key int64) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt64Int32) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -8942,7 +8943,7 @@ func (i *IterInt64Int32) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt64Int32) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -8950,7 +8951,7 @@ func (i *IterInt64Int32) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt64Int32) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt64Int32) step(dir int) {
@@ -8963,7 +8964,7 @@ func (i *IterInt64Int32) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -8979,7 +8980,7 @@ func (i *IterInt64Int32) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -9003,7 +9004,6 @@ func (i *IterInt64Int32) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt64Int64 implements an associative array of int64 indexed by int64.
@@ -9097,6 +9097,10 @@ func (t *MapInt64Int64) Rem(key int64) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt64Int64) SetP(key int64, val *int64) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -9131,31 +9135,30 @@ func (t *MapInt64Int64) Set(key int64, val int64) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt64Int64) GetP(key int64) (*int64, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt64Int64) GetP(key int64) *int64 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*int64)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*int64)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt64Int64) Get(key int64) (int64, bool) {
-	var v int64
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero int64
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -9181,9 +9184,8 @@ type IterInt64Int64 struct {
 	t       *MapInt64Int64
 	nodes   []*nodeMapint64int64
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int64  // Key found by last call to Next, Prev.
-	Value   *int64 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *int64 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt64Int64.
@@ -9226,7 +9228,6 @@ func (i *IterInt64Int64) Seek(key int64) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt64Int64) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -9242,7 +9243,7 @@ func (i *IterInt64Int64) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt64Int64) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -9250,7 +9251,7 @@ func (i *IterInt64Int64) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt64Int64) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt64Int64) step(dir int) {
@@ -9263,7 +9264,7 @@ func (i *IterInt64Int64) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -9279,7 +9280,7 @@ func (i *IterInt64Int64) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -9303,7 +9304,6 @@ func (i *IterInt64Int64) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt64Int8 implements an associative array of int8 indexed by int64.
@@ -9397,6 +9397,10 @@ func (t *MapInt64Int8) Rem(key int64) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt64Int8) SetP(key int64, val *int8) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -9431,31 +9435,30 @@ func (t *MapInt64Int8) Set(key int64, val int8) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt64Int8) GetP(key int64) (*int8, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt64Int8) GetP(key int64) *int8 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*int8)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*int8)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt64Int8) Get(key int64) (int8, bool) {
-	var v int8
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero int8
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -9481,9 +9484,8 @@ type IterInt64Int8 struct {
 	t       *MapInt64Int8
 	nodes   []*nodeMapint64int8
 	lastDir int
-	Found   bool  // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int64 // Key found by last call to Next, Prev.
-	Value   *int8 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *int8 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt64Int8.
@@ -9526,7 +9528,6 @@ func (i *IterInt64Int8) Seek(key int64) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt64Int8) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -9542,7 +9543,7 @@ func (i *IterInt64Int8) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt64Int8) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -9550,7 +9551,7 @@ func (i *IterInt64Int8) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt64Int8) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt64Int8) step(dir int) {
@@ -9563,7 +9564,7 @@ func (i *IterInt64Int8) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -9579,7 +9580,7 @@ func (i *IterInt64Int8) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -9603,7 +9604,6 @@ func (i *IterInt64Int8) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt64Rune implements an associative array of rune indexed by int64.
@@ -9697,6 +9697,10 @@ func (t *MapInt64Rune) Rem(key int64) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt64Rune) SetP(key int64, val *rune) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -9731,31 +9735,30 @@ func (t *MapInt64Rune) Set(key int64, val rune) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt64Rune) GetP(key int64) (*rune, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt64Rune) GetP(key int64) *rune {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*rune)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*rune)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt64Rune) Get(key int64) (rune, bool) {
-	var v rune
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero rune
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -9781,9 +9784,8 @@ type IterInt64Rune struct {
 	t       *MapInt64Rune
 	nodes   []*nodeMapint64rune
 	lastDir int
-	Found   bool  // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int64 // Key found by last call to Next, Prev.
-	Value   *rune // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *rune // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt64Rune.
@@ -9826,7 +9828,6 @@ func (i *IterInt64Rune) Seek(key int64) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt64Rune) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -9842,7 +9843,7 @@ func (i *IterInt64Rune) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt64Rune) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -9850,7 +9851,7 @@ func (i *IterInt64Rune) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt64Rune) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt64Rune) step(dir int) {
@@ -9863,7 +9864,7 @@ func (i *IterInt64Rune) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -9879,7 +9880,7 @@ func (i *IterInt64Rune) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -9903,7 +9904,6 @@ func (i *IterInt64Rune) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt64String implements an associative array of string indexed by int64.
@@ -9997,6 +9997,10 @@ func (t *MapInt64String) Rem(key int64) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt64String) SetP(key int64, val *string) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -10031,31 +10035,30 @@ func (t *MapInt64String) Set(key int64, val string) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt64String) GetP(key int64) (*string, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt64String) GetP(key int64) *string {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*string)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*string)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt64String) Get(key int64) (string, bool) {
-	var v string
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero string
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -10081,9 +10084,8 @@ type IterInt64String struct {
 	t       *MapInt64String
 	nodes   []*nodeMapint64string
 	lastDir int
-	Found   bool    // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int64   // Key found by last call to Next, Prev.
-	Value   *string // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *string // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt64String.
@@ -10126,7 +10128,6 @@ func (i *IterInt64String) Seek(key int64) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt64String) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -10142,7 +10143,7 @@ func (i *IterInt64String) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt64String) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -10150,7 +10151,7 @@ func (i *IterInt64String) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt64String) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt64String) step(dir int) {
@@ -10163,7 +10164,7 @@ func (i *IterInt64String) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -10179,7 +10180,7 @@ func (i *IterInt64String) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -10203,7 +10204,6 @@ func (i *IterInt64String) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt64Uint implements an associative array of uint indexed by int64.
@@ -10297,6 +10297,10 @@ func (t *MapInt64Uint) Rem(key int64) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt64Uint) SetP(key int64, val *uint) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -10331,31 +10335,30 @@ func (t *MapInt64Uint) Set(key int64, val uint) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt64Uint) GetP(key int64) (*uint, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt64Uint) GetP(key int64) *uint {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uint)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uint)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt64Uint) Get(key int64) (uint, bool) {
-	var v uint
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uint
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -10381,9 +10384,8 @@ type IterInt64Uint struct {
 	t       *MapInt64Uint
 	nodes   []*nodeMapint64uint
 	lastDir int
-	Found   bool  // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int64 // Key found by last call to Next, Prev.
-	Value   *uint // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uint // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt64Uint.
@@ -10426,7 +10428,6 @@ func (i *IterInt64Uint) Seek(key int64) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt64Uint) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -10442,7 +10443,7 @@ func (i *IterInt64Uint) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt64Uint) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -10450,7 +10451,7 @@ func (i *IterInt64Uint) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt64Uint) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt64Uint) step(dir int) {
@@ -10463,7 +10464,7 @@ func (i *IterInt64Uint) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -10479,7 +10480,7 @@ func (i *IterInt64Uint) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -10503,7 +10504,6 @@ func (i *IterInt64Uint) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt64Uint16 implements an associative array of uint16 indexed by int64.
@@ -10597,6 +10597,10 @@ func (t *MapInt64Uint16) Rem(key int64) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt64Uint16) SetP(key int64, val *uint16) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -10631,31 +10635,30 @@ func (t *MapInt64Uint16) Set(key int64, val uint16) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt64Uint16) GetP(key int64) (*uint16, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt64Uint16) GetP(key int64) *uint16 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uint16)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uint16)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt64Uint16) Get(key int64) (uint16, bool) {
-	var v uint16
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uint16
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -10681,9 +10684,8 @@ type IterInt64Uint16 struct {
 	t       *MapInt64Uint16
 	nodes   []*nodeMapint64uint16
 	lastDir int
-	Found   bool    // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int64   // Key found by last call to Next, Prev.
-	Value   *uint16 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uint16 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt64Uint16.
@@ -10726,7 +10728,6 @@ func (i *IterInt64Uint16) Seek(key int64) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt64Uint16) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -10742,7 +10743,7 @@ func (i *IterInt64Uint16) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt64Uint16) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -10750,7 +10751,7 @@ func (i *IterInt64Uint16) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt64Uint16) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt64Uint16) step(dir int) {
@@ -10763,7 +10764,7 @@ func (i *IterInt64Uint16) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -10779,7 +10780,7 @@ func (i *IterInt64Uint16) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -10803,7 +10804,6 @@ func (i *IterInt64Uint16) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt64Uint32 implements an associative array of uint32 indexed by int64.
@@ -10897,6 +10897,10 @@ func (t *MapInt64Uint32) Rem(key int64) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt64Uint32) SetP(key int64, val *uint32) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -10931,31 +10935,30 @@ func (t *MapInt64Uint32) Set(key int64, val uint32) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt64Uint32) GetP(key int64) (*uint32, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt64Uint32) GetP(key int64) *uint32 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uint32)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uint32)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt64Uint32) Get(key int64) (uint32, bool) {
-	var v uint32
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uint32
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -10981,9 +10984,8 @@ type IterInt64Uint32 struct {
 	t       *MapInt64Uint32
 	nodes   []*nodeMapint64uint32
 	lastDir int
-	Found   bool    // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int64   // Key found by last call to Next, Prev.
-	Value   *uint32 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uint32 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt64Uint32.
@@ -11026,7 +11028,6 @@ func (i *IterInt64Uint32) Seek(key int64) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt64Uint32) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -11042,7 +11043,7 @@ func (i *IterInt64Uint32) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt64Uint32) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -11050,7 +11051,7 @@ func (i *IterInt64Uint32) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt64Uint32) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt64Uint32) step(dir int) {
@@ -11063,7 +11064,7 @@ func (i *IterInt64Uint32) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -11079,7 +11080,7 @@ func (i *IterInt64Uint32) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -11103,7 +11104,6 @@ func (i *IterInt64Uint32) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt64Uint64 implements an associative array of uint64 indexed by int64.
@@ -11197,6 +11197,10 @@ func (t *MapInt64Uint64) Rem(key int64) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt64Uint64) SetP(key int64, val *uint64) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -11231,31 +11235,30 @@ func (t *MapInt64Uint64) Set(key int64, val uint64) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt64Uint64) GetP(key int64) (*uint64, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt64Uint64) GetP(key int64) *uint64 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uint64)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uint64)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt64Uint64) Get(key int64) (uint64, bool) {
-	var v uint64
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uint64
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -11281,9 +11284,8 @@ type IterInt64Uint64 struct {
 	t       *MapInt64Uint64
 	nodes   []*nodeMapint64uint64
 	lastDir int
-	Found   bool    // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int64   // Key found by last call to Next, Prev.
-	Value   *uint64 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uint64 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt64Uint64.
@@ -11326,7 +11328,6 @@ func (i *IterInt64Uint64) Seek(key int64) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt64Uint64) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -11342,7 +11343,7 @@ func (i *IterInt64Uint64) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt64Uint64) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -11350,7 +11351,7 @@ func (i *IterInt64Uint64) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt64Uint64) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt64Uint64) step(dir int) {
@@ -11363,7 +11364,7 @@ func (i *IterInt64Uint64) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -11379,7 +11380,7 @@ func (i *IterInt64Uint64) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -11403,7 +11404,6 @@ func (i *IterInt64Uint64) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt64Uint8 implements an associative array of uint8 indexed by int64.
@@ -11497,6 +11497,10 @@ func (t *MapInt64Uint8) Rem(key int64) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt64Uint8) SetP(key int64, val *uint8) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -11531,31 +11535,30 @@ func (t *MapInt64Uint8) Set(key int64, val uint8) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt64Uint8) GetP(key int64) (*uint8, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt64Uint8) GetP(key int64) *uint8 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uint8)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uint8)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt64Uint8) Get(key int64) (uint8, bool) {
-	var v uint8
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uint8
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -11581,9 +11584,8 @@ type IterInt64Uint8 struct {
 	t       *MapInt64Uint8
 	nodes   []*nodeMapint64uint8
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int64  // Key found by last call to Next, Prev.
-	Value   *uint8 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uint8 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt64Uint8.
@@ -11626,7 +11628,6 @@ func (i *IterInt64Uint8) Seek(key int64) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt64Uint8) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -11642,7 +11643,7 @@ func (i *IterInt64Uint8) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt64Uint8) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -11650,7 +11651,7 @@ func (i *IterInt64Uint8) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt64Uint8) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt64Uint8) step(dir int) {
@@ -11663,7 +11664,7 @@ func (i *IterInt64Uint8) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -11679,7 +11680,7 @@ func (i *IterInt64Uint8) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -11703,7 +11704,6 @@ func (i *IterInt64Uint8) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt64Uintptr implements an associative array of uintptr indexed by int64.
@@ -11797,6 +11797,10 @@ func (t *MapInt64Uintptr) Rem(key int64) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt64Uintptr) SetP(key int64, val *uintptr) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -11831,31 +11835,30 @@ func (t *MapInt64Uintptr) Set(key int64, val uintptr) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt64Uintptr) GetP(key int64) (*uintptr, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt64Uintptr) GetP(key int64) *uintptr {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uintptr)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uintptr)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt64Uintptr) Get(key int64) (uintptr, bool) {
-	var v uintptr
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uintptr
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -11881,9 +11884,8 @@ type IterInt64Uintptr struct {
 	t       *MapInt64Uintptr
 	nodes   []*nodeMapint64uintptr
 	lastDir int
-	Found   bool     // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int64    // Key found by last call to Next, Prev.
-	Value   *uintptr // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uintptr // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt64Uintptr.
@@ -11926,7 +11928,6 @@ func (i *IterInt64Uintptr) Seek(key int64) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt64Uintptr) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -11942,7 +11943,7 @@ func (i *IterInt64Uintptr) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt64Uintptr) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -11950,7 +11951,7 @@ func (i *IterInt64Uintptr) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt64Uintptr) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt64Uintptr) step(dir int) {
@@ -11963,7 +11964,7 @@ func (i *IterInt64Uintptr) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -11979,7 +11980,7 @@ func (i *IterInt64Uintptr) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -12003,7 +12004,6 @@ func (i *IterInt64Uintptr) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt32Bool implements an associative array of bool indexed by int32.
@@ -12097,6 +12097,10 @@ func (t *MapInt32Bool) Rem(key int32) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt32Bool) SetP(key int32, val *bool) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -12131,31 +12135,30 @@ func (t *MapInt32Bool) Set(key int32, val bool) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt32Bool) GetP(key int32) (*bool, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt32Bool) GetP(key int32) *bool {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*bool)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*bool)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt32Bool) Get(key int32) (bool, bool) {
-	var v bool
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero bool
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -12181,9 +12184,8 @@ type IterInt32Bool struct {
 	t       *MapInt32Bool
 	nodes   []*nodeMapint32bool
 	lastDir int
-	Found   bool  // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int32 // Key found by last call to Next, Prev.
-	Value   *bool // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *bool // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt32Bool.
@@ -12226,7 +12228,6 @@ func (i *IterInt32Bool) Seek(key int32) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt32Bool) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -12242,7 +12243,7 @@ func (i *IterInt32Bool) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt32Bool) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -12250,7 +12251,7 @@ func (i *IterInt32Bool) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt32Bool) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt32Bool) step(dir int) {
@@ -12263,7 +12264,7 @@ func (i *IterInt32Bool) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -12279,7 +12280,7 @@ func (i *IterInt32Bool) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -12303,7 +12304,6 @@ func (i *IterInt32Bool) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt32Byte implements an associative array of byte indexed by int32.
@@ -12397,6 +12397,10 @@ func (t *MapInt32Byte) Rem(key int32) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt32Byte) SetP(key int32, val *byte) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -12431,31 +12435,30 @@ func (t *MapInt32Byte) Set(key int32, val byte) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt32Byte) GetP(key int32) (*byte, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt32Byte) GetP(key int32) *byte {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*byte)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*byte)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt32Byte) Get(key int32) (byte, bool) {
-	var v byte
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero byte
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -12481,9 +12484,8 @@ type IterInt32Byte struct {
 	t       *MapInt32Byte
 	nodes   []*nodeMapint32byte
 	lastDir int
-	Found   bool  // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int32 // Key found by last call to Next, Prev.
-	Value   *byte // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *byte // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt32Byte.
@@ -12526,7 +12528,6 @@ func (i *IterInt32Byte) Seek(key int32) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt32Byte) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -12542,7 +12543,7 @@ func (i *IterInt32Byte) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt32Byte) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -12550,7 +12551,7 @@ func (i *IterInt32Byte) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt32Byte) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt32Byte) step(dir int) {
@@ -12563,7 +12564,7 @@ func (i *IterInt32Byte) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -12579,7 +12580,7 @@ func (i *IterInt32Byte) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -12603,7 +12604,6 @@ func (i *IterInt32Byte) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt32Complex128 implements an associative array of complex128 indexed by int32.
@@ -12697,6 +12697,10 @@ func (t *MapInt32Complex128) Rem(key int32) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt32Complex128) SetP(key int32, val *complex128) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -12731,31 +12735,30 @@ func (t *MapInt32Complex128) Set(key int32, val complex128) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt32Complex128) GetP(key int32) (*complex128, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt32Complex128) GetP(key int32) *complex128 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*complex128)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*complex128)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt32Complex128) Get(key int32) (complex128, bool) {
-	var v complex128
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero complex128
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -12781,9 +12784,8 @@ type IterInt32Complex128 struct {
 	t       *MapInt32Complex128
 	nodes   []*nodeMapint32complex128
 	lastDir int
-	Found   bool        // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int32       // Key found by last call to Next, Prev.
-	Value   *complex128 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *complex128 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt32Complex128.
@@ -12826,7 +12828,6 @@ func (i *IterInt32Complex128) Seek(key int32) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt32Complex128) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -12842,7 +12843,7 @@ func (i *IterInt32Complex128) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt32Complex128) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -12850,7 +12851,7 @@ func (i *IterInt32Complex128) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt32Complex128) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt32Complex128) step(dir int) {
@@ -12863,7 +12864,7 @@ func (i *IterInt32Complex128) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -12879,7 +12880,7 @@ func (i *IterInt32Complex128) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -12903,7 +12904,6 @@ func (i *IterInt32Complex128) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt32Complex64 implements an associative array of complex64 indexed by int32.
@@ -12997,6 +12997,10 @@ func (t *MapInt32Complex64) Rem(key int32) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt32Complex64) SetP(key int32, val *complex64) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -13031,31 +13035,30 @@ func (t *MapInt32Complex64) Set(key int32, val complex64) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt32Complex64) GetP(key int32) (*complex64, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt32Complex64) GetP(key int32) *complex64 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*complex64)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*complex64)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt32Complex64) Get(key int32) (complex64, bool) {
-	var v complex64
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero complex64
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -13081,9 +13084,8 @@ type IterInt32Complex64 struct {
 	t       *MapInt32Complex64
 	nodes   []*nodeMapint32complex64
 	lastDir int
-	Found   bool       // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int32      // Key found by last call to Next, Prev.
-	Value   *complex64 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *complex64 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt32Complex64.
@@ -13126,7 +13128,6 @@ func (i *IterInt32Complex64) Seek(key int32) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt32Complex64) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -13142,7 +13143,7 @@ func (i *IterInt32Complex64) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt32Complex64) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -13150,7 +13151,7 @@ func (i *IterInt32Complex64) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt32Complex64) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt32Complex64) step(dir int) {
@@ -13163,7 +13164,7 @@ func (i *IterInt32Complex64) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -13179,7 +13180,7 @@ func (i *IterInt32Complex64) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -13203,7 +13204,6 @@ func (i *IterInt32Complex64) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt32Error implements an associative array of error indexed by int32.
@@ -13297,6 +13297,10 @@ func (t *MapInt32Error) Rem(key int32) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt32Error) SetP(key int32, val *error) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -13331,31 +13335,30 @@ func (t *MapInt32Error) Set(key int32, val error) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt32Error) GetP(key int32) (*error, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt32Error) GetP(key int32) *error {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*error)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*error)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt32Error) Get(key int32) (error, bool) {
-	var v error
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero error
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -13381,9 +13384,8 @@ type IterInt32Error struct {
 	t       *MapInt32Error
 	nodes   []*nodeMapint32error
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int32  // Key found by last call to Next, Prev.
-	Value   *error // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *error // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt32Error.
@@ -13426,7 +13428,6 @@ func (i *IterInt32Error) Seek(key int32) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt32Error) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -13442,7 +13443,7 @@ func (i *IterInt32Error) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt32Error) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -13450,7 +13451,7 @@ func (i *IterInt32Error) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt32Error) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt32Error) step(dir int) {
@@ -13463,7 +13464,7 @@ func (i *IterInt32Error) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -13479,7 +13480,7 @@ func (i *IterInt32Error) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -13503,7 +13504,6 @@ func (i *IterInt32Error) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt32Float32 implements an associative array of float32 indexed by int32.
@@ -13597,6 +13597,10 @@ func (t *MapInt32Float32) Rem(key int32) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt32Float32) SetP(key int32, val *float32) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -13631,31 +13635,30 @@ func (t *MapInt32Float32) Set(key int32, val float32) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt32Float32) GetP(key int32) (*float32, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt32Float32) GetP(key int32) *float32 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*float32)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*float32)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt32Float32) Get(key int32) (float32, bool) {
-	var v float32
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero float32
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -13681,9 +13684,8 @@ type IterInt32Float32 struct {
 	t       *MapInt32Float32
 	nodes   []*nodeMapint32float32
 	lastDir int
-	Found   bool     // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int32    // Key found by last call to Next, Prev.
-	Value   *float32 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *float32 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt32Float32.
@@ -13726,7 +13728,6 @@ func (i *IterInt32Float32) Seek(key int32) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt32Float32) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -13742,7 +13743,7 @@ func (i *IterInt32Float32) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt32Float32) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -13750,7 +13751,7 @@ func (i *IterInt32Float32) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt32Float32) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt32Float32) step(dir int) {
@@ -13763,7 +13764,7 @@ func (i *IterInt32Float32) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -13779,7 +13780,7 @@ func (i *IterInt32Float32) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -13803,7 +13804,6 @@ func (i *IterInt32Float32) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt32Float64 implements an associative array of float64 indexed by int32.
@@ -13897,6 +13897,10 @@ func (t *MapInt32Float64) Rem(key int32) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt32Float64) SetP(key int32, val *float64) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -13931,31 +13935,30 @@ func (t *MapInt32Float64) Set(key int32, val float64) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt32Float64) GetP(key int32) (*float64, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt32Float64) GetP(key int32) *float64 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*float64)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*float64)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt32Float64) Get(key int32) (float64, bool) {
-	var v float64
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero float64
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -13981,9 +13984,8 @@ type IterInt32Float64 struct {
 	t       *MapInt32Float64
 	nodes   []*nodeMapint32float64
 	lastDir int
-	Found   bool     // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int32    // Key found by last call to Next, Prev.
-	Value   *float64 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *float64 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt32Float64.
@@ -14026,7 +14028,6 @@ func (i *IterInt32Float64) Seek(key int32) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt32Float64) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -14042,7 +14043,7 @@ func (i *IterInt32Float64) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt32Float64) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -14050,7 +14051,7 @@ func (i *IterInt32Float64) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt32Float64) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt32Float64) step(dir int) {
@@ -14063,7 +14064,7 @@ func (i *IterInt32Float64) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -14079,7 +14080,7 @@ func (i *IterInt32Float64) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -14103,7 +14104,6 @@ func (i *IterInt32Float64) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt32Int implements an associative array of int indexed by int32.
@@ -14197,6 +14197,10 @@ func (t *MapInt32Int) Rem(key int32) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt32Int) SetP(key int32, val *int) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -14231,31 +14235,30 @@ func (t *MapInt32Int) Set(key int32, val int) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt32Int) GetP(key int32) (*int, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt32Int) GetP(key int32) *int {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*int)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*int)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt32Int) Get(key int32) (int, bool) {
-	var v int
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero int
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -14281,9 +14284,8 @@ type IterInt32Int struct {
 	t       *MapInt32Int
 	nodes   []*nodeMapint32int
 	lastDir int
-	Found   bool  // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int32 // Key found by last call to Next, Prev.
-	Value   *int  // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *int  // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt32Int.
@@ -14326,7 +14328,6 @@ func (i *IterInt32Int) Seek(key int32) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt32Int) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -14342,7 +14343,7 @@ func (i *IterInt32Int) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt32Int) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -14350,7 +14351,7 @@ func (i *IterInt32Int) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt32Int) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt32Int) step(dir int) {
@@ -14363,7 +14364,7 @@ func (i *IterInt32Int) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -14379,7 +14380,7 @@ func (i *IterInt32Int) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -14403,7 +14404,6 @@ func (i *IterInt32Int) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt32Int16 implements an associative array of int16 indexed by int32.
@@ -14497,6 +14497,10 @@ func (t *MapInt32Int16) Rem(key int32) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt32Int16) SetP(key int32, val *int16) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -14531,31 +14535,30 @@ func (t *MapInt32Int16) Set(key int32, val int16) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt32Int16) GetP(key int32) (*int16, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt32Int16) GetP(key int32) *int16 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*int16)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*int16)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt32Int16) Get(key int32) (int16, bool) {
-	var v int16
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero int16
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -14581,9 +14584,8 @@ type IterInt32Int16 struct {
 	t       *MapInt32Int16
 	nodes   []*nodeMapint32int16
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int32  // Key found by last call to Next, Prev.
-	Value   *int16 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *int16 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt32Int16.
@@ -14626,7 +14628,6 @@ func (i *IterInt32Int16) Seek(key int32) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt32Int16) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -14642,7 +14643,7 @@ func (i *IterInt32Int16) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt32Int16) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -14650,7 +14651,7 @@ func (i *IterInt32Int16) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt32Int16) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt32Int16) step(dir int) {
@@ -14663,7 +14664,7 @@ func (i *IterInt32Int16) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -14679,7 +14680,7 @@ func (i *IterInt32Int16) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -14703,7 +14704,6 @@ func (i *IterInt32Int16) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt32Int32 implements an associative array of int32 indexed by int32.
@@ -14797,6 +14797,10 @@ func (t *MapInt32Int32) Rem(key int32) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt32Int32) SetP(key int32, val *int32) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -14831,31 +14835,30 @@ func (t *MapInt32Int32) Set(key int32, val int32) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt32Int32) GetP(key int32) (*int32, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt32Int32) GetP(key int32) *int32 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*int32)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*int32)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt32Int32) Get(key int32) (int32, bool) {
-	var v int32
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero int32
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -14881,9 +14884,8 @@ type IterInt32Int32 struct {
 	t       *MapInt32Int32
 	nodes   []*nodeMapint32int32
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int32  // Key found by last call to Next, Prev.
-	Value   *int32 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *int32 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt32Int32.
@@ -14926,7 +14928,6 @@ func (i *IterInt32Int32) Seek(key int32) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt32Int32) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -14942,7 +14943,7 @@ func (i *IterInt32Int32) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt32Int32) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -14950,7 +14951,7 @@ func (i *IterInt32Int32) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt32Int32) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt32Int32) step(dir int) {
@@ -14963,7 +14964,7 @@ func (i *IterInt32Int32) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -14979,7 +14980,7 @@ func (i *IterInt32Int32) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -15003,7 +15004,6 @@ func (i *IterInt32Int32) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt32Int64 implements an associative array of int64 indexed by int32.
@@ -15097,6 +15097,10 @@ func (t *MapInt32Int64) Rem(key int32) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt32Int64) SetP(key int32, val *int64) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -15131,31 +15135,30 @@ func (t *MapInt32Int64) Set(key int32, val int64) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt32Int64) GetP(key int32) (*int64, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt32Int64) GetP(key int32) *int64 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*int64)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*int64)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt32Int64) Get(key int32) (int64, bool) {
-	var v int64
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero int64
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -15181,9 +15184,8 @@ type IterInt32Int64 struct {
 	t       *MapInt32Int64
 	nodes   []*nodeMapint32int64
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int32  // Key found by last call to Next, Prev.
-	Value   *int64 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *int64 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt32Int64.
@@ -15226,7 +15228,6 @@ func (i *IterInt32Int64) Seek(key int32) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt32Int64) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -15242,7 +15243,7 @@ func (i *IterInt32Int64) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt32Int64) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -15250,7 +15251,7 @@ func (i *IterInt32Int64) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt32Int64) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt32Int64) step(dir int) {
@@ -15263,7 +15264,7 @@ func (i *IterInt32Int64) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -15279,7 +15280,7 @@ func (i *IterInt32Int64) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -15303,7 +15304,6 @@ func (i *IterInt32Int64) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt32Int8 implements an associative array of int8 indexed by int32.
@@ -15397,6 +15397,10 @@ func (t *MapInt32Int8) Rem(key int32) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt32Int8) SetP(key int32, val *int8) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -15431,31 +15435,30 @@ func (t *MapInt32Int8) Set(key int32, val int8) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt32Int8) GetP(key int32) (*int8, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt32Int8) GetP(key int32) *int8 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*int8)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*int8)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt32Int8) Get(key int32) (int8, bool) {
-	var v int8
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero int8
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -15481,9 +15484,8 @@ type IterInt32Int8 struct {
 	t       *MapInt32Int8
 	nodes   []*nodeMapint32int8
 	lastDir int
-	Found   bool  // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int32 // Key found by last call to Next, Prev.
-	Value   *int8 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *int8 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt32Int8.
@@ -15526,7 +15528,6 @@ func (i *IterInt32Int8) Seek(key int32) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt32Int8) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -15542,7 +15543,7 @@ func (i *IterInt32Int8) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt32Int8) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -15550,7 +15551,7 @@ func (i *IterInt32Int8) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt32Int8) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt32Int8) step(dir int) {
@@ -15563,7 +15564,7 @@ func (i *IterInt32Int8) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -15579,7 +15580,7 @@ func (i *IterInt32Int8) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -15603,7 +15604,6 @@ func (i *IterInt32Int8) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt32Rune implements an associative array of rune indexed by int32.
@@ -15697,6 +15697,10 @@ func (t *MapInt32Rune) Rem(key int32) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt32Rune) SetP(key int32, val *rune) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -15731,31 +15735,30 @@ func (t *MapInt32Rune) Set(key int32, val rune) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt32Rune) GetP(key int32) (*rune, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt32Rune) GetP(key int32) *rune {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*rune)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*rune)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt32Rune) Get(key int32) (rune, bool) {
-	var v rune
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero rune
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -15781,9 +15784,8 @@ type IterInt32Rune struct {
 	t       *MapInt32Rune
 	nodes   []*nodeMapint32rune
 	lastDir int
-	Found   bool  // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int32 // Key found by last call to Next, Prev.
-	Value   *rune // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *rune // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt32Rune.
@@ -15826,7 +15828,6 @@ func (i *IterInt32Rune) Seek(key int32) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt32Rune) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -15842,7 +15843,7 @@ func (i *IterInt32Rune) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt32Rune) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -15850,7 +15851,7 @@ func (i *IterInt32Rune) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt32Rune) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt32Rune) step(dir int) {
@@ -15863,7 +15864,7 @@ func (i *IterInt32Rune) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -15879,7 +15880,7 @@ func (i *IterInt32Rune) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -15903,7 +15904,6 @@ func (i *IterInt32Rune) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt32String implements an associative array of string indexed by int32.
@@ -15997,6 +15997,10 @@ func (t *MapInt32String) Rem(key int32) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt32String) SetP(key int32, val *string) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -16031,31 +16035,30 @@ func (t *MapInt32String) Set(key int32, val string) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt32String) GetP(key int32) (*string, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt32String) GetP(key int32) *string {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*string)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*string)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt32String) Get(key int32) (string, bool) {
-	var v string
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero string
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -16081,9 +16084,8 @@ type IterInt32String struct {
 	t       *MapInt32String
 	nodes   []*nodeMapint32string
 	lastDir int
-	Found   bool    // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int32   // Key found by last call to Next, Prev.
-	Value   *string // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *string // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt32String.
@@ -16126,7 +16128,6 @@ func (i *IterInt32String) Seek(key int32) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt32String) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -16142,7 +16143,7 @@ func (i *IterInt32String) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt32String) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -16150,7 +16151,7 @@ func (i *IterInt32String) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt32String) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt32String) step(dir int) {
@@ -16163,7 +16164,7 @@ func (i *IterInt32String) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -16179,7 +16180,7 @@ func (i *IterInt32String) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -16203,7 +16204,6 @@ func (i *IterInt32String) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt32Uint implements an associative array of uint indexed by int32.
@@ -16297,6 +16297,10 @@ func (t *MapInt32Uint) Rem(key int32) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt32Uint) SetP(key int32, val *uint) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -16331,31 +16335,30 @@ func (t *MapInt32Uint) Set(key int32, val uint) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt32Uint) GetP(key int32) (*uint, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt32Uint) GetP(key int32) *uint {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uint)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uint)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt32Uint) Get(key int32) (uint, bool) {
-	var v uint
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uint
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -16381,9 +16384,8 @@ type IterInt32Uint struct {
 	t       *MapInt32Uint
 	nodes   []*nodeMapint32uint
 	lastDir int
-	Found   bool  // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int32 // Key found by last call to Next, Prev.
-	Value   *uint // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uint // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt32Uint.
@@ -16426,7 +16428,6 @@ func (i *IterInt32Uint) Seek(key int32) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt32Uint) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -16442,7 +16443,7 @@ func (i *IterInt32Uint) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt32Uint) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -16450,7 +16451,7 @@ func (i *IterInt32Uint) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt32Uint) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt32Uint) step(dir int) {
@@ -16463,7 +16464,7 @@ func (i *IterInt32Uint) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -16479,7 +16480,7 @@ func (i *IterInt32Uint) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -16503,7 +16504,6 @@ func (i *IterInt32Uint) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt32Uint16 implements an associative array of uint16 indexed by int32.
@@ -16597,6 +16597,10 @@ func (t *MapInt32Uint16) Rem(key int32) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt32Uint16) SetP(key int32, val *uint16) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -16631,31 +16635,30 @@ func (t *MapInt32Uint16) Set(key int32, val uint16) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt32Uint16) GetP(key int32) (*uint16, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt32Uint16) GetP(key int32) *uint16 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uint16)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uint16)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt32Uint16) Get(key int32) (uint16, bool) {
-	var v uint16
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uint16
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -16681,9 +16684,8 @@ type IterInt32Uint16 struct {
 	t       *MapInt32Uint16
 	nodes   []*nodeMapint32uint16
 	lastDir int
-	Found   bool    // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int32   // Key found by last call to Next, Prev.
-	Value   *uint16 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uint16 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt32Uint16.
@@ -16726,7 +16728,6 @@ func (i *IterInt32Uint16) Seek(key int32) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt32Uint16) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -16742,7 +16743,7 @@ func (i *IterInt32Uint16) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt32Uint16) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -16750,7 +16751,7 @@ func (i *IterInt32Uint16) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt32Uint16) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt32Uint16) step(dir int) {
@@ -16763,7 +16764,7 @@ func (i *IterInt32Uint16) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -16779,7 +16780,7 @@ func (i *IterInt32Uint16) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -16803,7 +16804,6 @@ func (i *IterInt32Uint16) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt32Uint32 implements an associative array of uint32 indexed by int32.
@@ -16897,6 +16897,10 @@ func (t *MapInt32Uint32) Rem(key int32) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt32Uint32) SetP(key int32, val *uint32) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -16931,31 +16935,30 @@ func (t *MapInt32Uint32) Set(key int32, val uint32) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt32Uint32) GetP(key int32) (*uint32, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt32Uint32) GetP(key int32) *uint32 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uint32)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uint32)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt32Uint32) Get(key int32) (uint32, bool) {
-	var v uint32
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uint32
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -16981,9 +16984,8 @@ type IterInt32Uint32 struct {
 	t       *MapInt32Uint32
 	nodes   []*nodeMapint32uint32
 	lastDir int
-	Found   bool    // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int32   // Key found by last call to Next, Prev.
-	Value   *uint32 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uint32 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt32Uint32.
@@ -17026,7 +17028,6 @@ func (i *IterInt32Uint32) Seek(key int32) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt32Uint32) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -17042,7 +17043,7 @@ func (i *IterInt32Uint32) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt32Uint32) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -17050,7 +17051,7 @@ func (i *IterInt32Uint32) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt32Uint32) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt32Uint32) step(dir int) {
@@ -17063,7 +17064,7 @@ func (i *IterInt32Uint32) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -17079,7 +17080,7 @@ func (i *IterInt32Uint32) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -17103,7 +17104,6 @@ func (i *IterInt32Uint32) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt32Uint64 implements an associative array of uint64 indexed by int32.
@@ -17197,6 +17197,10 @@ func (t *MapInt32Uint64) Rem(key int32) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt32Uint64) SetP(key int32, val *uint64) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -17231,31 +17235,30 @@ func (t *MapInt32Uint64) Set(key int32, val uint64) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt32Uint64) GetP(key int32) (*uint64, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt32Uint64) GetP(key int32) *uint64 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uint64)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uint64)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt32Uint64) Get(key int32) (uint64, bool) {
-	var v uint64
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uint64
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -17281,9 +17284,8 @@ type IterInt32Uint64 struct {
 	t       *MapInt32Uint64
 	nodes   []*nodeMapint32uint64
 	lastDir int
-	Found   bool    // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int32   // Key found by last call to Next, Prev.
-	Value   *uint64 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uint64 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt32Uint64.
@@ -17326,7 +17328,6 @@ func (i *IterInt32Uint64) Seek(key int32) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt32Uint64) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -17342,7 +17343,7 @@ func (i *IterInt32Uint64) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt32Uint64) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -17350,7 +17351,7 @@ func (i *IterInt32Uint64) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt32Uint64) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt32Uint64) step(dir int) {
@@ -17363,7 +17364,7 @@ func (i *IterInt32Uint64) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -17379,7 +17380,7 @@ func (i *IterInt32Uint64) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -17403,7 +17404,6 @@ func (i *IterInt32Uint64) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt32Uint8 implements an associative array of uint8 indexed by int32.
@@ -17497,6 +17497,10 @@ func (t *MapInt32Uint8) Rem(key int32) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt32Uint8) SetP(key int32, val *uint8) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -17531,31 +17535,30 @@ func (t *MapInt32Uint8) Set(key int32, val uint8) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt32Uint8) GetP(key int32) (*uint8, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt32Uint8) GetP(key int32) *uint8 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uint8)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uint8)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt32Uint8) Get(key int32) (uint8, bool) {
-	var v uint8
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uint8
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -17581,9 +17584,8 @@ type IterInt32Uint8 struct {
 	t       *MapInt32Uint8
 	nodes   []*nodeMapint32uint8
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int32  // Key found by last call to Next, Prev.
-	Value   *uint8 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uint8 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt32Uint8.
@@ -17626,7 +17628,6 @@ func (i *IterInt32Uint8) Seek(key int32) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt32Uint8) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -17642,7 +17643,7 @@ func (i *IterInt32Uint8) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt32Uint8) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -17650,7 +17651,7 @@ func (i *IterInt32Uint8) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt32Uint8) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt32Uint8) step(dir int) {
@@ -17663,7 +17664,7 @@ func (i *IterInt32Uint8) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -17679,7 +17680,7 @@ func (i *IterInt32Uint8) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -17703,7 +17704,6 @@ func (i *IterInt32Uint8) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt32Uintptr implements an associative array of uintptr indexed by int32.
@@ -17797,6 +17797,10 @@ func (t *MapInt32Uintptr) Rem(key int32) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt32Uintptr) SetP(key int32, val *uintptr) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -17831,31 +17835,30 @@ func (t *MapInt32Uintptr) Set(key int32, val uintptr) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt32Uintptr) GetP(key int32) (*uintptr, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt32Uintptr) GetP(key int32) *uintptr {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uintptr)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uintptr)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt32Uintptr) Get(key int32) (uintptr, bool) {
-	var v uintptr
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uintptr
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -17881,9 +17884,8 @@ type IterInt32Uintptr struct {
 	t       *MapInt32Uintptr
 	nodes   []*nodeMapint32uintptr
 	lastDir int
-	Found   bool     // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int32    // Key found by last call to Next, Prev.
-	Value   *uintptr // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uintptr // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt32Uintptr.
@@ -17926,7 +17928,6 @@ func (i *IterInt32Uintptr) Seek(key int32) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt32Uintptr) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -17942,7 +17943,7 @@ func (i *IterInt32Uintptr) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt32Uintptr) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -17950,7 +17951,7 @@ func (i *IterInt32Uintptr) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt32Uintptr) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt32Uintptr) step(dir int) {
@@ -17963,7 +17964,7 @@ func (i *IterInt32Uintptr) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -17979,7 +17980,7 @@ func (i *IterInt32Uintptr) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -18003,7 +18004,6 @@ func (i *IterInt32Uintptr) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt16Bool implements an associative array of bool indexed by int16.
@@ -18097,6 +18097,10 @@ func (t *MapInt16Bool) Rem(key int16) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt16Bool) SetP(key int16, val *bool) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -18131,31 +18135,30 @@ func (t *MapInt16Bool) Set(key int16, val bool) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt16Bool) GetP(key int16) (*bool, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt16Bool) GetP(key int16) *bool {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*bool)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*bool)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt16Bool) Get(key int16) (bool, bool) {
-	var v bool
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero bool
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -18181,9 +18184,8 @@ type IterInt16Bool struct {
 	t       *MapInt16Bool
 	nodes   []*nodeMapint16bool
 	lastDir int
-	Found   bool  // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int16 // Key found by last call to Next, Prev.
-	Value   *bool // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *bool // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt16Bool.
@@ -18226,7 +18228,6 @@ func (i *IterInt16Bool) Seek(key int16) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt16Bool) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -18242,7 +18243,7 @@ func (i *IterInt16Bool) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt16Bool) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -18250,7 +18251,7 @@ func (i *IterInt16Bool) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt16Bool) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt16Bool) step(dir int) {
@@ -18263,7 +18264,7 @@ func (i *IterInt16Bool) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -18279,7 +18280,7 @@ func (i *IterInt16Bool) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -18303,7 +18304,6 @@ func (i *IterInt16Bool) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt16Byte implements an associative array of byte indexed by int16.
@@ -18397,6 +18397,10 @@ func (t *MapInt16Byte) Rem(key int16) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt16Byte) SetP(key int16, val *byte) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -18431,31 +18435,30 @@ func (t *MapInt16Byte) Set(key int16, val byte) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt16Byte) GetP(key int16) (*byte, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt16Byte) GetP(key int16) *byte {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*byte)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*byte)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt16Byte) Get(key int16) (byte, bool) {
-	var v byte
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero byte
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -18481,9 +18484,8 @@ type IterInt16Byte struct {
 	t       *MapInt16Byte
 	nodes   []*nodeMapint16byte
 	lastDir int
-	Found   bool  // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int16 // Key found by last call to Next, Prev.
-	Value   *byte // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *byte // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt16Byte.
@@ -18526,7 +18528,6 @@ func (i *IterInt16Byte) Seek(key int16) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt16Byte) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -18542,7 +18543,7 @@ func (i *IterInt16Byte) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt16Byte) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -18550,7 +18551,7 @@ func (i *IterInt16Byte) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt16Byte) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt16Byte) step(dir int) {
@@ -18563,7 +18564,7 @@ func (i *IterInt16Byte) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -18579,7 +18580,7 @@ func (i *IterInt16Byte) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -18603,7 +18604,6 @@ func (i *IterInt16Byte) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt16Complex128 implements an associative array of complex128 indexed by int16.
@@ -18697,6 +18697,10 @@ func (t *MapInt16Complex128) Rem(key int16) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt16Complex128) SetP(key int16, val *complex128) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -18731,31 +18735,30 @@ func (t *MapInt16Complex128) Set(key int16, val complex128) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt16Complex128) GetP(key int16) (*complex128, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt16Complex128) GetP(key int16) *complex128 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*complex128)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*complex128)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt16Complex128) Get(key int16) (complex128, bool) {
-	var v complex128
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero complex128
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -18781,9 +18784,8 @@ type IterInt16Complex128 struct {
 	t       *MapInt16Complex128
 	nodes   []*nodeMapint16complex128
 	lastDir int
-	Found   bool        // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int16       // Key found by last call to Next, Prev.
-	Value   *complex128 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *complex128 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt16Complex128.
@@ -18826,7 +18828,6 @@ func (i *IterInt16Complex128) Seek(key int16) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt16Complex128) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -18842,7 +18843,7 @@ func (i *IterInt16Complex128) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt16Complex128) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -18850,7 +18851,7 @@ func (i *IterInt16Complex128) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt16Complex128) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt16Complex128) step(dir int) {
@@ -18863,7 +18864,7 @@ func (i *IterInt16Complex128) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -18879,7 +18880,7 @@ func (i *IterInt16Complex128) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -18903,7 +18904,6 @@ func (i *IterInt16Complex128) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt16Complex64 implements an associative array of complex64 indexed by int16.
@@ -18997,6 +18997,10 @@ func (t *MapInt16Complex64) Rem(key int16) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt16Complex64) SetP(key int16, val *complex64) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -19031,31 +19035,30 @@ func (t *MapInt16Complex64) Set(key int16, val complex64) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt16Complex64) GetP(key int16) (*complex64, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt16Complex64) GetP(key int16) *complex64 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*complex64)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*complex64)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt16Complex64) Get(key int16) (complex64, bool) {
-	var v complex64
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero complex64
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -19081,9 +19084,8 @@ type IterInt16Complex64 struct {
 	t       *MapInt16Complex64
 	nodes   []*nodeMapint16complex64
 	lastDir int
-	Found   bool       // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int16      // Key found by last call to Next, Prev.
-	Value   *complex64 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *complex64 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt16Complex64.
@@ -19126,7 +19128,6 @@ func (i *IterInt16Complex64) Seek(key int16) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt16Complex64) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -19142,7 +19143,7 @@ func (i *IterInt16Complex64) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt16Complex64) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -19150,7 +19151,7 @@ func (i *IterInt16Complex64) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt16Complex64) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt16Complex64) step(dir int) {
@@ -19163,7 +19164,7 @@ func (i *IterInt16Complex64) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -19179,7 +19180,7 @@ func (i *IterInt16Complex64) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -19203,7 +19204,6 @@ func (i *IterInt16Complex64) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt16Error implements an associative array of error indexed by int16.
@@ -19297,6 +19297,10 @@ func (t *MapInt16Error) Rem(key int16) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt16Error) SetP(key int16, val *error) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -19331,31 +19335,30 @@ func (t *MapInt16Error) Set(key int16, val error) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt16Error) GetP(key int16) (*error, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt16Error) GetP(key int16) *error {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*error)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*error)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt16Error) Get(key int16) (error, bool) {
-	var v error
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero error
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -19381,9 +19384,8 @@ type IterInt16Error struct {
 	t       *MapInt16Error
 	nodes   []*nodeMapint16error
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int16  // Key found by last call to Next, Prev.
-	Value   *error // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *error // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt16Error.
@@ -19426,7 +19428,6 @@ func (i *IterInt16Error) Seek(key int16) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt16Error) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -19442,7 +19443,7 @@ func (i *IterInt16Error) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt16Error) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -19450,7 +19451,7 @@ func (i *IterInt16Error) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt16Error) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt16Error) step(dir int) {
@@ -19463,7 +19464,7 @@ func (i *IterInt16Error) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -19479,7 +19480,7 @@ func (i *IterInt16Error) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -19503,7 +19504,6 @@ func (i *IterInt16Error) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt16Float32 implements an associative array of float32 indexed by int16.
@@ -19597,6 +19597,10 @@ func (t *MapInt16Float32) Rem(key int16) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt16Float32) SetP(key int16, val *float32) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -19631,31 +19635,30 @@ func (t *MapInt16Float32) Set(key int16, val float32) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt16Float32) GetP(key int16) (*float32, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt16Float32) GetP(key int16) *float32 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*float32)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*float32)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt16Float32) Get(key int16) (float32, bool) {
-	var v float32
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero float32
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -19681,9 +19684,8 @@ type IterInt16Float32 struct {
 	t       *MapInt16Float32
 	nodes   []*nodeMapint16float32
 	lastDir int
-	Found   bool     // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int16    // Key found by last call to Next, Prev.
-	Value   *float32 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *float32 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt16Float32.
@@ -19726,7 +19728,6 @@ func (i *IterInt16Float32) Seek(key int16) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt16Float32) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -19742,7 +19743,7 @@ func (i *IterInt16Float32) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt16Float32) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -19750,7 +19751,7 @@ func (i *IterInt16Float32) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt16Float32) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt16Float32) step(dir int) {
@@ -19763,7 +19764,7 @@ func (i *IterInt16Float32) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -19779,7 +19780,7 @@ func (i *IterInt16Float32) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -19803,7 +19804,6 @@ func (i *IterInt16Float32) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt16Float64 implements an associative array of float64 indexed by int16.
@@ -19897,6 +19897,10 @@ func (t *MapInt16Float64) Rem(key int16) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt16Float64) SetP(key int16, val *float64) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -19931,31 +19935,30 @@ func (t *MapInt16Float64) Set(key int16, val float64) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt16Float64) GetP(key int16) (*float64, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt16Float64) GetP(key int16) *float64 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*float64)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*float64)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt16Float64) Get(key int16) (float64, bool) {
-	var v float64
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero float64
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -19981,9 +19984,8 @@ type IterInt16Float64 struct {
 	t       *MapInt16Float64
 	nodes   []*nodeMapint16float64
 	lastDir int
-	Found   bool     // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int16    // Key found by last call to Next, Prev.
-	Value   *float64 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *float64 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt16Float64.
@@ -20026,7 +20028,6 @@ func (i *IterInt16Float64) Seek(key int16) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt16Float64) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -20042,7 +20043,7 @@ func (i *IterInt16Float64) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt16Float64) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -20050,7 +20051,7 @@ func (i *IterInt16Float64) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt16Float64) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt16Float64) step(dir int) {
@@ -20063,7 +20064,7 @@ func (i *IterInt16Float64) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -20079,7 +20080,7 @@ func (i *IterInt16Float64) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -20103,7 +20104,6 @@ func (i *IterInt16Float64) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt16Int implements an associative array of int indexed by int16.
@@ -20197,6 +20197,10 @@ func (t *MapInt16Int) Rem(key int16) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt16Int) SetP(key int16, val *int) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -20231,31 +20235,30 @@ func (t *MapInt16Int) Set(key int16, val int) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt16Int) GetP(key int16) (*int, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt16Int) GetP(key int16) *int {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*int)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*int)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt16Int) Get(key int16) (int, bool) {
-	var v int
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero int
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -20281,9 +20284,8 @@ type IterInt16Int struct {
 	t       *MapInt16Int
 	nodes   []*nodeMapint16int
 	lastDir int
-	Found   bool  // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int16 // Key found by last call to Next, Prev.
-	Value   *int  // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *int  // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt16Int.
@@ -20326,7 +20328,6 @@ func (i *IterInt16Int) Seek(key int16) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt16Int) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -20342,7 +20343,7 @@ func (i *IterInt16Int) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt16Int) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -20350,7 +20351,7 @@ func (i *IterInt16Int) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt16Int) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt16Int) step(dir int) {
@@ -20363,7 +20364,7 @@ func (i *IterInt16Int) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -20379,7 +20380,7 @@ func (i *IterInt16Int) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -20403,7 +20404,6 @@ func (i *IterInt16Int) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt16Int16 implements an associative array of int16 indexed by int16.
@@ -20497,6 +20497,10 @@ func (t *MapInt16Int16) Rem(key int16) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt16Int16) SetP(key int16, val *int16) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -20531,31 +20535,30 @@ func (t *MapInt16Int16) Set(key int16, val int16) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt16Int16) GetP(key int16) (*int16, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt16Int16) GetP(key int16) *int16 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*int16)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*int16)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt16Int16) Get(key int16) (int16, bool) {
-	var v int16
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero int16
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -20581,9 +20584,8 @@ type IterInt16Int16 struct {
 	t       *MapInt16Int16
 	nodes   []*nodeMapint16int16
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int16  // Key found by last call to Next, Prev.
-	Value   *int16 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *int16 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt16Int16.
@@ -20626,7 +20628,6 @@ func (i *IterInt16Int16) Seek(key int16) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt16Int16) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -20642,7 +20643,7 @@ func (i *IterInt16Int16) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt16Int16) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -20650,7 +20651,7 @@ func (i *IterInt16Int16) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt16Int16) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt16Int16) step(dir int) {
@@ -20663,7 +20664,7 @@ func (i *IterInt16Int16) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -20679,7 +20680,7 @@ func (i *IterInt16Int16) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -20703,7 +20704,6 @@ func (i *IterInt16Int16) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt16Int32 implements an associative array of int32 indexed by int16.
@@ -20797,6 +20797,10 @@ func (t *MapInt16Int32) Rem(key int16) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt16Int32) SetP(key int16, val *int32) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -20831,31 +20835,30 @@ func (t *MapInt16Int32) Set(key int16, val int32) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt16Int32) GetP(key int16) (*int32, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt16Int32) GetP(key int16) *int32 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*int32)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*int32)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt16Int32) Get(key int16) (int32, bool) {
-	var v int32
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero int32
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -20881,9 +20884,8 @@ type IterInt16Int32 struct {
 	t       *MapInt16Int32
 	nodes   []*nodeMapint16int32
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int16  // Key found by last call to Next, Prev.
-	Value   *int32 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *int32 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt16Int32.
@@ -20926,7 +20928,6 @@ func (i *IterInt16Int32) Seek(key int16) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt16Int32) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -20942,7 +20943,7 @@ func (i *IterInt16Int32) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt16Int32) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -20950,7 +20951,7 @@ func (i *IterInt16Int32) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt16Int32) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt16Int32) step(dir int) {
@@ -20963,7 +20964,7 @@ func (i *IterInt16Int32) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -20979,7 +20980,7 @@ func (i *IterInt16Int32) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -21003,7 +21004,6 @@ func (i *IterInt16Int32) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt16Int64 implements an associative array of int64 indexed by int16.
@@ -21097,6 +21097,10 @@ func (t *MapInt16Int64) Rem(key int16) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt16Int64) SetP(key int16, val *int64) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -21131,31 +21135,30 @@ func (t *MapInt16Int64) Set(key int16, val int64) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt16Int64) GetP(key int16) (*int64, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt16Int64) GetP(key int16) *int64 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*int64)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*int64)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt16Int64) Get(key int16) (int64, bool) {
-	var v int64
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero int64
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -21181,9 +21184,8 @@ type IterInt16Int64 struct {
 	t       *MapInt16Int64
 	nodes   []*nodeMapint16int64
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int16  // Key found by last call to Next, Prev.
-	Value   *int64 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *int64 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt16Int64.
@@ -21226,7 +21228,6 @@ func (i *IterInt16Int64) Seek(key int16) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt16Int64) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -21242,7 +21243,7 @@ func (i *IterInt16Int64) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt16Int64) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -21250,7 +21251,7 @@ func (i *IterInt16Int64) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt16Int64) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt16Int64) step(dir int) {
@@ -21263,7 +21264,7 @@ func (i *IterInt16Int64) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -21279,7 +21280,7 @@ func (i *IterInt16Int64) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -21303,7 +21304,6 @@ func (i *IterInt16Int64) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt16Int8 implements an associative array of int8 indexed by int16.
@@ -21397,6 +21397,10 @@ func (t *MapInt16Int8) Rem(key int16) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt16Int8) SetP(key int16, val *int8) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -21431,31 +21435,30 @@ func (t *MapInt16Int8) Set(key int16, val int8) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt16Int8) GetP(key int16) (*int8, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt16Int8) GetP(key int16) *int8 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*int8)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*int8)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt16Int8) Get(key int16) (int8, bool) {
-	var v int8
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero int8
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -21481,9 +21484,8 @@ type IterInt16Int8 struct {
 	t       *MapInt16Int8
 	nodes   []*nodeMapint16int8
 	lastDir int
-	Found   bool  // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int16 // Key found by last call to Next, Prev.
-	Value   *int8 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *int8 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt16Int8.
@@ -21526,7 +21528,6 @@ func (i *IterInt16Int8) Seek(key int16) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt16Int8) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -21542,7 +21543,7 @@ func (i *IterInt16Int8) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt16Int8) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -21550,7 +21551,7 @@ func (i *IterInt16Int8) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt16Int8) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt16Int8) step(dir int) {
@@ -21563,7 +21564,7 @@ func (i *IterInt16Int8) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -21579,7 +21580,7 @@ func (i *IterInt16Int8) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -21603,7 +21604,6 @@ func (i *IterInt16Int8) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt16Rune implements an associative array of rune indexed by int16.
@@ -21697,6 +21697,10 @@ func (t *MapInt16Rune) Rem(key int16) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt16Rune) SetP(key int16, val *rune) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -21731,31 +21735,30 @@ func (t *MapInt16Rune) Set(key int16, val rune) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt16Rune) GetP(key int16) (*rune, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt16Rune) GetP(key int16) *rune {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*rune)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*rune)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt16Rune) Get(key int16) (rune, bool) {
-	var v rune
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero rune
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -21781,9 +21784,8 @@ type IterInt16Rune struct {
 	t       *MapInt16Rune
 	nodes   []*nodeMapint16rune
 	lastDir int
-	Found   bool  // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int16 // Key found by last call to Next, Prev.
-	Value   *rune // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *rune // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt16Rune.
@@ -21826,7 +21828,6 @@ func (i *IterInt16Rune) Seek(key int16) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt16Rune) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -21842,7 +21843,7 @@ func (i *IterInt16Rune) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt16Rune) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -21850,7 +21851,7 @@ func (i *IterInt16Rune) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt16Rune) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt16Rune) step(dir int) {
@@ -21863,7 +21864,7 @@ func (i *IterInt16Rune) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -21879,7 +21880,7 @@ func (i *IterInt16Rune) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -21903,7 +21904,6 @@ func (i *IterInt16Rune) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt16String implements an associative array of string indexed by int16.
@@ -21997,6 +21997,10 @@ func (t *MapInt16String) Rem(key int16) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt16String) SetP(key int16, val *string) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -22031,31 +22035,30 @@ func (t *MapInt16String) Set(key int16, val string) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt16String) GetP(key int16) (*string, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt16String) GetP(key int16) *string {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*string)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*string)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt16String) Get(key int16) (string, bool) {
-	var v string
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero string
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -22081,9 +22084,8 @@ type IterInt16String struct {
 	t       *MapInt16String
 	nodes   []*nodeMapint16string
 	lastDir int
-	Found   bool    // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int16   // Key found by last call to Next, Prev.
-	Value   *string // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *string // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt16String.
@@ -22126,7 +22128,6 @@ func (i *IterInt16String) Seek(key int16) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt16String) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -22142,7 +22143,7 @@ func (i *IterInt16String) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt16String) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -22150,7 +22151,7 @@ func (i *IterInt16String) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt16String) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt16String) step(dir int) {
@@ -22163,7 +22164,7 @@ func (i *IterInt16String) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -22179,7 +22180,7 @@ func (i *IterInt16String) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -22203,7 +22204,6 @@ func (i *IterInt16String) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt16Uint implements an associative array of uint indexed by int16.
@@ -22297,6 +22297,10 @@ func (t *MapInt16Uint) Rem(key int16) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt16Uint) SetP(key int16, val *uint) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -22331,31 +22335,30 @@ func (t *MapInt16Uint) Set(key int16, val uint) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt16Uint) GetP(key int16) (*uint, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt16Uint) GetP(key int16) *uint {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uint)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uint)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt16Uint) Get(key int16) (uint, bool) {
-	var v uint
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uint
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -22381,9 +22384,8 @@ type IterInt16Uint struct {
 	t       *MapInt16Uint
 	nodes   []*nodeMapint16uint
 	lastDir int
-	Found   bool  // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int16 // Key found by last call to Next, Prev.
-	Value   *uint // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uint // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt16Uint.
@@ -22426,7 +22428,6 @@ func (i *IterInt16Uint) Seek(key int16) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt16Uint) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -22442,7 +22443,7 @@ func (i *IterInt16Uint) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt16Uint) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -22450,7 +22451,7 @@ func (i *IterInt16Uint) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt16Uint) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt16Uint) step(dir int) {
@@ -22463,7 +22464,7 @@ func (i *IterInt16Uint) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -22479,7 +22480,7 @@ func (i *IterInt16Uint) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -22503,7 +22504,6 @@ func (i *IterInt16Uint) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt16Uint16 implements an associative array of uint16 indexed by int16.
@@ -22597,6 +22597,10 @@ func (t *MapInt16Uint16) Rem(key int16) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt16Uint16) SetP(key int16, val *uint16) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -22631,31 +22635,30 @@ func (t *MapInt16Uint16) Set(key int16, val uint16) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt16Uint16) GetP(key int16) (*uint16, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt16Uint16) GetP(key int16) *uint16 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uint16)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uint16)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt16Uint16) Get(key int16) (uint16, bool) {
-	var v uint16
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uint16
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -22681,9 +22684,8 @@ type IterInt16Uint16 struct {
 	t       *MapInt16Uint16
 	nodes   []*nodeMapint16uint16
 	lastDir int
-	Found   bool    // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int16   // Key found by last call to Next, Prev.
-	Value   *uint16 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uint16 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt16Uint16.
@@ -22726,7 +22728,6 @@ func (i *IterInt16Uint16) Seek(key int16) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt16Uint16) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -22742,7 +22743,7 @@ func (i *IterInt16Uint16) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt16Uint16) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -22750,7 +22751,7 @@ func (i *IterInt16Uint16) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt16Uint16) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt16Uint16) step(dir int) {
@@ -22763,7 +22764,7 @@ func (i *IterInt16Uint16) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -22779,7 +22780,7 @@ func (i *IterInt16Uint16) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -22803,7 +22804,6 @@ func (i *IterInt16Uint16) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt16Uint32 implements an associative array of uint32 indexed by int16.
@@ -22897,6 +22897,10 @@ func (t *MapInt16Uint32) Rem(key int16) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt16Uint32) SetP(key int16, val *uint32) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -22931,31 +22935,30 @@ func (t *MapInt16Uint32) Set(key int16, val uint32) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt16Uint32) GetP(key int16) (*uint32, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt16Uint32) GetP(key int16) *uint32 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uint32)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uint32)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt16Uint32) Get(key int16) (uint32, bool) {
-	var v uint32
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uint32
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -22981,9 +22984,8 @@ type IterInt16Uint32 struct {
 	t       *MapInt16Uint32
 	nodes   []*nodeMapint16uint32
 	lastDir int
-	Found   bool    // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int16   // Key found by last call to Next, Prev.
-	Value   *uint32 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uint32 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt16Uint32.
@@ -23026,7 +23028,6 @@ func (i *IterInt16Uint32) Seek(key int16) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt16Uint32) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -23042,7 +23043,7 @@ func (i *IterInt16Uint32) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt16Uint32) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -23050,7 +23051,7 @@ func (i *IterInt16Uint32) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt16Uint32) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt16Uint32) step(dir int) {
@@ -23063,7 +23064,7 @@ func (i *IterInt16Uint32) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -23079,7 +23080,7 @@ func (i *IterInt16Uint32) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -23103,7 +23104,6 @@ func (i *IterInt16Uint32) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt16Uint64 implements an associative array of uint64 indexed by int16.
@@ -23197,6 +23197,10 @@ func (t *MapInt16Uint64) Rem(key int16) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt16Uint64) SetP(key int16, val *uint64) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -23231,31 +23235,30 @@ func (t *MapInt16Uint64) Set(key int16, val uint64) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt16Uint64) GetP(key int16) (*uint64, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt16Uint64) GetP(key int16) *uint64 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uint64)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uint64)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt16Uint64) Get(key int16) (uint64, bool) {
-	var v uint64
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uint64
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -23281,9 +23284,8 @@ type IterInt16Uint64 struct {
 	t       *MapInt16Uint64
 	nodes   []*nodeMapint16uint64
 	lastDir int
-	Found   bool    // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int16   // Key found by last call to Next, Prev.
-	Value   *uint64 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uint64 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt16Uint64.
@@ -23326,7 +23328,6 @@ func (i *IterInt16Uint64) Seek(key int16) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt16Uint64) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -23342,7 +23343,7 @@ func (i *IterInt16Uint64) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt16Uint64) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -23350,7 +23351,7 @@ func (i *IterInt16Uint64) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt16Uint64) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt16Uint64) step(dir int) {
@@ -23363,7 +23364,7 @@ func (i *IterInt16Uint64) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -23379,7 +23380,7 @@ func (i *IterInt16Uint64) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -23403,7 +23404,6 @@ func (i *IterInt16Uint64) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt16Uint8 implements an associative array of uint8 indexed by int16.
@@ -23497,6 +23497,10 @@ func (t *MapInt16Uint8) Rem(key int16) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt16Uint8) SetP(key int16, val *uint8) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -23531,31 +23535,30 @@ func (t *MapInt16Uint8) Set(key int16, val uint8) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt16Uint8) GetP(key int16) (*uint8, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt16Uint8) GetP(key int16) *uint8 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uint8)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uint8)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt16Uint8) Get(key int16) (uint8, bool) {
-	var v uint8
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uint8
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -23581,9 +23584,8 @@ type IterInt16Uint8 struct {
 	t       *MapInt16Uint8
 	nodes   []*nodeMapint16uint8
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int16  // Key found by last call to Next, Prev.
-	Value   *uint8 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uint8 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt16Uint8.
@@ -23626,7 +23628,6 @@ func (i *IterInt16Uint8) Seek(key int16) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt16Uint8) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -23642,7 +23643,7 @@ func (i *IterInt16Uint8) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt16Uint8) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -23650,7 +23651,7 @@ func (i *IterInt16Uint8) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt16Uint8) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt16Uint8) step(dir int) {
@@ -23663,7 +23664,7 @@ func (i *IterInt16Uint8) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -23679,7 +23680,7 @@ func (i *IterInt16Uint8) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -23703,7 +23704,6 @@ func (i *IterInt16Uint8) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt16Uintptr implements an associative array of uintptr indexed by int16.
@@ -23797,6 +23797,10 @@ func (t *MapInt16Uintptr) Rem(key int16) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt16Uintptr) SetP(key int16, val *uintptr) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -23831,31 +23835,30 @@ func (t *MapInt16Uintptr) Set(key int16, val uintptr) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt16Uintptr) GetP(key int16) (*uintptr, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt16Uintptr) GetP(key int16) *uintptr {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uintptr)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uintptr)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt16Uintptr) Get(key int16) (uintptr, bool) {
-	var v uintptr
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uintptr
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -23881,9 +23884,8 @@ type IterInt16Uintptr struct {
 	t       *MapInt16Uintptr
 	nodes   []*nodeMapint16uintptr
 	lastDir int
-	Found   bool     // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int16    // Key found by last call to Next, Prev.
-	Value   *uintptr // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uintptr // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt16Uintptr.
@@ -23926,7 +23928,6 @@ func (i *IterInt16Uintptr) Seek(key int16) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt16Uintptr) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -23942,7 +23943,7 @@ func (i *IterInt16Uintptr) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt16Uintptr) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -23950,7 +23951,7 @@ func (i *IterInt16Uintptr) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt16Uintptr) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt16Uintptr) step(dir int) {
@@ -23963,7 +23964,7 @@ func (i *IterInt16Uintptr) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -23979,7 +23980,7 @@ func (i *IterInt16Uintptr) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -24003,7 +24004,6 @@ func (i *IterInt16Uintptr) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt8Bool implements an associative array of bool indexed by int8.
@@ -24097,6 +24097,10 @@ func (t *MapInt8Bool) Rem(key int8) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt8Bool) SetP(key int8, val *bool) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -24131,31 +24135,30 @@ func (t *MapInt8Bool) Set(key int8, val bool) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt8Bool) GetP(key int8) (*bool, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt8Bool) GetP(key int8) *bool {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*bool)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*bool)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt8Bool) Get(key int8) (bool, bool) {
-	var v bool
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero bool
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -24181,9 +24184,8 @@ type IterInt8Bool struct {
 	t       *MapInt8Bool
 	nodes   []*nodeMapint8bool
 	lastDir int
-	Found   bool  // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int8  // Key found by last call to Next, Prev.
-	Value   *bool // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *bool // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt8Bool.
@@ -24226,7 +24228,6 @@ func (i *IterInt8Bool) Seek(key int8) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt8Bool) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -24242,7 +24243,7 @@ func (i *IterInt8Bool) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt8Bool) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -24250,7 +24251,7 @@ func (i *IterInt8Bool) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt8Bool) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt8Bool) step(dir int) {
@@ -24263,7 +24264,7 @@ func (i *IterInt8Bool) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -24279,7 +24280,7 @@ func (i *IterInt8Bool) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -24303,7 +24304,6 @@ func (i *IterInt8Bool) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt8Byte implements an associative array of byte indexed by int8.
@@ -24397,6 +24397,10 @@ func (t *MapInt8Byte) Rem(key int8) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt8Byte) SetP(key int8, val *byte) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -24431,31 +24435,30 @@ func (t *MapInt8Byte) Set(key int8, val byte) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt8Byte) GetP(key int8) (*byte, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt8Byte) GetP(key int8) *byte {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*byte)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*byte)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt8Byte) Get(key int8) (byte, bool) {
-	var v byte
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero byte
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -24481,9 +24484,8 @@ type IterInt8Byte struct {
 	t       *MapInt8Byte
 	nodes   []*nodeMapint8byte
 	lastDir int
-	Found   bool  // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int8  // Key found by last call to Next, Prev.
-	Value   *byte // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *byte // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt8Byte.
@@ -24526,7 +24528,6 @@ func (i *IterInt8Byte) Seek(key int8) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt8Byte) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -24542,7 +24543,7 @@ func (i *IterInt8Byte) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt8Byte) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -24550,7 +24551,7 @@ func (i *IterInt8Byte) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt8Byte) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt8Byte) step(dir int) {
@@ -24563,7 +24564,7 @@ func (i *IterInt8Byte) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -24579,7 +24580,7 @@ func (i *IterInt8Byte) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -24603,7 +24604,6 @@ func (i *IterInt8Byte) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt8Complex128 implements an associative array of complex128 indexed by int8.
@@ -24697,6 +24697,10 @@ func (t *MapInt8Complex128) Rem(key int8) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt8Complex128) SetP(key int8, val *complex128) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -24731,31 +24735,30 @@ func (t *MapInt8Complex128) Set(key int8, val complex128) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt8Complex128) GetP(key int8) (*complex128, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt8Complex128) GetP(key int8) *complex128 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*complex128)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*complex128)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt8Complex128) Get(key int8) (complex128, bool) {
-	var v complex128
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero complex128
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -24781,9 +24784,8 @@ type IterInt8Complex128 struct {
 	t       *MapInt8Complex128
 	nodes   []*nodeMapint8complex128
 	lastDir int
-	Found   bool        // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int8        // Key found by last call to Next, Prev.
-	Value   *complex128 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *complex128 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt8Complex128.
@@ -24826,7 +24828,6 @@ func (i *IterInt8Complex128) Seek(key int8) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt8Complex128) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -24842,7 +24843,7 @@ func (i *IterInt8Complex128) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt8Complex128) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -24850,7 +24851,7 @@ func (i *IterInt8Complex128) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt8Complex128) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt8Complex128) step(dir int) {
@@ -24863,7 +24864,7 @@ func (i *IterInt8Complex128) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -24879,7 +24880,7 @@ func (i *IterInt8Complex128) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -24903,7 +24904,6 @@ func (i *IterInt8Complex128) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt8Complex64 implements an associative array of complex64 indexed by int8.
@@ -24997,6 +24997,10 @@ func (t *MapInt8Complex64) Rem(key int8) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt8Complex64) SetP(key int8, val *complex64) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -25031,31 +25035,30 @@ func (t *MapInt8Complex64) Set(key int8, val complex64) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt8Complex64) GetP(key int8) (*complex64, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt8Complex64) GetP(key int8) *complex64 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*complex64)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*complex64)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt8Complex64) Get(key int8) (complex64, bool) {
-	var v complex64
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero complex64
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -25081,9 +25084,8 @@ type IterInt8Complex64 struct {
 	t       *MapInt8Complex64
 	nodes   []*nodeMapint8complex64
 	lastDir int
-	Found   bool       // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int8       // Key found by last call to Next, Prev.
-	Value   *complex64 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *complex64 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt8Complex64.
@@ -25126,7 +25128,6 @@ func (i *IterInt8Complex64) Seek(key int8) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt8Complex64) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -25142,7 +25143,7 @@ func (i *IterInt8Complex64) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt8Complex64) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -25150,7 +25151,7 @@ func (i *IterInt8Complex64) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt8Complex64) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt8Complex64) step(dir int) {
@@ -25163,7 +25164,7 @@ func (i *IterInt8Complex64) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -25179,7 +25180,7 @@ func (i *IterInt8Complex64) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -25203,7 +25204,6 @@ func (i *IterInt8Complex64) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt8Error implements an associative array of error indexed by int8.
@@ -25297,6 +25297,10 @@ func (t *MapInt8Error) Rem(key int8) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt8Error) SetP(key int8, val *error) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -25331,31 +25335,30 @@ func (t *MapInt8Error) Set(key int8, val error) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt8Error) GetP(key int8) (*error, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt8Error) GetP(key int8) *error {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*error)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*error)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt8Error) Get(key int8) (error, bool) {
-	var v error
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero error
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -25381,9 +25384,8 @@ type IterInt8Error struct {
 	t       *MapInt8Error
 	nodes   []*nodeMapint8error
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int8   // Key found by last call to Next, Prev.
-	Value   *error // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *error // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt8Error.
@@ -25426,7 +25428,6 @@ func (i *IterInt8Error) Seek(key int8) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt8Error) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -25442,7 +25443,7 @@ func (i *IterInt8Error) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt8Error) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -25450,7 +25451,7 @@ func (i *IterInt8Error) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt8Error) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt8Error) step(dir int) {
@@ -25463,7 +25464,7 @@ func (i *IterInt8Error) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -25479,7 +25480,7 @@ func (i *IterInt8Error) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -25503,7 +25504,6 @@ func (i *IterInt8Error) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt8Float32 implements an associative array of float32 indexed by int8.
@@ -25597,6 +25597,10 @@ func (t *MapInt8Float32) Rem(key int8) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt8Float32) SetP(key int8, val *float32) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -25631,31 +25635,30 @@ func (t *MapInt8Float32) Set(key int8, val float32) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt8Float32) GetP(key int8) (*float32, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt8Float32) GetP(key int8) *float32 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*float32)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*float32)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt8Float32) Get(key int8) (float32, bool) {
-	var v float32
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero float32
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -25681,9 +25684,8 @@ type IterInt8Float32 struct {
 	t       *MapInt8Float32
 	nodes   []*nodeMapint8float32
 	lastDir int
-	Found   bool     // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int8     // Key found by last call to Next, Prev.
-	Value   *float32 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *float32 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt8Float32.
@@ -25726,7 +25728,6 @@ func (i *IterInt8Float32) Seek(key int8) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt8Float32) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -25742,7 +25743,7 @@ func (i *IterInt8Float32) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt8Float32) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -25750,7 +25751,7 @@ func (i *IterInt8Float32) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt8Float32) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt8Float32) step(dir int) {
@@ -25763,7 +25764,7 @@ func (i *IterInt8Float32) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -25779,7 +25780,7 @@ func (i *IterInt8Float32) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -25803,7 +25804,6 @@ func (i *IterInt8Float32) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt8Float64 implements an associative array of float64 indexed by int8.
@@ -25897,6 +25897,10 @@ func (t *MapInt8Float64) Rem(key int8) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt8Float64) SetP(key int8, val *float64) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -25931,31 +25935,30 @@ func (t *MapInt8Float64) Set(key int8, val float64) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt8Float64) GetP(key int8) (*float64, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt8Float64) GetP(key int8) *float64 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*float64)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*float64)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt8Float64) Get(key int8) (float64, bool) {
-	var v float64
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero float64
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -25981,9 +25984,8 @@ type IterInt8Float64 struct {
 	t       *MapInt8Float64
 	nodes   []*nodeMapint8float64
 	lastDir int
-	Found   bool     // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int8     // Key found by last call to Next, Prev.
-	Value   *float64 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *float64 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt8Float64.
@@ -26026,7 +26028,6 @@ func (i *IterInt8Float64) Seek(key int8) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt8Float64) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -26042,7 +26043,7 @@ func (i *IterInt8Float64) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt8Float64) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -26050,7 +26051,7 @@ func (i *IterInt8Float64) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt8Float64) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt8Float64) step(dir int) {
@@ -26063,7 +26064,7 @@ func (i *IterInt8Float64) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -26079,7 +26080,7 @@ func (i *IterInt8Float64) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -26103,7 +26104,6 @@ func (i *IterInt8Float64) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt8Int implements an associative array of int indexed by int8.
@@ -26197,6 +26197,10 @@ func (t *MapInt8Int) Rem(key int8) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt8Int) SetP(key int8, val *int) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -26231,31 +26235,30 @@ func (t *MapInt8Int) Set(key int8, val int) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt8Int) GetP(key int8) (*int, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt8Int) GetP(key int8) *int {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*int)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*int)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt8Int) Get(key int8) (int, bool) {
-	var v int
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero int
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -26281,9 +26284,8 @@ type IterInt8Int struct {
 	t       *MapInt8Int
 	nodes   []*nodeMapint8int
 	lastDir int
-	Found   bool // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int8 // Key found by last call to Next, Prev.
-	Value   *int // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *int // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt8Int.
@@ -26326,7 +26328,6 @@ func (i *IterInt8Int) Seek(key int8) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt8Int) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -26342,7 +26343,7 @@ func (i *IterInt8Int) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt8Int) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -26350,7 +26351,7 @@ func (i *IterInt8Int) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt8Int) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt8Int) step(dir int) {
@@ -26363,7 +26364,7 @@ func (i *IterInt8Int) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -26379,7 +26380,7 @@ func (i *IterInt8Int) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -26403,7 +26404,6 @@ func (i *IterInt8Int) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt8Int16 implements an associative array of int16 indexed by int8.
@@ -26497,6 +26497,10 @@ func (t *MapInt8Int16) Rem(key int8) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt8Int16) SetP(key int8, val *int16) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -26531,31 +26535,30 @@ func (t *MapInt8Int16) Set(key int8, val int16) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt8Int16) GetP(key int8) (*int16, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt8Int16) GetP(key int8) *int16 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*int16)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*int16)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt8Int16) Get(key int8) (int16, bool) {
-	var v int16
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero int16
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -26581,9 +26584,8 @@ type IterInt8Int16 struct {
 	t       *MapInt8Int16
 	nodes   []*nodeMapint8int16
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int8   // Key found by last call to Next, Prev.
-	Value   *int16 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *int16 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt8Int16.
@@ -26626,7 +26628,6 @@ func (i *IterInt8Int16) Seek(key int8) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt8Int16) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -26642,7 +26643,7 @@ func (i *IterInt8Int16) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt8Int16) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -26650,7 +26651,7 @@ func (i *IterInt8Int16) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt8Int16) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt8Int16) step(dir int) {
@@ -26663,7 +26664,7 @@ func (i *IterInt8Int16) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -26679,7 +26680,7 @@ func (i *IterInt8Int16) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -26703,7 +26704,6 @@ func (i *IterInt8Int16) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt8Int32 implements an associative array of int32 indexed by int8.
@@ -26797,6 +26797,10 @@ func (t *MapInt8Int32) Rem(key int8) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt8Int32) SetP(key int8, val *int32) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -26831,31 +26835,30 @@ func (t *MapInt8Int32) Set(key int8, val int32) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt8Int32) GetP(key int8) (*int32, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt8Int32) GetP(key int8) *int32 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*int32)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*int32)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt8Int32) Get(key int8) (int32, bool) {
-	var v int32
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero int32
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -26881,9 +26884,8 @@ type IterInt8Int32 struct {
 	t       *MapInt8Int32
 	nodes   []*nodeMapint8int32
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int8   // Key found by last call to Next, Prev.
-	Value   *int32 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *int32 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt8Int32.
@@ -26926,7 +26928,6 @@ func (i *IterInt8Int32) Seek(key int8) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt8Int32) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -26942,7 +26943,7 @@ func (i *IterInt8Int32) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt8Int32) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -26950,7 +26951,7 @@ func (i *IterInt8Int32) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt8Int32) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt8Int32) step(dir int) {
@@ -26963,7 +26964,7 @@ func (i *IterInt8Int32) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -26979,7 +26980,7 @@ func (i *IterInt8Int32) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -27003,7 +27004,6 @@ func (i *IterInt8Int32) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt8Int64 implements an associative array of int64 indexed by int8.
@@ -27097,6 +27097,10 @@ func (t *MapInt8Int64) Rem(key int8) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt8Int64) SetP(key int8, val *int64) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -27131,31 +27135,30 @@ func (t *MapInt8Int64) Set(key int8, val int64) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt8Int64) GetP(key int8) (*int64, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt8Int64) GetP(key int8) *int64 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*int64)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*int64)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt8Int64) Get(key int8) (int64, bool) {
-	var v int64
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero int64
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -27181,9 +27184,8 @@ type IterInt8Int64 struct {
 	t       *MapInt8Int64
 	nodes   []*nodeMapint8int64
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int8   // Key found by last call to Next, Prev.
-	Value   *int64 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *int64 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt8Int64.
@@ -27226,7 +27228,6 @@ func (i *IterInt8Int64) Seek(key int8) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt8Int64) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -27242,7 +27243,7 @@ func (i *IterInt8Int64) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt8Int64) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -27250,7 +27251,7 @@ func (i *IterInt8Int64) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt8Int64) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt8Int64) step(dir int) {
@@ -27263,7 +27264,7 @@ func (i *IterInt8Int64) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -27279,7 +27280,7 @@ func (i *IterInt8Int64) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -27303,7 +27304,6 @@ func (i *IterInt8Int64) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt8Int8 implements an associative array of int8 indexed by int8.
@@ -27397,6 +27397,10 @@ func (t *MapInt8Int8) Rem(key int8) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt8Int8) SetP(key int8, val *int8) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -27431,31 +27435,30 @@ func (t *MapInt8Int8) Set(key int8, val int8) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt8Int8) GetP(key int8) (*int8, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt8Int8) GetP(key int8) *int8 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*int8)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*int8)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt8Int8) Get(key int8) (int8, bool) {
-	var v int8
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero int8
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -27481,9 +27484,8 @@ type IterInt8Int8 struct {
 	t       *MapInt8Int8
 	nodes   []*nodeMapint8int8
 	lastDir int
-	Found   bool  // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int8  // Key found by last call to Next, Prev.
-	Value   *int8 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *int8 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt8Int8.
@@ -27526,7 +27528,6 @@ func (i *IterInt8Int8) Seek(key int8) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt8Int8) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -27542,7 +27543,7 @@ func (i *IterInt8Int8) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt8Int8) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -27550,7 +27551,7 @@ func (i *IterInt8Int8) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt8Int8) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt8Int8) step(dir int) {
@@ -27563,7 +27564,7 @@ func (i *IterInt8Int8) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -27579,7 +27580,7 @@ func (i *IterInt8Int8) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -27603,7 +27604,6 @@ func (i *IterInt8Int8) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt8Rune implements an associative array of rune indexed by int8.
@@ -27697,6 +27697,10 @@ func (t *MapInt8Rune) Rem(key int8) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt8Rune) SetP(key int8, val *rune) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -27731,31 +27735,30 @@ func (t *MapInt8Rune) Set(key int8, val rune) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt8Rune) GetP(key int8) (*rune, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt8Rune) GetP(key int8) *rune {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*rune)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*rune)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt8Rune) Get(key int8) (rune, bool) {
-	var v rune
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero rune
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -27781,9 +27784,8 @@ type IterInt8Rune struct {
 	t       *MapInt8Rune
 	nodes   []*nodeMapint8rune
 	lastDir int
-	Found   bool  // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int8  // Key found by last call to Next, Prev.
-	Value   *rune // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *rune // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt8Rune.
@@ -27826,7 +27828,6 @@ func (i *IterInt8Rune) Seek(key int8) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt8Rune) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -27842,7 +27843,7 @@ func (i *IterInt8Rune) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt8Rune) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -27850,7 +27851,7 @@ func (i *IterInt8Rune) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt8Rune) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt8Rune) step(dir int) {
@@ -27863,7 +27864,7 @@ func (i *IterInt8Rune) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -27879,7 +27880,7 @@ func (i *IterInt8Rune) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -27903,7 +27904,6 @@ func (i *IterInt8Rune) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt8String implements an associative array of string indexed by int8.
@@ -27997,6 +27997,10 @@ func (t *MapInt8String) Rem(key int8) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt8String) SetP(key int8, val *string) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -28031,31 +28035,30 @@ func (t *MapInt8String) Set(key int8, val string) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt8String) GetP(key int8) (*string, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt8String) GetP(key int8) *string {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*string)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*string)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt8String) Get(key int8) (string, bool) {
-	var v string
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero string
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -28081,9 +28084,8 @@ type IterInt8String struct {
 	t       *MapInt8String
 	nodes   []*nodeMapint8string
 	lastDir int
-	Found   bool    // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int8    // Key found by last call to Next, Prev.
-	Value   *string // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *string // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt8String.
@@ -28126,7 +28128,6 @@ func (i *IterInt8String) Seek(key int8) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt8String) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -28142,7 +28143,7 @@ func (i *IterInt8String) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt8String) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -28150,7 +28151,7 @@ func (i *IterInt8String) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt8String) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt8String) step(dir int) {
@@ -28163,7 +28164,7 @@ func (i *IterInt8String) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -28179,7 +28180,7 @@ func (i *IterInt8String) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -28203,7 +28204,6 @@ func (i *IterInt8String) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt8Uint implements an associative array of uint indexed by int8.
@@ -28297,6 +28297,10 @@ func (t *MapInt8Uint) Rem(key int8) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt8Uint) SetP(key int8, val *uint) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -28331,31 +28335,30 @@ func (t *MapInt8Uint) Set(key int8, val uint) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt8Uint) GetP(key int8) (*uint, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt8Uint) GetP(key int8) *uint {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uint)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uint)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt8Uint) Get(key int8) (uint, bool) {
-	var v uint
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uint
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -28381,9 +28384,8 @@ type IterInt8Uint struct {
 	t       *MapInt8Uint
 	nodes   []*nodeMapint8uint
 	lastDir int
-	Found   bool  // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int8  // Key found by last call to Next, Prev.
-	Value   *uint // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uint // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt8Uint.
@@ -28426,7 +28428,6 @@ func (i *IterInt8Uint) Seek(key int8) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt8Uint) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -28442,7 +28443,7 @@ func (i *IterInt8Uint) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt8Uint) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -28450,7 +28451,7 @@ func (i *IterInt8Uint) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt8Uint) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt8Uint) step(dir int) {
@@ -28463,7 +28464,7 @@ func (i *IterInt8Uint) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -28479,7 +28480,7 @@ func (i *IterInt8Uint) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -28503,7 +28504,6 @@ func (i *IterInt8Uint) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt8Uint16 implements an associative array of uint16 indexed by int8.
@@ -28597,6 +28597,10 @@ func (t *MapInt8Uint16) Rem(key int8) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt8Uint16) SetP(key int8, val *uint16) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -28631,31 +28635,30 @@ func (t *MapInt8Uint16) Set(key int8, val uint16) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt8Uint16) GetP(key int8) (*uint16, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt8Uint16) GetP(key int8) *uint16 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uint16)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uint16)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt8Uint16) Get(key int8) (uint16, bool) {
-	var v uint16
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uint16
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -28681,9 +28684,8 @@ type IterInt8Uint16 struct {
 	t       *MapInt8Uint16
 	nodes   []*nodeMapint8uint16
 	lastDir int
-	Found   bool    // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int8    // Key found by last call to Next, Prev.
-	Value   *uint16 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uint16 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt8Uint16.
@@ -28726,7 +28728,6 @@ func (i *IterInt8Uint16) Seek(key int8) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt8Uint16) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -28742,7 +28743,7 @@ func (i *IterInt8Uint16) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt8Uint16) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -28750,7 +28751,7 @@ func (i *IterInt8Uint16) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt8Uint16) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt8Uint16) step(dir int) {
@@ -28763,7 +28764,7 @@ func (i *IterInt8Uint16) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -28779,7 +28780,7 @@ func (i *IterInt8Uint16) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -28803,7 +28804,6 @@ func (i *IterInt8Uint16) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt8Uint32 implements an associative array of uint32 indexed by int8.
@@ -28897,6 +28897,10 @@ func (t *MapInt8Uint32) Rem(key int8) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt8Uint32) SetP(key int8, val *uint32) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -28931,31 +28935,30 @@ func (t *MapInt8Uint32) Set(key int8, val uint32) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt8Uint32) GetP(key int8) (*uint32, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt8Uint32) GetP(key int8) *uint32 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uint32)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uint32)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt8Uint32) Get(key int8) (uint32, bool) {
-	var v uint32
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uint32
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -28981,9 +28984,8 @@ type IterInt8Uint32 struct {
 	t       *MapInt8Uint32
 	nodes   []*nodeMapint8uint32
 	lastDir int
-	Found   bool    // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int8    // Key found by last call to Next, Prev.
-	Value   *uint32 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uint32 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt8Uint32.
@@ -29026,7 +29028,6 @@ func (i *IterInt8Uint32) Seek(key int8) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt8Uint32) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -29042,7 +29043,7 @@ func (i *IterInt8Uint32) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt8Uint32) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -29050,7 +29051,7 @@ func (i *IterInt8Uint32) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt8Uint32) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt8Uint32) step(dir int) {
@@ -29063,7 +29064,7 @@ func (i *IterInt8Uint32) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -29079,7 +29080,7 @@ func (i *IterInt8Uint32) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -29103,7 +29104,6 @@ func (i *IterInt8Uint32) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt8Uint64 implements an associative array of uint64 indexed by int8.
@@ -29197,6 +29197,10 @@ func (t *MapInt8Uint64) Rem(key int8) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt8Uint64) SetP(key int8, val *uint64) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -29231,31 +29235,30 @@ func (t *MapInt8Uint64) Set(key int8, val uint64) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt8Uint64) GetP(key int8) (*uint64, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt8Uint64) GetP(key int8) *uint64 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uint64)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uint64)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt8Uint64) Get(key int8) (uint64, bool) {
-	var v uint64
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uint64
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -29281,9 +29284,8 @@ type IterInt8Uint64 struct {
 	t       *MapInt8Uint64
 	nodes   []*nodeMapint8uint64
 	lastDir int
-	Found   bool    // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int8    // Key found by last call to Next, Prev.
-	Value   *uint64 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uint64 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt8Uint64.
@@ -29326,7 +29328,6 @@ func (i *IterInt8Uint64) Seek(key int8) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt8Uint64) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -29342,7 +29343,7 @@ func (i *IterInt8Uint64) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt8Uint64) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -29350,7 +29351,7 @@ func (i *IterInt8Uint64) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt8Uint64) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt8Uint64) step(dir int) {
@@ -29363,7 +29364,7 @@ func (i *IterInt8Uint64) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -29379,7 +29380,7 @@ func (i *IterInt8Uint64) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -29403,7 +29404,6 @@ func (i *IterInt8Uint64) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt8Uint8 implements an associative array of uint8 indexed by int8.
@@ -29497,6 +29497,10 @@ func (t *MapInt8Uint8) Rem(key int8) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt8Uint8) SetP(key int8, val *uint8) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -29531,31 +29535,30 @@ func (t *MapInt8Uint8) Set(key int8, val uint8) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt8Uint8) GetP(key int8) (*uint8, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt8Uint8) GetP(key int8) *uint8 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uint8)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uint8)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt8Uint8) Get(key int8) (uint8, bool) {
-	var v uint8
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uint8
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -29581,9 +29584,8 @@ type IterInt8Uint8 struct {
 	t       *MapInt8Uint8
 	nodes   []*nodeMapint8uint8
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int8   // Key found by last call to Next, Prev.
-	Value   *uint8 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uint8 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt8Uint8.
@@ -29626,7 +29628,6 @@ func (i *IterInt8Uint8) Seek(key int8) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt8Uint8) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -29642,7 +29643,7 @@ func (i *IterInt8Uint8) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt8Uint8) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -29650,7 +29651,7 @@ func (i *IterInt8Uint8) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt8Uint8) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt8Uint8) step(dir int) {
@@ -29663,7 +29664,7 @@ func (i *IterInt8Uint8) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -29679,7 +29680,7 @@ func (i *IterInt8Uint8) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -29703,7 +29704,6 @@ func (i *IterInt8Uint8) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapInt8Uintptr implements an associative array of uintptr indexed by int8.
@@ -29797,6 +29797,10 @@ func (t *MapInt8Uintptr) Rem(key int8) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapInt8Uintptr) SetP(key int8, val *uintptr) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -29831,31 +29835,30 @@ func (t *MapInt8Uintptr) Set(key int8, val uintptr) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapInt8Uintptr) GetP(key int8) (*uintptr, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapInt8Uintptr) GetP(key int8) *uintptr {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uintptr)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uintptr)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapInt8Uintptr) Get(key int8) (uintptr, bool) {
-	var v uintptr
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uintptr
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -29881,9 +29884,8 @@ type IterInt8Uintptr struct {
 	t       *MapInt8Uintptr
 	nodes   []*nodeMapint8uintptr
 	lastDir int
-	Found   bool     // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     int8     // Key found by last call to Next, Prev.
-	Value   *uintptr // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uintptr // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterInt8Uintptr.
@@ -29926,7 +29928,6 @@ func (i *IterInt8Uintptr) Seek(key int8) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterInt8Uintptr) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -29942,7 +29943,7 @@ func (i *IterInt8Uintptr) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterInt8Uintptr) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -29950,7 +29951,7 @@ func (i *IterInt8Uintptr) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterInt8Uintptr) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterInt8Uintptr) step(dir int) {
@@ -29963,7 +29964,7 @@ func (i *IterInt8Uintptr) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -29979,7 +29980,7 @@ func (i *IterInt8Uintptr) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -30003,7 +30004,6 @@ func (i *IterInt8Uintptr) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUintBool implements an associative array of bool indexed by uint.
@@ -30097,6 +30097,10 @@ func (t *MapUintBool) Rem(key uint) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUintBool) SetP(key uint, val *bool) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -30131,31 +30135,30 @@ func (t *MapUintBool) Set(key uint, val bool) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUintBool) GetP(key uint) (*bool, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUintBool) GetP(key uint) *bool {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*bool)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*bool)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUintBool) Get(key uint) (bool, bool) {
-	var v bool
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero bool
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -30181,9 +30184,8 @@ type IterUintBool struct {
 	t       *MapUintBool
 	nodes   []*nodeMapuintbool
 	lastDir int
-	Found   bool  // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint  // Key found by last call to Next, Prev.
-	Value   *bool // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *bool // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUintBool.
@@ -30226,7 +30228,6 @@ func (i *IterUintBool) Seek(key uint) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUintBool) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -30242,7 +30243,7 @@ func (i *IterUintBool) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUintBool) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -30250,7 +30251,7 @@ func (i *IterUintBool) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUintBool) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUintBool) step(dir int) {
@@ -30263,7 +30264,7 @@ func (i *IterUintBool) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -30279,7 +30280,7 @@ func (i *IterUintBool) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -30303,7 +30304,6 @@ func (i *IterUintBool) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUintByte implements an associative array of byte indexed by uint.
@@ -30397,6 +30397,10 @@ func (t *MapUintByte) Rem(key uint) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUintByte) SetP(key uint, val *byte) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -30431,31 +30435,30 @@ func (t *MapUintByte) Set(key uint, val byte) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUintByte) GetP(key uint) (*byte, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUintByte) GetP(key uint) *byte {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*byte)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*byte)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUintByte) Get(key uint) (byte, bool) {
-	var v byte
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero byte
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -30481,9 +30484,8 @@ type IterUintByte struct {
 	t       *MapUintByte
 	nodes   []*nodeMapuintbyte
 	lastDir int
-	Found   bool  // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint  // Key found by last call to Next, Prev.
-	Value   *byte // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *byte // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUintByte.
@@ -30526,7 +30528,6 @@ func (i *IterUintByte) Seek(key uint) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUintByte) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -30542,7 +30543,7 @@ func (i *IterUintByte) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUintByte) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -30550,7 +30551,7 @@ func (i *IterUintByte) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUintByte) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUintByte) step(dir int) {
@@ -30563,7 +30564,7 @@ func (i *IterUintByte) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -30579,7 +30580,7 @@ func (i *IterUintByte) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -30603,7 +30604,6 @@ func (i *IterUintByte) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUintComplex128 implements an associative array of complex128 indexed by uint.
@@ -30697,6 +30697,10 @@ func (t *MapUintComplex128) Rem(key uint) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUintComplex128) SetP(key uint, val *complex128) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -30731,31 +30735,30 @@ func (t *MapUintComplex128) Set(key uint, val complex128) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUintComplex128) GetP(key uint) (*complex128, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUintComplex128) GetP(key uint) *complex128 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*complex128)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*complex128)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUintComplex128) Get(key uint) (complex128, bool) {
-	var v complex128
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero complex128
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -30781,9 +30784,8 @@ type IterUintComplex128 struct {
 	t       *MapUintComplex128
 	nodes   []*nodeMapuintcomplex128
 	lastDir int
-	Found   bool        // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint        // Key found by last call to Next, Prev.
-	Value   *complex128 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *complex128 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUintComplex128.
@@ -30826,7 +30828,6 @@ func (i *IterUintComplex128) Seek(key uint) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUintComplex128) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -30842,7 +30843,7 @@ func (i *IterUintComplex128) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUintComplex128) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -30850,7 +30851,7 @@ func (i *IterUintComplex128) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUintComplex128) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUintComplex128) step(dir int) {
@@ -30863,7 +30864,7 @@ func (i *IterUintComplex128) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -30879,7 +30880,7 @@ func (i *IterUintComplex128) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -30903,7 +30904,6 @@ func (i *IterUintComplex128) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUintComplex64 implements an associative array of complex64 indexed by uint.
@@ -30997,6 +30997,10 @@ func (t *MapUintComplex64) Rem(key uint) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUintComplex64) SetP(key uint, val *complex64) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -31031,31 +31035,30 @@ func (t *MapUintComplex64) Set(key uint, val complex64) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUintComplex64) GetP(key uint) (*complex64, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUintComplex64) GetP(key uint) *complex64 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*complex64)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*complex64)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUintComplex64) Get(key uint) (complex64, bool) {
-	var v complex64
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero complex64
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -31081,9 +31084,8 @@ type IterUintComplex64 struct {
 	t       *MapUintComplex64
 	nodes   []*nodeMapuintcomplex64
 	lastDir int
-	Found   bool       // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint       // Key found by last call to Next, Prev.
-	Value   *complex64 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *complex64 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUintComplex64.
@@ -31126,7 +31128,6 @@ func (i *IterUintComplex64) Seek(key uint) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUintComplex64) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -31142,7 +31143,7 @@ func (i *IterUintComplex64) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUintComplex64) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -31150,7 +31151,7 @@ func (i *IterUintComplex64) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUintComplex64) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUintComplex64) step(dir int) {
@@ -31163,7 +31164,7 @@ func (i *IterUintComplex64) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -31179,7 +31180,7 @@ func (i *IterUintComplex64) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -31203,7 +31204,6 @@ func (i *IterUintComplex64) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUintError implements an associative array of error indexed by uint.
@@ -31297,6 +31297,10 @@ func (t *MapUintError) Rem(key uint) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUintError) SetP(key uint, val *error) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -31331,31 +31335,30 @@ func (t *MapUintError) Set(key uint, val error) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUintError) GetP(key uint) (*error, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUintError) GetP(key uint) *error {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*error)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*error)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUintError) Get(key uint) (error, bool) {
-	var v error
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero error
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -31381,9 +31384,8 @@ type IterUintError struct {
 	t       *MapUintError
 	nodes   []*nodeMapuinterror
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint   // Key found by last call to Next, Prev.
-	Value   *error // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *error // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUintError.
@@ -31426,7 +31428,6 @@ func (i *IterUintError) Seek(key uint) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUintError) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -31442,7 +31443,7 @@ func (i *IterUintError) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUintError) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -31450,7 +31451,7 @@ func (i *IterUintError) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUintError) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUintError) step(dir int) {
@@ -31463,7 +31464,7 @@ func (i *IterUintError) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -31479,7 +31480,7 @@ func (i *IterUintError) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -31503,7 +31504,6 @@ func (i *IterUintError) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUintFloat32 implements an associative array of float32 indexed by uint.
@@ -31597,6 +31597,10 @@ func (t *MapUintFloat32) Rem(key uint) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUintFloat32) SetP(key uint, val *float32) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -31631,31 +31635,30 @@ func (t *MapUintFloat32) Set(key uint, val float32) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUintFloat32) GetP(key uint) (*float32, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUintFloat32) GetP(key uint) *float32 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*float32)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*float32)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUintFloat32) Get(key uint) (float32, bool) {
-	var v float32
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero float32
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -31681,9 +31684,8 @@ type IterUintFloat32 struct {
 	t       *MapUintFloat32
 	nodes   []*nodeMapuintfloat32
 	lastDir int
-	Found   bool     // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint     // Key found by last call to Next, Prev.
-	Value   *float32 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *float32 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUintFloat32.
@@ -31726,7 +31728,6 @@ func (i *IterUintFloat32) Seek(key uint) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUintFloat32) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -31742,7 +31743,7 @@ func (i *IterUintFloat32) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUintFloat32) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -31750,7 +31751,7 @@ func (i *IterUintFloat32) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUintFloat32) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUintFloat32) step(dir int) {
@@ -31763,7 +31764,7 @@ func (i *IterUintFloat32) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -31779,7 +31780,7 @@ func (i *IterUintFloat32) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -31803,7 +31804,6 @@ func (i *IterUintFloat32) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUintFloat64 implements an associative array of float64 indexed by uint.
@@ -31897,6 +31897,10 @@ func (t *MapUintFloat64) Rem(key uint) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUintFloat64) SetP(key uint, val *float64) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -31931,31 +31935,30 @@ func (t *MapUintFloat64) Set(key uint, val float64) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUintFloat64) GetP(key uint) (*float64, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUintFloat64) GetP(key uint) *float64 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*float64)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*float64)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUintFloat64) Get(key uint) (float64, bool) {
-	var v float64
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero float64
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -31981,9 +31984,8 @@ type IterUintFloat64 struct {
 	t       *MapUintFloat64
 	nodes   []*nodeMapuintfloat64
 	lastDir int
-	Found   bool     // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint     // Key found by last call to Next, Prev.
-	Value   *float64 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *float64 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUintFloat64.
@@ -32026,7 +32028,6 @@ func (i *IterUintFloat64) Seek(key uint) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUintFloat64) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -32042,7 +32043,7 @@ func (i *IterUintFloat64) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUintFloat64) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -32050,7 +32051,7 @@ func (i *IterUintFloat64) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUintFloat64) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUintFloat64) step(dir int) {
@@ -32063,7 +32064,7 @@ func (i *IterUintFloat64) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -32079,7 +32080,7 @@ func (i *IterUintFloat64) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -32103,7 +32104,6 @@ func (i *IterUintFloat64) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUintInt implements an associative array of int indexed by uint.
@@ -32197,6 +32197,10 @@ func (t *MapUintInt) Rem(key uint) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUintInt) SetP(key uint, val *int) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -32231,31 +32235,30 @@ func (t *MapUintInt) Set(key uint, val int) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUintInt) GetP(key uint) (*int, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUintInt) GetP(key uint) *int {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*int)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*int)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUintInt) Get(key uint) (int, bool) {
-	var v int
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero int
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -32281,9 +32284,8 @@ type IterUintInt struct {
 	t       *MapUintInt
 	nodes   []*nodeMapuintint
 	lastDir int
-	Found   bool // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint // Key found by last call to Next, Prev.
-	Value   *int // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *int // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUintInt.
@@ -32326,7 +32328,6 @@ func (i *IterUintInt) Seek(key uint) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUintInt) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -32342,7 +32343,7 @@ func (i *IterUintInt) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUintInt) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -32350,7 +32351,7 @@ func (i *IterUintInt) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUintInt) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUintInt) step(dir int) {
@@ -32363,7 +32364,7 @@ func (i *IterUintInt) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -32379,7 +32380,7 @@ func (i *IterUintInt) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -32403,7 +32404,6 @@ func (i *IterUintInt) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUintInt16 implements an associative array of int16 indexed by uint.
@@ -32497,6 +32497,10 @@ func (t *MapUintInt16) Rem(key uint) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUintInt16) SetP(key uint, val *int16) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -32531,31 +32535,30 @@ func (t *MapUintInt16) Set(key uint, val int16) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUintInt16) GetP(key uint) (*int16, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUintInt16) GetP(key uint) *int16 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*int16)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*int16)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUintInt16) Get(key uint) (int16, bool) {
-	var v int16
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero int16
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -32581,9 +32584,8 @@ type IterUintInt16 struct {
 	t       *MapUintInt16
 	nodes   []*nodeMapuintint16
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint   // Key found by last call to Next, Prev.
-	Value   *int16 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *int16 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUintInt16.
@@ -32626,7 +32628,6 @@ func (i *IterUintInt16) Seek(key uint) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUintInt16) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -32642,7 +32643,7 @@ func (i *IterUintInt16) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUintInt16) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -32650,7 +32651,7 @@ func (i *IterUintInt16) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUintInt16) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUintInt16) step(dir int) {
@@ -32663,7 +32664,7 @@ func (i *IterUintInt16) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -32679,7 +32680,7 @@ func (i *IterUintInt16) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -32703,7 +32704,6 @@ func (i *IterUintInt16) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUintInt32 implements an associative array of int32 indexed by uint.
@@ -32797,6 +32797,10 @@ func (t *MapUintInt32) Rem(key uint) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUintInt32) SetP(key uint, val *int32) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -32831,31 +32835,30 @@ func (t *MapUintInt32) Set(key uint, val int32) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUintInt32) GetP(key uint) (*int32, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUintInt32) GetP(key uint) *int32 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*int32)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*int32)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUintInt32) Get(key uint) (int32, bool) {
-	var v int32
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero int32
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -32881,9 +32884,8 @@ type IterUintInt32 struct {
 	t       *MapUintInt32
 	nodes   []*nodeMapuintint32
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint   // Key found by last call to Next, Prev.
-	Value   *int32 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *int32 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUintInt32.
@@ -32926,7 +32928,6 @@ func (i *IterUintInt32) Seek(key uint) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUintInt32) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -32942,7 +32943,7 @@ func (i *IterUintInt32) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUintInt32) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -32950,7 +32951,7 @@ func (i *IterUintInt32) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUintInt32) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUintInt32) step(dir int) {
@@ -32963,7 +32964,7 @@ func (i *IterUintInt32) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -32979,7 +32980,7 @@ func (i *IterUintInt32) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -33003,7 +33004,6 @@ func (i *IterUintInt32) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUintInt64 implements an associative array of int64 indexed by uint.
@@ -33097,6 +33097,10 @@ func (t *MapUintInt64) Rem(key uint) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUintInt64) SetP(key uint, val *int64) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -33131,31 +33135,30 @@ func (t *MapUintInt64) Set(key uint, val int64) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUintInt64) GetP(key uint) (*int64, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUintInt64) GetP(key uint) *int64 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*int64)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*int64)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUintInt64) Get(key uint) (int64, bool) {
-	var v int64
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero int64
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -33181,9 +33184,8 @@ type IterUintInt64 struct {
 	t       *MapUintInt64
 	nodes   []*nodeMapuintint64
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint   // Key found by last call to Next, Prev.
-	Value   *int64 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *int64 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUintInt64.
@@ -33226,7 +33228,6 @@ func (i *IterUintInt64) Seek(key uint) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUintInt64) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -33242,7 +33243,7 @@ func (i *IterUintInt64) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUintInt64) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -33250,7 +33251,7 @@ func (i *IterUintInt64) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUintInt64) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUintInt64) step(dir int) {
@@ -33263,7 +33264,7 @@ func (i *IterUintInt64) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -33279,7 +33280,7 @@ func (i *IterUintInt64) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -33303,7 +33304,6 @@ func (i *IterUintInt64) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUintInt8 implements an associative array of int8 indexed by uint.
@@ -33397,6 +33397,10 @@ func (t *MapUintInt8) Rem(key uint) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUintInt8) SetP(key uint, val *int8) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -33431,31 +33435,30 @@ func (t *MapUintInt8) Set(key uint, val int8) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUintInt8) GetP(key uint) (*int8, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUintInt8) GetP(key uint) *int8 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*int8)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*int8)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUintInt8) Get(key uint) (int8, bool) {
-	var v int8
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero int8
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -33481,9 +33484,8 @@ type IterUintInt8 struct {
 	t       *MapUintInt8
 	nodes   []*nodeMapuintint8
 	lastDir int
-	Found   bool  // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint  // Key found by last call to Next, Prev.
-	Value   *int8 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *int8 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUintInt8.
@@ -33526,7 +33528,6 @@ func (i *IterUintInt8) Seek(key uint) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUintInt8) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -33542,7 +33543,7 @@ func (i *IterUintInt8) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUintInt8) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -33550,7 +33551,7 @@ func (i *IterUintInt8) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUintInt8) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUintInt8) step(dir int) {
@@ -33563,7 +33564,7 @@ func (i *IterUintInt8) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -33579,7 +33580,7 @@ func (i *IterUintInt8) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -33603,7 +33604,6 @@ func (i *IterUintInt8) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUintRune implements an associative array of rune indexed by uint.
@@ -33697,6 +33697,10 @@ func (t *MapUintRune) Rem(key uint) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUintRune) SetP(key uint, val *rune) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -33731,31 +33735,30 @@ func (t *MapUintRune) Set(key uint, val rune) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUintRune) GetP(key uint) (*rune, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUintRune) GetP(key uint) *rune {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*rune)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*rune)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUintRune) Get(key uint) (rune, bool) {
-	var v rune
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero rune
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -33781,9 +33784,8 @@ type IterUintRune struct {
 	t       *MapUintRune
 	nodes   []*nodeMapuintrune
 	lastDir int
-	Found   bool  // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint  // Key found by last call to Next, Prev.
-	Value   *rune // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *rune // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUintRune.
@@ -33826,7 +33828,6 @@ func (i *IterUintRune) Seek(key uint) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUintRune) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -33842,7 +33843,7 @@ func (i *IterUintRune) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUintRune) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -33850,7 +33851,7 @@ func (i *IterUintRune) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUintRune) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUintRune) step(dir int) {
@@ -33863,7 +33864,7 @@ func (i *IterUintRune) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -33879,7 +33880,7 @@ func (i *IterUintRune) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -33903,7 +33904,6 @@ func (i *IterUintRune) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUintString implements an associative array of string indexed by uint.
@@ -33997,6 +33997,10 @@ func (t *MapUintString) Rem(key uint) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUintString) SetP(key uint, val *string) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -34031,31 +34035,30 @@ func (t *MapUintString) Set(key uint, val string) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUintString) GetP(key uint) (*string, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUintString) GetP(key uint) *string {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*string)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*string)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUintString) Get(key uint) (string, bool) {
-	var v string
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero string
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -34081,9 +34084,8 @@ type IterUintString struct {
 	t       *MapUintString
 	nodes   []*nodeMapuintstring
 	lastDir int
-	Found   bool    // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint    // Key found by last call to Next, Prev.
-	Value   *string // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *string // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUintString.
@@ -34126,7 +34128,6 @@ func (i *IterUintString) Seek(key uint) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUintString) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -34142,7 +34143,7 @@ func (i *IterUintString) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUintString) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -34150,7 +34151,7 @@ func (i *IterUintString) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUintString) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUintString) step(dir int) {
@@ -34163,7 +34164,7 @@ func (i *IterUintString) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -34179,7 +34180,7 @@ func (i *IterUintString) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -34203,7 +34204,6 @@ func (i *IterUintString) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUintUint implements an associative array of uint indexed by uint.
@@ -34297,6 +34297,10 @@ func (t *MapUintUint) Rem(key uint) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUintUint) SetP(key uint, val *uint) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -34331,31 +34335,30 @@ func (t *MapUintUint) Set(key uint, val uint) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUintUint) GetP(key uint) (*uint, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUintUint) GetP(key uint) *uint {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uint)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uint)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUintUint) Get(key uint) (uint, bool) {
-	var v uint
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uint
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -34381,9 +34384,8 @@ type IterUintUint struct {
 	t       *MapUintUint
 	nodes   []*nodeMapuintuint
 	lastDir int
-	Found   bool  // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint  // Key found by last call to Next, Prev.
-	Value   *uint // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uint // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUintUint.
@@ -34426,7 +34428,6 @@ func (i *IterUintUint) Seek(key uint) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUintUint) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -34442,7 +34443,7 @@ func (i *IterUintUint) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUintUint) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -34450,7 +34451,7 @@ func (i *IterUintUint) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUintUint) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUintUint) step(dir int) {
@@ -34463,7 +34464,7 @@ func (i *IterUintUint) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -34479,7 +34480,7 @@ func (i *IterUintUint) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -34503,7 +34504,6 @@ func (i *IterUintUint) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUintUint16 implements an associative array of uint16 indexed by uint.
@@ -34597,6 +34597,10 @@ func (t *MapUintUint16) Rem(key uint) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUintUint16) SetP(key uint, val *uint16) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -34631,31 +34635,30 @@ func (t *MapUintUint16) Set(key uint, val uint16) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUintUint16) GetP(key uint) (*uint16, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUintUint16) GetP(key uint) *uint16 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uint16)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uint16)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUintUint16) Get(key uint) (uint16, bool) {
-	var v uint16
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uint16
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -34681,9 +34684,8 @@ type IterUintUint16 struct {
 	t       *MapUintUint16
 	nodes   []*nodeMapuintuint16
 	lastDir int
-	Found   bool    // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint    // Key found by last call to Next, Prev.
-	Value   *uint16 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uint16 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUintUint16.
@@ -34726,7 +34728,6 @@ func (i *IterUintUint16) Seek(key uint) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUintUint16) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -34742,7 +34743,7 @@ func (i *IterUintUint16) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUintUint16) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -34750,7 +34751,7 @@ func (i *IterUintUint16) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUintUint16) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUintUint16) step(dir int) {
@@ -34763,7 +34764,7 @@ func (i *IterUintUint16) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -34779,7 +34780,7 @@ func (i *IterUintUint16) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -34803,7 +34804,6 @@ func (i *IterUintUint16) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUintUint32 implements an associative array of uint32 indexed by uint.
@@ -34897,6 +34897,10 @@ func (t *MapUintUint32) Rem(key uint) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUintUint32) SetP(key uint, val *uint32) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -34931,31 +34935,30 @@ func (t *MapUintUint32) Set(key uint, val uint32) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUintUint32) GetP(key uint) (*uint32, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUintUint32) GetP(key uint) *uint32 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uint32)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uint32)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUintUint32) Get(key uint) (uint32, bool) {
-	var v uint32
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uint32
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -34981,9 +34984,8 @@ type IterUintUint32 struct {
 	t       *MapUintUint32
 	nodes   []*nodeMapuintuint32
 	lastDir int
-	Found   bool    // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint    // Key found by last call to Next, Prev.
-	Value   *uint32 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uint32 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUintUint32.
@@ -35026,7 +35028,6 @@ func (i *IterUintUint32) Seek(key uint) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUintUint32) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -35042,7 +35043,7 @@ func (i *IterUintUint32) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUintUint32) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -35050,7 +35051,7 @@ func (i *IterUintUint32) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUintUint32) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUintUint32) step(dir int) {
@@ -35063,7 +35064,7 @@ func (i *IterUintUint32) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -35079,7 +35080,7 @@ func (i *IterUintUint32) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -35103,7 +35104,6 @@ func (i *IterUintUint32) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUintUint64 implements an associative array of uint64 indexed by uint.
@@ -35197,6 +35197,10 @@ func (t *MapUintUint64) Rem(key uint) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUintUint64) SetP(key uint, val *uint64) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -35231,31 +35235,30 @@ func (t *MapUintUint64) Set(key uint, val uint64) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUintUint64) GetP(key uint) (*uint64, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUintUint64) GetP(key uint) *uint64 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uint64)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uint64)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUintUint64) Get(key uint) (uint64, bool) {
-	var v uint64
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uint64
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -35281,9 +35284,8 @@ type IterUintUint64 struct {
 	t       *MapUintUint64
 	nodes   []*nodeMapuintuint64
 	lastDir int
-	Found   bool    // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint    // Key found by last call to Next, Prev.
-	Value   *uint64 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uint64 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUintUint64.
@@ -35326,7 +35328,6 @@ func (i *IterUintUint64) Seek(key uint) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUintUint64) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -35342,7 +35343,7 @@ func (i *IterUintUint64) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUintUint64) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -35350,7 +35351,7 @@ func (i *IterUintUint64) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUintUint64) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUintUint64) step(dir int) {
@@ -35363,7 +35364,7 @@ func (i *IterUintUint64) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -35379,7 +35380,7 @@ func (i *IterUintUint64) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -35403,7 +35404,6 @@ func (i *IterUintUint64) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUintUint8 implements an associative array of uint8 indexed by uint.
@@ -35497,6 +35497,10 @@ func (t *MapUintUint8) Rem(key uint) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUintUint8) SetP(key uint, val *uint8) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -35531,31 +35535,30 @@ func (t *MapUintUint8) Set(key uint, val uint8) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUintUint8) GetP(key uint) (*uint8, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUintUint8) GetP(key uint) *uint8 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uint8)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uint8)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUintUint8) Get(key uint) (uint8, bool) {
-	var v uint8
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uint8
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -35581,9 +35584,8 @@ type IterUintUint8 struct {
 	t       *MapUintUint8
 	nodes   []*nodeMapuintuint8
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint   // Key found by last call to Next, Prev.
-	Value   *uint8 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uint8 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUintUint8.
@@ -35626,7 +35628,6 @@ func (i *IterUintUint8) Seek(key uint) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUintUint8) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -35642,7 +35643,7 @@ func (i *IterUintUint8) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUintUint8) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -35650,7 +35651,7 @@ func (i *IterUintUint8) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUintUint8) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUintUint8) step(dir int) {
@@ -35663,7 +35664,7 @@ func (i *IterUintUint8) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -35679,7 +35680,7 @@ func (i *IterUintUint8) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -35703,7 +35704,6 @@ func (i *IterUintUint8) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUintUintptr implements an associative array of uintptr indexed by uint.
@@ -35797,6 +35797,10 @@ func (t *MapUintUintptr) Rem(key uint) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUintUintptr) SetP(key uint, val *uintptr) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -35831,31 +35835,30 @@ func (t *MapUintUintptr) Set(key uint, val uintptr) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUintUintptr) GetP(key uint) (*uintptr, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUintUintptr) GetP(key uint) *uintptr {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uintptr)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uintptr)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUintUintptr) Get(key uint) (uintptr, bool) {
-	var v uintptr
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uintptr
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -35881,9 +35884,8 @@ type IterUintUintptr struct {
 	t       *MapUintUintptr
 	nodes   []*nodeMapuintuintptr
 	lastDir int
-	Found   bool     // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint     // Key found by last call to Next, Prev.
-	Value   *uintptr // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uintptr // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUintUintptr.
@@ -35926,7 +35928,6 @@ func (i *IterUintUintptr) Seek(key uint) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUintUintptr) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -35942,7 +35943,7 @@ func (i *IterUintUintptr) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUintUintptr) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -35950,7 +35951,7 @@ func (i *IterUintUintptr) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUintUintptr) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUintUintptr) step(dir int) {
@@ -35963,7 +35964,7 @@ func (i *IterUintUintptr) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -35979,7 +35980,7 @@ func (i *IterUintUintptr) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -36003,7 +36004,6 @@ func (i *IterUintUintptr) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUintptrBool implements an associative array of bool indexed by uintptr.
@@ -36097,6 +36097,10 @@ func (t *MapUintptrBool) Rem(key uintptr) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUintptrBool) SetP(key uintptr, val *bool) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -36131,31 +36135,30 @@ func (t *MapUintptrBool) Set(key uintptr, val bool) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUintptrBool) GetP(key uintptr) (*bool, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUintptrBool) GetP(key uintptr) *bool {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*bool)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*bool)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUintptrBool) Get(key uintptr) (bool, bool) {
-	var v bool
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero bool
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -36181,9 +36184,8 @@ type IterUintptrBool struct {
 	t       *MapUintptrBool
 	nodes   []*nodeMapuintptrbool
 	lastDir int
-	Found   bool    // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uintptr // Key found by last call to Next, Prev.
-	Value   *bool   // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *bool   // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUintptrBool.
@@ -36226,7 +36228,6 @@ func (i *IterUintptrBool) Seek(key uintptr) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUintptrBool) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -36242,7 +36243,7 @@ func (i *IterUintptrBool) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUintptrBool) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -36250,7 +36251,7 @@ func (i *IterUintptrBool) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUintptrBool) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUintptrBool) step(dir int) {
@@ -36263,7 +36264,7 @@ func (i *IterUintptrBool) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -36279,7 +36280,7 @@ func (i *IterUintptrBool) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -36303,7 +36304,6 @@ func (i *IterUintptrBool) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUintptrByte implements an associative array of byte indexed by uintptr.
@@ -36397,6 +36397,10 @@ func (t *MapUintptrByte) Rem(key uintptr) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUintptrByte) SetP(key uintptr, val *byte) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -36431,31 +36435,30 @@ func (t *MapUintptrByte) Set(key uintptr, val byte) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUintptrByte) GetP(key uintptr) (*byte, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUintptrByte) GetP(key uintptr) *byte {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*byte)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*byte)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUintptrByte) Get(key uintptr) (byte, bool) {
-	var v byte
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero byte
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -36481,9 +36484,8 @@ type IterUintptrByte struct {
 	t       *MapUintptrByte
 	nodes   []*nodeMapuintptrbyte
 	lastDir int
-	Found   bool    // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uintptr // Key found by last call to Next, Prev.
-	Value   *byte   // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *byte   // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUintptrByte.
@@ -36526,7 +36528,6 @@ func (i *IterUintptrByte) Seek(key uintptr) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUintptrByte) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -36542,7 +36543,7 @@ func (i *IterUintptrByte) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUintptrByte) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -36550,7 +36551,7 @@ func (i *IterUintptrByte) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUintptrByte) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUintptrByte) step(dir int) {
@@ -36563,7 +36564,7 @@ func (i *IterUintptrByte) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -36579,7 +36580,7 @@ func (i *IterUintptrByte) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -36603,7 +36604,6 @@ func (i *IterUintptrByte) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUintptrComplex128 implements an associative array of complex128 indexed by uintptr.
@@ -36697,6 +36697,10 @@ func (t *MapUintptrComplex128) Rem(key uintptr) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUintptrComplex128) SetP(key uintptr, val *complex128) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -36731,31 +36735,30 @@ func (t *MapUintptrComplex128) Set(key uintptr, val complex128) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUintptrComplex128) GetP(key uintptr) (*complex128, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUintptrComplex128) GetP(key uintptr) *complex128 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*complex128)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*complex128)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUintptrComplex128) Get(key uintptr) (complex128, bool) {
-	var v complex128
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero complex128
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -36781,9 +36784,8 @@ type IterUintptrComplex128 struct {
 	t       *MapUintptrComplex128
 	nodes   []*nodeMapuintptrcomplex128
 	lastDir int
-	Found   bool        // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uintptr     // Key found by last call to Next, Prev.
-	Value   *complex128 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *complex128 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUintptrComplex128.
@@ -36826,7 +36828,6 @@ func (i *IterUintptrComplex128) Seek(key uintptr) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUintptrComplex128) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -36842,7 +36843,7 @@ func (i *IterUintptrComplex128) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUintptrComplex128) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -36850,7 +36851,7 @@ func (i *IterUintptrComplex128) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUintptrComplex128) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUintptrComplex128) step(dir int) {
@@ -36863,7 +36864,7 @@ func (i *IterUintptrComplex128) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -36879,7 +36880,7 @@ func (i *IterUintptrComplex128) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -36903,7 +36904,6 @@ func (i *IterUintptrComplex128) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUintptrComplex64 implements an associative array of complex64 indexed by uintptr.
@@ -36997,6 +36997,10 @@ func (t *MapUintptrComplex64) Rem(key uintptr) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUintptrComplex64) SetP(key uintptr, val *complex64) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -37031,31 +37035,30 @@ func (t *MapUintptrComplex64) Set(key uintptr, val complex64) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUintptrComplex64) GetP(key uintptr) (*complex64, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUintptrComplex64) GetP(key uintptr) *complex64 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*complex64)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*complex64)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUintptrComplex64) Get(key uintptr) (complex64, bool) {
-	var v complex64
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero complex64
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -37081,9 +37084,8 @@ type IterUintptrComplex64 struct {
 	t       *MapUintptrComplex64
 	nodes   []*nodeMapuintptrcomplex64
 	lastDir int
-	Found   bool       // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uintptr    // Key found by last call to Next, Prev.
-	Value   *complex64 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *complex64 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUintptrComplex64.
@@ -37126,7 +37128,6 @@ func (i *IterUintptrComplex64) Seek(key uintptr) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUintptrComplex64) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -37142,7 +37143,7 @@ func (i *IterUintptrComplex64) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUintptrComplex64) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -37150,7 +37151,7 @@ func (i *IterUintptrComplex64) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUintptrComplex64) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUintptrComplex64) step(dir int) {
@@ -37163,7 +37164,7 @@ func (i *IterUintptrComplex64) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -37179,7 +37180,7 @@ func (i *IterUintptrComplex64) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -37203,7 +37204,6 @@ func (i *IterUintptrComplex64) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUintptrError implements an associative array of error indexed by uintptr.
@@ -37297,6 +37297,10 @@ func (t *MapUintptrError) Rem(key uintptr) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUintptrError) SetP(key uintptr, val *error) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -37331,31 +37335,30 @@ func (t *MapUintptrError) Set(key uintptr, val error) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUintptrError) GetP(key uintptr) (*error, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUintptrError) GetP(key uintptr) *error {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*error)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*error)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUintptrError) Get(key uintptr) (error, bool) {
-	var v error
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero error
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -37381,9 +37384,8 @@ type IterUintptrError struct {
 	t       *MapUintptrError
 	nodes   []*nodeMapuintptrerror
 	lastDir int
-	Found   bool    // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uintptr // Key found by last call to Next, Prev.
-	Value   *error  // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *error  // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUintptrError.
@@ -37426,7 +37428,6 @@ func (i *IterUintptrError) Seek(key uintptr) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUintptrError) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -37442,7 +37443,7 @@ func (i *IterUintptrError) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUintptrError) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -37450,7 +37451,7 @@ func (i *IterUintptrError) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUintptrError) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUintptrError) step(dir int) {
@@ -37463,7 +37464,7 @@ func (i *IterUintptrError) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -37479,7 +37480,7 @@ func (i *IterUintptrError) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -37503,7 +37504,6 @@ func (i *IterUintptrError) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUintptrFloat32 implements an associative array of float32 indexed by uintptr.
@@ -37597,6 +37597,10 @@ func (t *MapUintptrFloat32) Rem(key uintptr) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUintptrFloat32) SetP(key uintptr, val *float32) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -37631,31 +37635,30 @@ func (t *MapUintptrFloat32) Set(key uintptr, val float32) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUintptrFloat32) GetP(key uintptr) (*float32, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUintptrFloat32) GetP(key uintptr) *float32 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*float32)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*float32)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUintptrFloat32) Get(key uintptr) (float32, bool) {
-	var v float32
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero float32
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -37681,9 +37684,8 @@ type IterUintptrFloat32 struct {
 	t       *MapUintptrFloat32
 	nodes   []*nodeMapuintptrfloat32
 	lastDir int
-	Found   bool     // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uintptr  // Key found by last call to Next, Prev.
-	Value   *float32 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *float32 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUintptrFloat32.
@@ -37726,7 +37728,6 @@ func (i *IterUintptrFloat32) Seek(key uintptr) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUintptrFloat32) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -37742,7 +37743,7 @@ func (i *IterUintptrFloat32) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUintptrFloat32) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -37750,7 +37751,7 @@ func (i *IterUintptrFloat32) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUintptrFloat32) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUintptrFloat32) step(dir int) {
@@ -37763,7 +37764,7 @@ func (i *IterUintptrFloat32) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -37779,7 +37780,7 @@ func (i *IterUintptrFloat32) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -37803,7 +37804,6 @@ func (i *IterUintptrFloat32) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUintptrFloat64 implements an associative array of float64 indexed by uintptr.
@@ -37897,6 +37897,10 @@ func (t *MapUintptrFloat64) Rem(key uintptr) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUintptrFloat64) SetP(key uintptr, val *float64) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -37931,31 +37935,30 @@ func (t *MapUintptrFloat64) Set(key uintptr, val float64) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUintptrFloat64) GetP(key uintptr) (*float64, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUintptrFloat64) GetP(key uintptr) *float64 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*float64)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*float64)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUintptrFloat64) Get(key uintptr) (float64, bool) {
-	var v float64
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero float64
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -37981,9 +37984,8 @@ type IterUintptrFloat64 struct {
 	t       *MapUintptrFloat64
 	nodes   []*nodeMapuintptrfloat64
 	lastDir int
-	Found   bool     // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uintptr  // Key found by last call to Next, Prev.
-	Value   *float64 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *float64 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUintptrFloat64.
@@ -38026,7 +38028,6 @@ func (i *IterUintptrFloat64) Seek(key uintptr) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUintptrFloat64) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -38042,7 +38043,7 @@ func (i *IterUintptrFloat64) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUintptrFloat64) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -38050,7 +38051,7 @@ func (i *IterUintptrFloat64) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUintptrFloat64) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUintptrFloat64) step(dir int) {
@@ -38063,7 +38064,7 @@ func (i *IterUintptrFloat64) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -38079,7 +38080,7 @@ func (i *IterUintptrFloat64) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -38103,7 +38104,6 @@ func (i *IterUintptrFloat64) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUintptrInt implements an associative array of int indexed by uintptr.
@@ -38197,6 +38197,10 @@ func (t *MapUintptrInt) Rem(key uintptr) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUintptrInt) SetP(key uintptr, val *int) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -38231,31 +38235,30 @@ func (t *MapUintptrInt) Set(key uintptr, val int) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUintptrInt) GetP(key uintptr) (*int, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUintptrInt) GetP(key uintptr) *int {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*int)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*int)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUintptrInt) Get(key uintptr) (int, bool) {
-	var v int
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero int
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -38281,9 +38284,8 @@ type IterUintptrInt struct {
 	t       *MapUintptrInt
 	nodes   []*nodeMapuintptrint
 	lastDir int
-	Found   bool    // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uintptr // Key found by last call to Next, Prev.
-	Value   *int    // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *int    // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUintptrInt.
@@ -38326,7 +38328,6 @@ func (i *IterUintptrInt) Seek(key uintptr) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUintptrInt) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -38342,7 +38343,7 @@ func (i *IterUintptrInt) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUintptrInt) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -38350,7 +38351,7 @@ func (i *IterUintptrInt) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUintptrInt) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUintptrInt) step(dir int) {
@@ -38363,7 +38364,7 @@ func (i *IterUintptrInt) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -38379,7 +38380,7 @@ func (i *IterUintptrInt) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -38403,7 +38404,6 @@ func (i *IterUintptrInt) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUintptrInt16 implements an associative array of int16 indexed by uintptr.
@@ -38497,6 +38497,10 @@ func (t *MapUintptrInt16) Rem(key uintptr) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUintptrInt16) SetP(key uintptr, val *int16) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -38531,31 +38535,30 @@ func (t *MapUintptrInt16) Set(key uintptr, val int16) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUintptrInt16) GetP(key uintptr) (*int16, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUintptrInt16) GetP(key uintptr) *int16 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*int16)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*int16)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUintptrInt16) Get(key uintptr) (int16, bool) {
-	var v int16
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero int16
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -38581,9 +38584,8 @@ type IterUintptrInt16 struct {
 	t       *MapUintptrInt16
 	nodes   []*nodeMapuintptrint16
 	lastDir int
-	Found   bool    // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uintptr // Key found by last call to Next, Prev.
-	Value   *int16  // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *int16  // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUintptrInt16.
@@ -38626,7 +38628,6 @@ func (i *IterUintptrInt16) Seek(key uintptr) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUintptrInt16) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -38642,7 +38643,7 @@ func (i *IterUintptrInt16) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUintptrInt16) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -38650,7 +38651,7 @@ func (i *IterUintptrInt16) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUintptrInt16) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUintptrInt16) step(dir int) {
@@ -38663,7 +38664,7 @@ func (i *IterUintptrInt16) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -38679,7 +38680,7 @@ func (i *IterUintptrInt16) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -38703,7 +38704,6 @@ func (i *IterUintptrInt16) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUintptrInt32 implements an associative array of int32 indexed by uintptr.
@@ -38797,6 +38797,10 @@ func (t *MapUintptrInt32) Rem(key uintptr) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUintptrInt32) SetP(key uintptr, val *int32) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -38831,31 +38835,30 @@ func (t *MapUintptrInt32) Set(key uintptr, val int32) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUintptrInt32) GetP(key uintptr) (*int32, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUintptrInt32) GetP(key uintptr) *int32 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*int32)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*int32)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUintptrInt32) Get(key uintptr) (int32, bool) {
-	var v int32
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero int32
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -38881,9 +38884,8 @@ type IterUintptrInt32 struct {
 	t       *MapUintptrInt32
 	nodes   []*nodeMapuintptrint32
 	lastDir int
-	Found   bool    // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uintptr // Key found by last call to Next, Prev.
-	Value   *int32  // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *int32  // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUintptrInt32.
@@ -38926,7 +38928,6 @@ func (i *IterUintptrInt32) Seek(key uintptr) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUintptrInt32) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -38942,7 +38943,7 @@ func (i *IterUintptrInt32) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUintptrInt32) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -38950,7 +38951,7 @@ func (i *IterUintptrInt32) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUintptrInt32) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUintptrInt32) step(dir int) {
@@ -38963,7 +38964,7 @@ func (i *IterUintptrInt32) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -38979,7 +38980,7 @@ func (i *IterUintptrInt32) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -39003,7 +39004,6 @@ func (i *IterUintptrInt32) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUintptrInt64 implements an associative array of int64 indexed by uintptr.
@@ -39097,6 +39097,10 @@ func (t *MapUintptrInt64) Rem(key uintptr) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUintptrInt64) SetP(key uintptr, val *int64) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -39131,31 +39135,30 @@ func (t *MapUintptrInt64) Set(key uintptr, val int64) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUintptrInt64) GetP(key uintptr) (*int64, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUintptrInt64) GetP(key uintptr) *int64 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*int64)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*int64)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUintptrInt64) Get(key uintptr) (int64, bool) {
-	var v int64
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero int64
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -39181,9 +39184,8 @@ type IterUintptrInt64 struct {
 	t       *MapUintptrInt64
 	nodes   []*nodeMapuintptrint64
 	lastDir int
-	Found   bool    // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uintptr // Key found by last call to Next, Prev.
-	Value   *int64  // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *int64  // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUintptrInt64.
@@ -39226,7 +39228,6 @@ func (i *IterUintptrInt64) Seek(key uintptr) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUintptrInt64) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -39242,7 +39243,7 @@ func (i *IterUintptrInt64) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUintptrInt64) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -39250,7 +39251,7 @@ func (i *IterUintptrInt64) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUintptrInt64) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUintptrInt64) step(dir int) {
@@ -39263,7 +39264,7 @@ func (i *IterUintptrInt64) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -39279,7 +39280,7 @@ func (i *IterUintptrInt64) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -39303,7 +39304,6 @@ func (i *IterUintptrInt64) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUintptrInt8 implements an associative array of int8 indexed by uintptr.
@@ -39397,6 +39397,10 @@ func (t *MapUintptrInt8) Rem(key uintptr) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUintptrInt8) SetP(key uintptr, val *int8) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -39431,31 +39435,30 @@ func (t *MapUintptrInt8) Set(key uintptr, val int8) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUintptrInt8) GetP(key uintptr) (*int8, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUintptrInt8) GetP(key uintptr) *int8 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*int8)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*int8)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUintptrInt8) Get(key uintptr) (int8, bool) {
-	var v int8
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero int8
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -39481,9 +39484,8 @@ type IterUintptrInt8 struct {
 	t       *MapUintptrInt8
 	nodes   []*nodeMapuintptrint8
 	lastDir int
-	Found   bool    // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uintptr // Key found by last call to Next, Prev.
-	Value   *int8   // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *int8   // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUintptrInt8.
@@ -39526,7 +39528,6 @@ func (i *IterUintptrInt8) Seek(key uintptr) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUintptrInt8) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -39542,7 +39543,7 @@ func (i *IterUintptrInt8) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUintptrInt8) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -39550,7 +39551,7 @@ func (i *IterUintptrInt8) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUintptrInt8) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUintptrInt8) step(dir int) {
@@ -39563,7 +39564,7 @@ func (i *IterUintptrInt8) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -39579,7 +39580,7 @@ func (i *IterUintptrInt8) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -39603,7 +39604,6 @@ func (i *IterUintptrInt8) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUintptrRune implements an associative array of rune indexed by uintptr.
@@ -39697,6 +39697,10 @@ func (t *MapUintptrRune) Rem(key uintptr) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUintptrRune) SetP(key uintptr, val *rune) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -39731,31 +39735,30 @@ func (t *MapUintptrRune) Set(key uintptr, val rune) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUintptrRune) GetP(key uintptr) (*rune, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUintptrRune) GetP(key uintptr) *rune {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*rune)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*rune)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUintptrRune) Get(key uintptr) (rune, bool) {
-	var v rune
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero rune
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -39781,9 +39784,8 @@ type IterUintptrRune struct {
 	t       *MapUintptrRune
 	nodes   []*nodeMapuintptrrune
 	lastDir int
-	Found   bool    // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uintptr // Key found by last call to Next, Prev.
-	Value   *rune   // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *rune   // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUintptrRune.
@@ -39826,7 +39828,6 @@ func (i *IterUintptrRune) Seek(key uintptr) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUintptrRune) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -39842,7 +39843,7 @@ func (i *IterUintptrRune) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUintptrRune) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -39850,7 +39851,7 @@ func (i *IterUintptrRune) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUintptrRune) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUintptrRune) step(dir int) {
@@ -39863,7 +39864,7 @@ func (i *IterUintptrRune) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -39879,7 +39880,7 @@ func (i *IterUintptrRune) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -39903,7 +39904,6 @@ func (i *IterUintptrRune) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUintptrString implements an associative array of string indexed by uintptr.
@@ -39997,6 +39997,10 @@ func (t *MapUintptrString) Rem(key uintptr) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUintptrString) SetP(key uintptr, val *string) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -40031,31 +40035,30 @@ func (t *MapUintptrString) Set(key uintptr, val string) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUintptrString) GetP(key uintptr) (*string, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUintptrString) GetP(key uintptr) *string {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*string)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*string)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUintptrString) Get(key uintptr) (string, bool) {
-	var v string
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero string
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -40081,9 +40084,8 @@ type IterUintptrString struct {
 	t       *MapUintptrString
 	nodes   []*nodeMapuintptrstring
 	lastDir int
-	Found   bool    // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uintptr // Key found by last call to Next, Prev.
-	Value   *string // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *string // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUintptrString.
@@ -40126,7 +40128,6 @@ func (i *IterUintptrString) Seek(key uintptr) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUintptrString) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -40142,7 +40143,7 @@ func (i *IterUintptrString) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUintptrString) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -40150,7 +40151,7 @@ func (i *IterUintptrString) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUintptrString) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUintptrString) step(dir int) {
@@ -40163,7 +40164,7 @@ func (i *IterUintptrString) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -40179,7 +40180,7 @@ func (i *IterUintptrString) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -40203,7 +40204,6 @@ func (i *IterUintptrString) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUintptrUint implements an associative array of uint indexed by uintptr.
@@ -40297,6 +40297,10 @@ func (t *MapUintptrUint) Rem(key uintptr) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUintptrUint) SetP(key uintptr, val *uint) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -40331,31 +40335,30 @@ func (t *MapUintptrUint) Set(key uintptr, val uint) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUintptrUint) GetP(key uintptr) (*uint, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUintptrUint) GetP(key uintptr) *uint {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uint)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uint)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUintptrUint) Get(key uintptr) (uint, bool) {
-	var v uint
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uint
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -40381,9 +40384,8 @@ type IterUintptrUint struct {
 	t       *MapUintptrUint
 	nodes   []*nodeMapuintptruint
 	lastDir int
-	Found   bool    // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uintptr // Key found by last call to Next, Prev.
-	Value   *uint   // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uint   // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUintptrUint.
@@ -40426,7 +40428,6 @@ func (i *IterUintptrUint) Seek(key uintptr) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUintptrUint) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -40442,7 +40443,7 @@ func (i *IterUintptrUint) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUintptrUint) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -40450,7 +40451,7 @@ func (i *IterUintptrUint) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUintptrUint) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUintptrUint) step(dir int) {
@@ -40463,7 +40464,7 @@ func (i *IterUintptrUint) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -40479,7 +40480,7 @@ func (i *IterUintptrUint) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -40503,7 +40504,6 @@ func (i *IterUintptrUint) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUintptrUint16 implements an associative array of uint16 indexed by uintptr.
@@ -40597,6 +40597,10 @@ func (t *MapUintptrUint16) Rem(key uintptr) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUintptrUint16) SetP(key uintptr, val *uint16) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -40631,31 +40635,30 @@ func (t *MapUintptrUint16) Set(key uintptr, val uint16) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUintptrUint16) GetP(key uintptr) (*uint16, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUintptrUint16) GetP(key uintptr) *uint16 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uint16)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uint16)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUintptrUint16) Get(key uintptr) (uint16, bool) {
-	var v uint16
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uint16
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -40681,9 +40684,8 @@ type IterUintptrUint16 struct {
 	t       *MapUintptrUint16
 	nodes   []*nodeMapuintptruint16
 	lastDir int
-	Found   bool    // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uintptr // Key found by last call to Next, Prev.
-	Value   *uint16 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uint16 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUintptrUint16.
@@ -40726,7 +40728,6 @@ func (i *IterUintptrUint16) Seek(key uintptr) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUintptrUint16) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -40742,7 +40743,7 @@ func (i *IterUintptrUint16) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUintptrUint16) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -40750,7 +40751,7 @@ func (i *IterUintptrUint16) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUintptrUint16) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUintptrUint16) step(dir int) {
@@ -40763,7 +40764,7 @@ func (i *IterUintptrUint16) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -40779,7 +40780,7 @@ func (i *IterUintptrUint16) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -40803,7 +40804,6 @@ func (i *IterUintptrUint16) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUintptrUint32 implements an associative array of uint32 indexed by uintptr.
@@ -40897,6 +40897,10 @@ func (t *MapUintptrUint32) Rem(key uintptr) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUintptrUint32) SetP(key uintptr, val *uint32) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -40931,31 +40935,30 @@ func (t *MapUintptrUint32) Set(key uintptr, val uint32) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUintptrUint32) GetP(key uintptr) (*uint32, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUintptrUint32) GetP(key uintptr) *uint32 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uint32)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uint32)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUintptrUint32) Get(key uintptr) (uint32, bool) {
-	var v uint32
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uint32
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -40981,9 +40984,8 @@ type IterUintptrUint32 struct {
 	t       *MapUintptrUint32
 	nodes   []*nodeMapuintptruint32
 	lastDir int
-	Found   bool    // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uintptr // Key found by last call to Next, Prev.
-	Value   *uint32 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uint32 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUintptrUint32.
@@ -41026,7 +41028,6 @@ func (i *IterUintptrUint32) Seek(key uintptr) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUintptrUint32) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -41042,7 +41043,7 @@ func (i *IterUintptrUint32) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUintptrUint32) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -41050,7 +41051,7 @@ func (i *IterUintptrUint32) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUintptrUint32) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUintptrUint32) step(dir int) {
@@ -41063,7 +41064,7 @@ func (i *IterUintptrUint32) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -41079,7 +41080,7 @@ func (i *IterUintptrUint32) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -41103,7 +41104,6 @@ func (i *IterUintptrUint32) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUintptrUint64 implements an associative array of uint64 indexed by uintptr.
@@ -41197,6 +41197,10 @@ func (t *MapUintptrUint64) Rem(key uintptr) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUintptrUint64) SetP(key uintptr, val *uint64) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -41231,31 +41235,30 @@ func (t *MapUintptrUint64) Set(key uintptr, val uint64) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUintptrUint64) GetP(key uintptr) (*uint64, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUintptrUint64) GetP(key uintptr) *uint64 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uint64)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uint64)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUintptrUint64) Get(key uintptr) (uint64, bool) {
-	var v uint64
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uint64
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -41281,9 +41284,8 @@ type IterUintptrUint64 struct {
 	t       *MapUintptrUint64
 	nodes   []*nodeMapuintptruint64
 	lastDir int
-	Found   bool    // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uintptr // Key found by last call to Next, Prev.
-	Value   *uint64 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uint64 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUintptrUint64.
@@ -41326,7 +41328,6 @@ func (i *IterUintptrUint64) Seek(key uintptr) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUintptrUint64) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -41342,7 +41343,7 @@ func (i *IterUintptrUint64) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUintptrUint64) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -41350,7 +41351,7 @@ func (i *IterUintptrUint64) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUintptrUint64) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUintptrUint64) step(dir int) {
@@ -41363,7 +41364,7 @@ func (i *IterUintptrUint64) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -41379,7 +41380,7 @@ func (i *IterUintptrUint64) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -41403,7 +41404,6 @@ func (i *IterUintptrUint64) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUintptrUint8 implements an associative array of uint8 indexed by uintptr.
@@ -41497,6 +41497,10 @@ func (t *MapUintptrUint8) Rem(key uintptr) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUintptrUint8) SetP(key uintptr, val *uint8) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -41531,31 +41535,30 @@ func (t *MapUintptrUint8) Set(key uintptr, val uint8) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUintptrUint8) GetP(key uintptr) (*uint8, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUintptrUint8) GetP(key uintptr) *uint8 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uint8)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uint8)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUintptrUint8) Get(key uintptr) (uint8, bool) {
-	var v uint8
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uint8
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -41581,9 +41584,8 @@ type IterUintptrUint8 struct {
 	t       *MapUintptrUint8
 	nodes   []*nodeMapuintptruint8
 	lastDir int
-	Found   bool    // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uintptr // Key found by last call to Next, Prev.
-	Value   *uint8  // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uint8  // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUintptrUint8.
@@ -41626,7 +41628,6 @@ func (i *IterUintptrUint8) Seek(key uintptr) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUintptrUint8) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -41642,7 +41643,7 @@ func (i *IterUintptrUint8) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUintptrUint8) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -41650,7 +41651,7 @@ func (i *IterUintptrUint8) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUintptrUint8) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUintptrUint8) step(dir int) {
@@ -41663,7 +41664,7 @@ func (i *IterUintptrUint8) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -41679,7 +41680,7 @@ func (i *IterUintptrUint8) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -41703,7 +41704,6 @@ func (i *IterUintptrUint8) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUintptrUintptr implements an associative array of uintptr indexed by uintptr.
@@ -41797,6 +41797,10 @@ func (t *MapUintptrUintptr) Rem(key uintptr) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUintptrUintptr) SetP(key uintptr, val *uintptr) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -41831,31 +41835,30 @@ func (t *MapUintptrUintptr) Set(key uintptr, val uintptr) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUintptrUintptr) GetP(key uintptr) (*uintptr, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUintptrUintptr) GetP(key uintptr) *uintptr {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uintptr)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uintptr)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUintptrUintptr) Get(key uintptr) (uintptr, bool) {
-	var v uintptr
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uintptr
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -41881,9 +41884,8 @@ type IterUintptrUintptr struct {
 	t       *MapUintptrUintptr
 	nodes   []*nodeMapuintptruintptr
 	lastDir int
-	Found   bool     // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uintptr  // Key found by last call to Next, Prev.
-	Value   *uintptr // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uintptr // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUintptrUintptr.
@@ -41926,7 +41928,6 @@ func (i *IterUintptrUintptr) Seek(key uintptr) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUintptrUintptr) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -41942,7 +41943,7 @@ func (i *IterUintptrUintptr) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUintptrUintptr) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -41950,7 +41951,7 @@ func (i *IterUintptrUintptr) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUintptrUintptr) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUintptrUintptr) step(dir int) {
@@ -41963,7 +41964,7 @@ func (i *IterUintptrUintptr) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -41979,7 +41980,7 @@ func (i *IterUintptrUintptr) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -42003,7 +42004,6 @@ func (i *IterUintptrUintptr) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint64Bool implements an associative array of bool indexed by uint64.
@@ -42097,6 +42097,10 @@ func (t *MapUint64Bool) Rem(key uint64) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint64Bool) SetP(key uint64, val *bool) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -42131,31 +42135,30 @@ func (t *MapUint64Bool) Set(key uint64, val bool) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint64Bool) GetP(key uint64) (*bool, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint64Bool) GetP(key uint64) *bool {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*bool)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*bool)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint64Bool) Get(key uint64) (bool, bool) {
-	var v bool
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero bool
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -42181,9 +42184,8 @@ type IterUint64Bool struct {
 	t       *MapUint64Bool
 	nodes   []*nodeMapuint64bool
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint64 // Key found by last call to Next, Prev.
-	Value   *bool  // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *bool  // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint64Bool.
@@ -42226,7 +42228,6 @@ func (i *IterUint64Bool) Seek(key uint64) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint64Bool) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -42242,7 +42243,7 @@ func (i *IterUint64Bool) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint64Bool) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -42250,7 +42251,7 @@ func (i *IterUint64Bool) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint64Bool) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint64Bool) step(dir int) {
@@ -42263,7 +42264,7 @@ func (i *IterUint64Bool) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -42279,7 +42280,7 @@ func (i *IterUint64Bool) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -42303,7 +42304,6 @@ func (i *IterUint64Bool) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint64Byte implements an associative array of byte indexed by uint64.
@@ -42397,6 +42397,10 @@ func (t *MapUint64Byte) Rem(key uint64) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint64Byte) SetP(key uint64, val *byte) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -42431,31 +42435,30 @@ func (t *MapUint64Byte) Set(key uint64, val byte) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint64Byte) GetP(key uint64) (*byte, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint64Byte) GetP(key uint64) *byte {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*byte)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*byte)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint64Byte) Get(key uint64) (byte, bool) {
-	var v byte
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero byte
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -42481,9 +42484,8 @@ type IterUint64Byte struct {
 	t       *MapUint64Byte
 	nodes   []*nodeMapuint64byte
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint64 // Key found by last call to Next, Prev.
-	Value   *byte  // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *byte  // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint64Byte.
@@ -42526,7 +42528,6 @@ func (i *IterUint64Byte) Seek(key uint64) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint64Byte) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -42542,7 +42543,7 @@ func (i *IterUint64Byte) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint64Byte) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -42550,7 +42551,7 @@ func (i *IterUint64Byte) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint64Byte) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint64Byte) step(dir int) {
@@ -42563,7 +42564,7 @@ func (i *IterUint64Byte) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -42579,7 +42580,7 @@ func (i *IterUint64Byte) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -42603,7 +42604,6 @@ func (i *IterUint64Byte) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint64Complex128 implements an associative array of complex128 indexed by uint64.
@@ -42697,6 +42697,10 @@ func (t *MapUint64Complex128) Rem(key uint64) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint64Complex128) SetP(key uint64, val *complex128) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -42731,31 +42735,30 @@ func (t *MapUint64Complex128) Set(key uint64, val complex128) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint64Complex128) GetP(key uint64) (*complex128, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint64Complex128) GetP(key uint64) *complex128 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*complex128)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*complex128)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint64Complex128) Get(key uint64) (complex128, bool) {
-	var v complex128
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero complex128
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -42781,9 +42784,8 @@ type IterUint64Complex128 struct {
 	t       *MapUint64Complex128
 	nodes   []*nodeMapuint64complex128
 	lastDir int
-	Found   bool        // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint64      // Key found by last call to Next, Prev.
-	Value   *complex128 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *complex128 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint64Complex128.
@@ -42826,7 +42828,6 @@ func (i *IterUint64Complex128) Seek(key uint64) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint64Complex128) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -42842,7 +42843,7 @@ func (i *IterUint64Complex128) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint64Complex128) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -42850,7 +42851,7 @@ func (i *IterUint64Complex128) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint64Complex128) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint64Complex128) step(dir int) {
@@ -42863,7 +42864,7 @@ func (i *IterUint64Complex128) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -42879,7 +42880,7 @@ func (i *IterUint64Complex128) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -42903,7 +42904,6 @@ func (i *IterUint64Complex128) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint64Complex64 implements an associative array of complex64 indexed by uint64.
@@ -42997,6 +42997,10 @@ func (t *MapUint64Complex64) Rem(key uint64) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint64Complex64) SetP(key uint64, val *complex64) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -43031,31 +43035,30 @@ func (t *MapUint64Complex64) Set(key uint64, val complex64) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint64Complex64) GetP(key uint64) (*complex64, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint64Complex64) GetP(key uint64) *complex64 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*complex64)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*complex64)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint64Complex64) Get(key uint64) (complex64, bool) {
-	var v complex64
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero complex64
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -43081,9 +43084,8 @@ type IterUint64Complex64 struct {
 	t       *MapUint64Complex64
 	nodes   []*nodeMapuint64complex64
 	lastDir int
-	Found   bool       // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint64     // Key found by last call to Next, Prev.
-	Value   *complex64 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *complex64 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint64Complex64.
@@ -43126,7 +43128,6 @@ func (i *IterUint64Complex64) Seek(key uint64) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint64Complex64) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -43142,7 +43143,7 @@ func (i *IterUint64Complex64) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint64Complex64) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -43150,7 +43151,7 @@ func (i *IterUint64Complex64) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint64Complex64) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint64Complex64) step(dir int) {
@@ -43163,7 +43164,7 @@ func (i *IterUint64Complex64) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -43179,7 +43180,7 @@ func (i *IterUint64Complex64) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -43203,7 +43204,6 @@ func (i *IterUint64Complex64) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint64Error implements an associative array of error indexed by uint64.
@@ -43297,6 +43297,10 @@ func (t *MapUint64Error) Rem(key uint64) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint64Error) SetP(key uint64, val *error) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -43331,31 +43335,30 @@ func (t *MapUint64Error) Set(key uint64, val error) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint64Error) GetP(key uint64) (*error, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint64Error) GetP(key uint64) *error {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*error)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*error)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint64Error) Get(key uint64) (error, bool) {
-	var v error
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero error
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -43381,9 +43384,8 @@ type IterUint64Error struct {
 	t       *MapUint64Error
 	nodes   []*nodeMapuint64error
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint64 // Key found by last call to Next, Prev.
-	Value   *error // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *error // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint64Error.
@@ -43426,7 +43428,6 @@ func (i *IterUint64Error) Seek(key uint64) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint64Error) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -43442,7 +43443,7 @@ func (i *IterUint64Error) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint64Error) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -43450,7 +43451,7 @@ func (i *IterUint64Error) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint64Error) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint64Error) step(dir int) {
@@ -43463,7 +43464,7 @@ func (i *IterUint64Error) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -43479,7 +43480,7 @@ func (i *IterUint64Error) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -43503,7 +43504,6 @@ func (i *IterUint64Error) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint64Float32 implements an associative array of float32 indexed by uint64.
@@ -43597,6 +43597,10 @@ func (t *MapUint64Float32) Rem(key uint64) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint64Float32) SetP(key uint64, val *float32) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -43631,31 +43635,30 @@ func (t *MapUint64Float32) Set(key uint64, val float32) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint64Float32) GetP(key uint64) (*float32, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint64Float32) GetP(key uint64) *float32 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*float32)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*float32)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint64Float32) Get(key uint64) (float32, bool) {
-	var v float32
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero float32
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -43681,9 +43684,8 @@ type IterUint64Float32 struct {
 	t       *MapUint64Float32
 	nodes   []*nodeMapuint64float32
 	lastDir int
-	Found   bool     // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint64   // Key found by last call to Next, Prev.
-	Value   *float32 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *float32 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint64Float32.
@@ -43726,7 +43728,6 @@ func (i *IterUint64Float32) Seek(key uint64) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint64Float32) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -43742,7 +43743,7 @@ func (i *IterUint64Float32) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint64Float32) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -43750,7 +43751,7 @@ func (i *IterUint64Float32) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint64Float32) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint64Float32) step(dir int) {
@@ -43763,7 +43764,7 @@ func (i *IterUint64Float32) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -43779,7 +43780,7 @@ func (i *IterUint64Float32) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -43803,7 +43804,6 @@ func (i *IterUint64Float32) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint64Float64 implements an associative array of float64 indexed by uint64.
@@ -43897,6 +43897,10 @@ func (t *MapUint64Float64) Rem(key uint64) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint64Float64) SetP(key uint64, val *float64) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -43931,31 +43935,30 @@ func (t *MapUint64Float64) Set(key uint64, val float64) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint64Float64) GetP(key uint64) (*float64, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint64Float64) GetP(key uint64) *float64 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*float64)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*float64)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint64Float64) Get(key uint64) (float64, bool) {
-	var v float64
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero float64
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -43981,9 +43984,8 @@ type IterUint64Float64 struct {
 	t       *MapUint64Float64
 	nodes   []*nodeMapuint64float64
 	lastDir int
-	Found   bool     // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint64   // Key found by last call to Next, Prev.
-	Value   *float64 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *float64 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint64Float64.
@@ -44026,7 +44028,6 @@ func (i *IterUint64Float64) Seek(key uint64) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint64Float64) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -44042,7 +44043,7 @@ func (i *IterUint64Float64) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint64Float64) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -44050,7 +44051,7 @@ func (i *IterUint64Float64) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint64Float64) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint64Float64) step(dir int) {
@@ -44063,7 +44064,7 @@ func (i *IterUint64Float64) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -44079,7 +44080,7 @@ func (i *IterUint64Float64) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -44103,7 +44104,6 @@ func (i *IterUint64Float64) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint64Int implements an associative array of int indexed by uint64.
@@ -44197,6 +44197,10 @@ func (t *MapUint64Int) Rem(key uint64) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint64Int) SetP(key uint64, val *int) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -44231,31 +44235,30 @@ func (t *MapUint64Int) Set(key uint64, val int) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint64Int) GetP(key uint64) (*int, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint64Int) GetP(key uint64) *int {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*int)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*int)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint64Int) Get(key uint64) (int, bool) {
-	var v int
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero int
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -44281,9 +44284,8 @@ type IterUint64Int struct {
 	t       *MapUint64Int
 	nodes   []*nodeMapuint64int
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint64 // Key found by last call to Next, Prev.
-	Value   *int   // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *int   // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint64Int.
@@ -44326,7 +44328,6 @@ func (i *IterUint64Int) Seek(key uint64) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint64Int) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -44342,7 +44343,7 @@ func (i *IterUint64Int) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint64Int) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -44350,7 +44351,7 @@ func (i *IterUint64Int) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint64Int) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint64Int) step(dir int) {
@@ -44363,7 +44364,7 @@ func (i *IterUint64Int) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -44379,7 +44380,7 @@ func (i *IterUint64Int) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -44403,7 +44404,6 @@ func (i *IterUint64Int) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint64Int16 implements an associative array of int16 indexed by uint64.
@@ -44497,6 +44497,10 @@ func (t *MapUint64Int16) Rem(key uint64) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint64Int16) SetP(key uint64, val *int16) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -44531,31 +44535,30 @@ func (t *MapUint64Int16) Set(key uint64, val int16) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint64Int16) GetP(key uint64) (*int16, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint64Int16) GetP(key uint64) *int16 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*int16)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*int16)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint64Int16) Get(key uint64) (int16, bool) {
-	var v int16
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero int16
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -44581,9 +44584,8 @@ type IterUint64Int16 struct {
 	t       *MapUint64Int16
 	nodes   []*nodeMapuint64int16
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint64 // Key found by last call to Next, Prev.
-	Value   *int16 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *int16 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint64Int16.
@@ -44626,7 +44628,6 @@ func (i *IterUint64Int16) Seek(key uint64) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint64Int16) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -44642,7 +44643,7 @@ func (i *IterUint64Int16) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint64Int16) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -44650,7 +44651,7 @@ func (i *IterUint64Int16) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint64Int16) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint64Int16) step(dir int) {
@@ -44663,7 +44664,7 @@ func (i *IterUint64Int16) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -44679,7 +44680,7 @@ func (i *IterUint64Int16) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -44703,7 +44704,6 @@ func (i *IterUint64Int16) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint64Int32 implements an associative array of int32 indexed by uint64.
@@ -44797,6 +44797,10 @@ func (t *MapUint64Int32) Rem(key uint64) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint64Int32) SetP(key uint64, val *int32) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -44831,31 +44835,30 @@ func (t *MapUint64Int32) Set(key uint64, val int32) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint64Int32) GetP(key uint64) (*int32, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint64Int32) GetP(key uint64) *int32 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*int32)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*int32)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint64Int32) Get(key uint64) (int32, bool) {
-	var v int32
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero int32
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -44881,9 +44884,8 @@ type IterUint64Int32 struct {
 	t       *MapUint64Int32
 	nodes   []*nodeMapuint64int32
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint64 // Key found by last call to Next, Prev.
-	Value   *int32 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *int32 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint64Int32.
@@ -44926,7 +44928,6 @@ func (i *IterUint64Int32) Seek(key uint64) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint64Int32) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -44942,7 +44943,7 @@ func (i *IterUint64Int32) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint64Int32) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -44950,7 +44951,7 @@ func (i *IterUint64Int32) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint64Int32) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint64Int32) step(dir int) {
@@ -44963,7 +44964,7 @@ func (i *IterUint64Int32) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -44979,7 +44980,7 @@ func (i *IterUint64Int32) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -45003,7 +45004,6 @@ func (i *IterUint64Int32) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint64Int64 implements an associative array of int64 indexed by uint64.
@@ -45097,6 +45097,10 @@ func (t *MapUint64Int64) Rem(key uint64) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint64Int64) SetP(key uint64, val *int64) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -45131,31 +45135,30 @@ func (t *MapUint64Int64) Set(key uint64, val int64) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint64Int64) GetP(key uint64) (*int64, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint64Int64) GetP(key uint64) *int64 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*int64)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*int64)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint64Int64) Get(key uint64) (int64, bool) {
-	var v int64
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero int64
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -45181,9 +45184,8 @@ type IterUint64Int64 struct {
 	t       *MapUint64Int64
 	nodes   []*nodeMapuint64int64
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint64 // Key found by last call to Next, Prev.
-	Value   *int64 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *int64 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint64Int64.
@@ -45226,7 +45228,6 @@ func (i *IterUint64Int64) Seek(key uint64) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint64Int64) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -45242,7 +45243,7 @@ func (i *IterUint64Int64) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint64Int64) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -45250,7 +45251,7 @@ func (i *IterUint64Int64) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint64Int64) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint64Int64) step(dir int) {
@@ -45263,7 +45264,7 @@ func (i *IterUint64Int64) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -45279,7 +45280,7 @@ func (i *IterUint64Int64) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -45303,7 +45304,6 @@ func (i *IterUint64Int64) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint64Int8 implements an associative array of int8 indexed by uint64.
@@ -45397,6 +45397,10 @@ func (t *MapUint64Int8) Rem(key uint64) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint64Int8) SetP(key uint64, val *int8) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -45431,31 +45435,30 @@ func (t *MapUint64Int8) Set(key uint64, val int8) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint64Int8) GetP(key uint64) (*int8, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint64Int8) GetP(key uint64) *int8 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*int8)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*int8)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint64Int8) Get(key uint64) (int8, bool) {
-	var v int8
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero int8
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -45481,9 +45484,8 @@ type IterUint64Int8 struct {
 	t       *MapUint64Int8
 	nodes   []*nodeMapuint64int8
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint64 // Key found by last call to Next, Prev.
-	Value   *int8  // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *int8  // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint64Int8.
@@ -45526,7 +45528,6 @@ func (i *IterUint64Int8) Seek(key uint64) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint64Int8) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -45542,7 +45543,7 @@ func (i *IterUint64Int8) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint64Int8) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -45550,7 +45551,7 @@ func (i *IterUint64Int8) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint64Int8) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint64Int8) step(dir int) {
@@ -45563,7 +45564,7 @@ func (i *IterUint64Int8) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -45579,7 +45580,7 @@ func (i *IterUint64Int8) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -45603,7 +45604,6 @@ func (i *IterUint64Int8) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint64Rune implements an associative array of rune indexed by uint64.
@@ -45697,6 +45697,10 @@ func (t *MapUint64Rune) Rem(key uint64) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint64Rune) SetP(key uint64, val *rune) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -45731,31 +45735,30 @@ func (t *MapUint64Rune) Set(key uint64, val rune) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint64Rune) GetP(key uint64) (*rune, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint64Rune) GetP(key uint64) *rune {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*rune)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*rune)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint64Rune) Get(key uint64) (rune, bool) {
-	var v rune
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero rune
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -45781,9 +45784,8 @@ type IterUint64Rune struct {
 	t       *MapUint64Rune
 	nodes   []*nodeMapuint64rune
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint64 // Key found by last call to Next, Prev.
-	Value   *rune  // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *rune  // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint64Rune.
@@ -45826,7 +45828,6 @@ func (i *IterUint64Rune) Seek(key uint64) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint64Rune) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -45842,7 +45843,7 @@ func (i *IterUint64Rune) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint64Rune) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -45850,7 +45851,7 @@ func (i *IterUint64Rune) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint64Rune) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint64Rune) step(dir int) {
@@ -45863,7 +45864,7 @@ func (i *IterUint64Rune) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -45879,7 +45880,7 @@ func (i *IterUint64Rune) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -45903,7 +45904,6 @@ func (i *IterUint64Rune) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint64String implements an associative array of string indexed by uint64.
@@ -45997,6 +45997,10 @@ func (t *MapUint64String) Rem(key uint64) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint64String) SetP(key uint64, val *string) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -46031,31 +46035,30 @@ func (t *MapUint64String) Set(key uint64, val string) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint64String) GetP(key uint64) (*string, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint64String) GetP(key uint64) *string {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*string)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*string)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint64String) Get(key uint64) (string, bool) {
-	var v string
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero string
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -46081,9 +46084,8 @@ type IterUint64String struct {
 	t       *MapUint64String
 	nodes   []*nodeMapuint64string
 	lastDir int
-	Found   bool    // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint64  // Key found by last call to Next, Prev.
-	Value   *string // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *string // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint64String.
@@ -46126,7 +46128,6 @@ func (i *IterUint64String) Seek(key uint64) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint64String) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -46142,7 +46143,7 @@ func (i *IterUint64String) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint64String) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -46150,7 +46151,7 @@ func (i *IterUint64String) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint64String) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint64String) step(dir int) {
@@ -46163,7 +46164,7 @@ func (i *IterUint64String) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -46179,7 +46180,7 @@ func (i *IterUint64String) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -46203,7 +46204,6 @@ func (i *IterUint64String) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint64Uint implements an associative array of uint indexed by uint64.
@@ -46297,6 +46297,10 @@ func (t *MapUint64Uint) Rem(key uint64) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint64Uint) SetP(key uint64, val *uint) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -46331,31 +46335,30 @@ func (t *MapUint64Uint) Set(key uint64, val uint) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint64Uint) GetP(key uint64) (*uint, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint64Uint) GetP(key uint64) *uint {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uint)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uint)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint64Uint) Get(key uint64) (uint, bool) {
-	var v uint
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uint
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -46381,9 +46384,8 @@ type IterUint64Uint struct {
 	t       *MapUint64Uint
 	nodes   []*nodeMapuint64uint
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint64 // Key found by last call to Next, Prev.
-	Value   *uint  // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uint  // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint64Uint.
@@ -46426,7 +46428,6 @@ func (i *IterUint64Uint) Seek(key uint64) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint64Uint) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -46442,7 +46443,7 @@ func (i *IterUint64Uint) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint64Uint) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -46450,7 +46451,7 @@ func (i *IterUint64Uint) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint64Uint) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint64Uint) step(dir int) {
@@ -46463,7 +46464,7 @@ func (i *IterUint64Uint) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -46479,7 +46480,7 @@ func (i *IterUint64Uint) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -46503,7 +46504,6 @@ func (i *IterUint64Uint) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint64Uint16 implements an associative array of uint16 indexed by uint64.
@@ -46597,6 +46597,10 @@ func (t *MapUint64Uint16) Rem(key uint64) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint64Uint16) SetP(key uint64, val *uint16) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -46631,31 +46635,30 @@ func (t *MapUint64Uint16) Set(key uint64, val uint16) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint64Uint16) GetP(key uint64) (*uint16, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint64Uint16) GetP(key uint64) *uint16 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uint16)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uint16)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint64Uint16) Get(key uint64) (uint16, bool) {
-	var v uint16
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uint16
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -46681,9 +46684,8 @@ type IterUint64Uint16 struct {
 	t       *MapUint64Uint16
 	nodes   []*nodeMapuint64uint16
 	lastDir int
-	Found   bool    // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint64  // Key found by last call to Next, Prev.
-	Value   *uint16 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uint16 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint64Uint16.
@@ -46726,7 +46728,6 @@ func (i *IterUint64Uint16) Seek(key uint64) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint64Uint16) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -46742,7 +46743,7 @@ func (i *IterUint64Uint16) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint64Uint16) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -46750,7 +46751,7 @@ func (i *IterUint64Uint16) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint64Uint16) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint64Uint16) step(dir int) {
@@ -46763,7 +46764,7 @@ func (i *IterUint64Uint16) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -46779,7 +46780,7 @@ func (i *IterUint64Uint16) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -46803,7 +46804,6 @@ func (i *IterUint64Uint16) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint64Uint32 implements an associative array of uint32 indexed by uint64.
@@ -46897,6 +46897,10 @@ func (t *MapUint64Uint32) Rem(key uint64) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint64Uint32) SetP(key uint64, val *uint32) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -46931,31 +46935,30 @@ func (t *MapUint64Uint32) Set(key uint64, val uint32) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint64Uint32) GetP(key uint64) (*uint32, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint64Uint32) GetP(key uint64) *uint32 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uint32)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uint32)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint64Uint32) Get(key uint64) (uint32, bool) {
-	var v uint32
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uint32
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -46981,9 +46984,8 @@ type IterUint64Uint32 struct {
 	t       *MapUint64Uint32
 	nodes   []*nodeMapuint64uint32
 	lastDir int
-	Found   bool    // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint64  // Key found by last call to Next, Prev.
-	Value   *uint32 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uint32 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint64Uint32.
@@ -47026,7 +47028,6 @@ func (i *IterUint64Uint32) Seek(key uint64) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint64Uint32) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -47042,7 +47043,7 @@ func (i *IterUint64Uint32) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint64Uint32) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -47050,7 +47051,7 @@ func (i *IterUint64Uint32) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint64Uint32) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint64Uint32) step(dir int) {
@@ -47063,7 +47064,7 @@ func (i *IterUint64Uint32) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -47079,7 +47080,7 @@ func (i *IterUint64Uint32) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -47103,7 +47104,6 @@ func (i *IterUint64Uint32) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint64Uint64 implements an associative array of uint64 indexed by uint64.
@@ -47197,6 +47197,10 @@ func (t *MapUint64Uint64) Rem(key uint64) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint64Uint64) SetP(key uint64, val *uint64) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -47231,31 +47235,30 @@ func (t *MapUint64Uint64) Set(key uint64, val uint64) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint64Uint64) GetP(key uint64) (*uint64, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint64Uint64) GetP(key uint64) *uint64 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uint64)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uint64)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint64Uint64) Get(key uint64) (uint64, bool) {
-	var v uint64
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uint64
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -47281,9 +47284,8 @@ type IterUint64Uint64 struct {
 	t       *MapUint64Uint64
 	nodes   []*nodeMapuint64uint64
 	lastDir int
-	Found   bool    // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint64  // Key found by last call to Next, Prev.
-	Value   *uint64 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uint64 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint64Uint64.
@@ -47326,7 +47328,6 @@ func (i *IterUint64Uint64) Seek(key uint64) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint64Uint64) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -47342,7 +47343,7 @@ func (i *IterUint64Uint64) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint64Uint64) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -47350,7 +47351,7 @@ func (i *IterUint64Uint64) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint64Uint64) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint64Uint64) step(dir int) {
@@ -47363,7 +47364,7 @@ func (i *IterUint64Uint64) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -47379,7 +47380,7 @@ func (i *IterUint64Uint64) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -47403,7 +47404,6 @@ func (i *IterUint64Uint64) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint64Uint8 implements an associative array of uint8 indexed by uint64.
@@ -47497,6 +47497,10 @@ func (t *MapUint64Uint8) Rem(key uint64) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint64Uint8) SetP(key uint64, val *uint8) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -47531,31 +47535,30 @@ func (t *MapUint64Uint8) Set(key uint64, val uint8) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint64Uint8) GetP(key uint64) (*uint8, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint64Uint8) GetP(key uint64) *uint8 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uint8)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uint8)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint64Uint8) Get(key uint64) (uint8, bool) {
-	var v uint8
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uint8
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -47581,9 +47584,8 @@ type IterUint64Uint8 struct {
 	t       *MapUint64Uint8
 	nodes   []*nodeMapuint64uint8
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint64 // Key found by last call to Next, Prev.
-	Value   *uint8 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uint8 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint64Uint8.
@@ -47626,7 +47628,6 @@ func (i *IterUint64Uint8) Seek(key uint64) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint64Uint8) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -47642,7 +47643,7 @@ func (i *IterUint64Uint8) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint64Uint8) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -47650,7 +47651,7 @@ func (i *IterUint64Uint8) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint64Uint8) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint64Uint8) step(dir int) {
@@ -47663,7 +47664,7 @@ func (i *IterUint64Uint8) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -47679,7 +47680,7 @@ func (i *IterUint64Uint8) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -47703,7 +47704,6 @@ func (i *IterUint64Uint8) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint64Uintptr implements an associative array of uintptr indexed by uint64.
@@ -47797,6 +47797,10 @@ func (t *MapUint64Uintptr) Rem(key uint64) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint64Uintptr) SetP(key uint64, val *uintptr) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -47831,31 +47835,30 @@ func (t *MapUint64Uintptr) Set(key uint64, val uintptr) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint64Uintptr) GetP(key uint64) (*uintptr, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint64Uintptr) GetP(key uint64) *uintptr {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uintptr)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uintptr)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint64Uintptr) Get(key uint64) (uintptr, bool) {
-	var v uintptr
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uintptr
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -47881,9 +47884,8 @@ type IterUint64Uintptr struct {
 	t       *MapUint64Uintptr
 	nodes   []*nodeMapuint64uintptr
 	lastDir int
-	Found   bool     // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint64   // Key found by last call to Next, Prev.
-	Value   *uintptr // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uintptr // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint64Uintptr.
@@ -47926,7 +47928,6 @@ func (i *IterUint64Uintptr) Seek(key uint64) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint64Uintptr) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -47942,7 +47943,7 @@ func (i *IterUint64Uintptr) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint64Uintptr) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -47950,7 +47951,7 @@ func (i *IterUint64Uintptr) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint64Uintptr) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint64Uintptr) step(dir int) {
@@ -47963,7 +47964,7 @@ func (i *IterUint64Uintptr) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -47979,7 +47980,7 @@ func (i *IterUint64Uintptr) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -48003,7 +48004,6 @@ func (i *IterUint64Uintptr) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint32Bool implements an associative array of bool indexed by uint32.
@@ -48097,6 +48097,10 @@ func (t *MapUint32Bool) Rem(key uint32) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint32Bool) SetP(key uint32, val *bool) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -48131,31 +48135,30 @@ func (t *MapUint32Bool) Set(key uint32, val bool) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint32Bool) GetP(key uint32) (*bool, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint32Bool) GetP(key uint32) *bool {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*bool)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*bool)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint32Bool) Get(key uint32) (bool, bool) {
-	var v bool
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero bool
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -48181,9 +48184,8 @@ type IterUint32Bool struct {
 	t       *MapUint32Bool
 	nodes   []*nodeMapuint32bool
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint32 // Key found by last call to Next, Prev.
-	Value   *bool  // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *bool  // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint32Bool.
@@ -48226,7 +48228,6 @@ func (i *IterUint32Bool) Seek(key uint32) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint32Bool) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -48242,7 +48243,7 @@ func (i *IterUint32Bool) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint32Bool) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -48250,7 +48251,7 @@ func (i *IterUint32Bool) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint32Bool) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint32Bool) step(dir int) {
@@ -48263,7 +48264,7 @@ func (i *IterUint32Bool) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -48279,7 +48280,7 @@ func (i *IterUint32Bool) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -48303,7 +48304,6 @@ func (i *IterUint32Bool) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint32Byte implements an associative array of byte indexed by uint32.
@@ -48397,6 +48397,10 @@ func (t *MapUint32Byte) Rem(key uint32) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint32Byte) SetP(key uint32, val *byte) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -48431,31 +48435,30 @@ func (t *MapUint32Byte) Set(key uint32, val byte) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint32Byte) GetP(key uint32) (*byte, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint32Byte) GetP(key uint32) *byte {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*byte)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*byte)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint32Byte) Get(key uint32) (byte, bool) {
-	var v byte
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero byte
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -48481,9 +48484,8 @@ type IterUint32Byte struct {
 	t       *MapUint32Byte
 	nodes   []*nodeMapuint32byte
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint32 // Key found by last call to Next, Prev.
-	Value   *byte  // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *byte  // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint32Byte.
@@ -48526,7 +48528,6 @@ func (i *IterUint32Byte) Seek(key uint32) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint32Byte) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -48542,7 +48543,7 @@ func (i *IterUint32Byte) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint32Byte) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -48550,7 +48551,7 @@ func (i *IterUint32Byte) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint32Byte) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint32Byte) step(dir int) {
@@ -48563,7 +48564,7 @@ func (i *IterUint32Byte) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -48579,7 +48580,7 @@ func (i *IterUint32Byte) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -48603,7 +48604,6 @@ func (i *IterUint32Byte) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint32Complex128 implements an associative array of complex128 indexed by uint32.
@@ -48697,6 +48697,10 @@ func (t *MapUint32Complex128) Rem(key uint32) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint32Complex128) SetP(key uint32, val *complex128) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -48731,31 +48735,30 @@ func (t *MapUint32Complex128) Set(key uint32, val complex128) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint32Complex128) GetP(key uint32) (*complex128, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint32Complex128) GetP(key uint32) *complex128 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*complex128)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*complex128)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint32Complex128) Get(key uint32) (complex128, bool) {
-	var v complex128
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero complex128
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -48781,9 +48784,8 @@ type IterUint32Complex128 struct {
 	t       *MapUint32Complex128
 	nodes   []*nodeMapuint32complex128
 	lastDir int
-	Found   bool        // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint32      // Key found by last call to Next, Prev.
-	Value   *complex128 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *complex128 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint32Complex128.
@@ -48826,7 +48828,6 @@ func (i *IterUint32Complex128) Seek(key uint32) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint32Complex128) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -48842,7 +48843,7 @@ func (i *IterUint32Complex128) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint32Complex128) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -48850,7 +48851,7 @@ func (i *IterUint32Complex128) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint32Complex128) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint32Complex128) step(dir int) {
@@ -48863,7 +48864,7 @@ func (i *IterUint32Complex128) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -48879,7 +48880,7 @@ func (i *IterUint32Complex128) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -48903,7 +48904,6 @@ func (i *IterUint32Complex128) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint32Complex64 implements an associative array of complex64 indexed by uint32.
@@ -48997,6 +48997,10 @@ func (t *MapUint32Complex64) Rem(key uint32) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint32Complex64) SetP(key uint32, val *complex64) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -49031,31 +49035,30 @@ func (t *MapUint32Complex64) Set(key uint32, val complex64) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint32Complex64) GetP(key uint32) (*complex64, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint32Complex64) GetP(key uint32) *complex64 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*complex64)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*complex64)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint32Complex64) Get(key uint32) (complex64, bool) {
-	var v complex64
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero complex64
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -49081,9 +49084,8 @@ type IterUint32Complex64 struct {
 	t       *MapUint32Complex64
 	nodes   []*nodeMapuint32complex64
 	lastDir int
-	Found   bool       // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint32     // Key found by last call to Next, Prev.
-	Value   *complex64 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *complex64 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint32Complex64.
@@ -49126,7 +49128,6 @@ func (i *IterUint32Complex64) Seek(key uint32) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint32Complex64) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -49142,7 +49143,7 @@ func (i *IterUint32Complex64) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint32Complex64) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -49150,7 +49151,7 @@ func (i *IterUint32Complex64) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint32Complex64) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint32Complex64) step(dir int) {
@@ -49163,7 +49164,7 @@ func (i *IterUint32Complex64) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -49179,7 +49180,7 @@ func (i *IterUint32Complex64) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -49203,7 +49204,6 @@ func (i *IterUint32Complex64) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint32Error implements an associative array of error indexed by uint32.
@@ -49297,6 +49297,10 @@ func (t *MapUint32Error) Rem(key uint32) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint32Error) SetP(key uint32, val *error) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -49331,31 +49335,30 @@ func (t *MapUint32Error) Set(key uint32, val error) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint32Error) GetP(key uint32) (*error, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint32Error) GetP(key uint32) *error {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*error)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*error)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint32Error) Get(key uint32) (error, bool) {
-	var v error
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero error
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -49381,9 +49384,8 @@ type IterUint32Error struct {
 	t       *MapUint32Error
 	nodes   []*nodeMapuint32error
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint32 // Key found by last call to Next, Prev.
-	Value   *error // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *error // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint32Error.
@@ -49426,7 +49428,6 @@ func (i *IterUint32Error) Seek(key uint32) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint32Error) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -49442,7 +49443,7 @@ func (i *IterUint32Error) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint32Error) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -49450,7 +49451,7 @@ func (i *IterUint32Error) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint32Error) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint32Error) step(dir int) {
@@ -49463,7 +49464,7 @@ func (i *IterUint32Error) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -49479,7 +49480,7 @@ func (i *IterUint32Error) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -49503,7 +49504,6 @@ func (i *IterUint32Error) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint32Float32 implements an associative array of float32 indexed by uint32.
@@ -49597,6 +49597,10 @@ func (t *MapUint32Float32) Rem(key uint32) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint32Float32) SetP(key uint32, val *float32) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -49631,31 +49635,30 @@ func (t *MapUint32Float32) Set(key uint32, val float32) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint32Float32) GetP(key uint32) (*float32, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint32Float32) GetP(key uint32) *float32 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*float32)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*float32)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint32Float32) Get(key uint32) (float32, bool) {
-	var v float32
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero float32
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -49681,9 +49684,8 @@ type IterUint32Float32 struct {
 	t       *MapUint32Float32
 	nodes   []*nodeMapuint32float32
 	lastDir int
-	Found   bool     // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint32   // Key found by last call to Next, Prev.
-	Value   *float32 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *float32 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint32Float32.
@@ -49726,7 +49728,6 @@ func (i *IterUint32Float32) Seek(key uint32) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint32Float32) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -49742,7 +49743,7 @@ func (i *IterUint32Float32) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint32Float32) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -49750,7 +49751,7 @@ func (i *IterUint32Float32) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint32Float32) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint32Float32) step(dir int) {
@@ -49763,7 +49764,7 @@ func (i *IterUint32Float32) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -49779,7 +49780,7 @@ func (i *IterUint32Float32) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -49803,7 +49804,6 @@ func (i *IterUint32Float32) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint32Float64 implements an associative array of float64 indexed by uint32.
@@ -49897,6 +49897,10 @@ func (t *MapUint32Float64) Rem(key uint32) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint32Float64) SetP(key uint32, val *float64) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -49931,31 +49935,30 @@ func (t *MapUint32Float64) Set(key uint32, val float64) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint32Float64) GetP(key uint32) (*float64, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint32Float64) GetP(key uint32) *float64 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*float64)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*float64)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint32Float64) Get(key uint32) (float64, bool) {
-	var v float64
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero float64
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -49981,9 +49984,8 @@ type IterUint32Float64 struct {
 	t       *MapUint32Float64
 	nodes   []*nodeMapuint32float64
 	lastDir int
-	Found   bool     // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint32   // Key found by last call to Next, Prev.
-	Value   *float64 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *float64 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint32Float64.
@@ -50026,7 +50028,6 @@ func (i *IterUint32Float64) Seek(key uint32) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint32Float64) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -50042,7 +50043,7 @@ func (i *IterUint32Float64) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint32Float64) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -50050,7 +50051,7 @@ func (i *IterUint32Float64) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint32Float64) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint32Float64) step(dir int) {
@@ -50063,7 +50064,7 @@ func (i *IterUint32Float64) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -50079,7 +50080,7 @@ func (i *IterUint32Float64) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -50103,7 +50104,6 @@ func (i *IterUint32Float64) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint32Int implements an associative array of int indexed by uint32.
@@ -50197,6 +50197,10 @@ func (t *MapUint32Int) Rem(key uint32) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint32Int) SetP(key uint32, val *int) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -50231,31 +50235,30 @@ func (t *MapUint32Int) Set(key uint32, val int) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint32Int) GetP(key uint32) (*int, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint32Int) GetP(key uint32) *int {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*int)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*int)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint32Int) Get(key uint32) (int, bool) {
-	var v int
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero int
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -50281,9 +50284,8 @@ type IterUint32Int struct {
 	t       *MapUint32Int
 	nodes   []*nodeMapuint32int
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint32 // Key found by last call to Next, Prev.
-	Value   *int   // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *int   // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint32Int.
@@ -50326,7 +50328,6 @@ func (i *IterUint32Int) Seek(key uint32) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint32Int) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -50342,7 +50343,7 @@ func (i *IterUint32Int) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint32Int) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -50350,7 +50351,7 @@ func (i *IterUint32Int) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint32Int) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint32Int) step(dir int) {
@@ -50363,7 +50364,7 @@ func (i *IterUint32Int) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -50379,7 +50380,7 @@ func (i *IterUint32Int) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -50403,7 +50404,6 @@ func (i *IterUint32Int) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint32Int16 implements an associative array of int16 indexed by uint32.
@@ -50497,6 +50497,10 @@ func (t *MapUint32Int16) Rem(key uint32) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint32Int16) SetP(key uint32, val *int16) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -50531,31 +50535,30 @@ func (t *MapUint32Int16) Set(key uint32, val int16) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint32Int16) GetP(key uint32) (*int16, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint32Int16) GetP(key uint32) *int16 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*int16)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*int16)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint32Int16) Get(key uint32) (int16, bool) {
-	var v int16
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero int16
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -50581,9 +50584,8 @@ type IterUint32Int16 struct {
 	t       *MapUint32Int16
 	nodes   []*nodeMapuint32int16
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint32 // Key found by last call to Next, Prev.
-	Value   *int16 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *int16 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint32Int16.
@@ -50626,7 +50628,6 @@ func (i *IterUint32Int16) Seek(key uint32) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint32Int16) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -50642,7 +50643,7 @@ func (i *IterUint32Int16) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint32Int16) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -50650,7 +50651,7 @@ func (i *IterUint32Int16) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint32Int16) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint32Int16) step(dir int) {
@@ -50663,7 +50664,7 @@ func (i *IterUint32Int16) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -50679,7 +50680,7 @@ func (i *IterUint32Int16) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -50703,7 +50704,6 @@ func (i *IterUint32Int16) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint32Int32 implements an associative array of int32 indexed by uint32.
@@ -50797,6 +50797,10 @@ func (t *MapUint32Int32) Rem(key uint32) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint32Int32) SetP(key uint32, val *int32) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -50831,31 +50835,30 @@ func (t *MapUint32Int32) Set(key uint32, val int32) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint32Int32) GetP(key uint32) (*int32, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint32Int32) GetP(key uint32) *int32 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*int32)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*int32)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint32Int32) Get(key uint32) (int32, bool) {
-	var v int32
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero int32
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -50881,9 +50884,8 @@ type IterUint32Int32 struct {
 	t       *MapUint32Int32
 	nodes   []*nodeMapuint32int32
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint32 // Key found by last call to Next, Prev.
-	Value   *int32 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *int32 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint32Int32.
@@ -50926,7 +50928,6 @@ func (i *IterUint32Int32) Seek(key uint32) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint32Int32) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -50942,7 +50943,7 @@ func (i *IterUint32Int32) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint32Int32) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -50950,7 +50951,7 @@ func (i *IterUint32Int32) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint32Int32) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint32Int32) step(dir int) {
@@ -50963,7 +50964,7 @@ func (i *IterUint32Int32) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -50979,7 +50980,7 @@ func (i *IterUint32Int32) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -51003,7 +51004,6 @@ func (i *IterUint32Int32) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint32Int64 implements an associative array of int64 indexed by uint32.
@@ -51097,6 +51097,10 @@ func (t *MapUint32Int64) Rem(key uint32) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint32Int64) SetP(key uint32, val *int64) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -51131,31 +51135,30 @@ func (t *MapUint32Int64) Set(key uint32, val int64) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint32Int64) GetP(key uint32) (*int64, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint32Int64) GetP(key uint32) *int64 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*int64)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*int64)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint32Int64) Get(key uint32) (int64, bool) {
-	var v int64
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero int64
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -51181,9 +51184,8 @@ type IterUint32Int64 struct {
 	t       *MapUint32Int64
 	nodes   []*nodeMapuint32int64
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint32 // Key found by last call to Next, Prev.
-	Value   *int64 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *int64 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint32Int64.
@@ -51226,7 +51228,6 @@ func (i *IterUint32Int64) Seek(key uint32) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint32Int64) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -51242,7 +51243,7 @@ func (i *IterUint32Int64) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint32Int64) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -51250,7 +51251,7 @@ func (i *IterUint32Int64) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint32Int64) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint32Int64) step(dir int) {
@@ -51263,7 +51264,7 @@ func (i *IterUint32Int64) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -51279,7 +51280,7 @@ func (i *IterUint32Int64) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -51303,7 +51304,6 @@ func (i *IterUint32Int64) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint32Int8 implements an associative array of int8 indexed by uint32.
@@ -51397,6 +51397,10 @@ func (t *MapUint32Int8) Rem(key uint32) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint32Int8) SetP(key uint32, val *int8) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -51431,31 +51435,30 @@ func (t *MapUint32Int8) Set(key uint32, val int8) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint32Int8) GetP(key uint32) (*int8, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint32Int8) GetP(key uint32) *int8 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*int8)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*int8)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint32Int8) Get(key uint32) (int8, bool) {
-	var v int8
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero int8
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -51481,9 +51484,8 @@ type IterUint32Int8 struct {
 	t       *MapUint32Int8
 	nodes   []*nodeMapuint32int8
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint32 // Key found by last call to Next, Prev.
-	Value   *int8  // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *int8  // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint32Int8.
@@ -51526,7 +51528,6 @@ func (i *IterUint32Int8) Seek(key uint32) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint32Int8) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -51542,7 +51543,7 @@ func (i *IterUint32Int8) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint32Int8) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -51550,7 +51551,7 @@ func (i *IterUint32Int8) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint32Int8) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint32Int8) step(dir int) {
@@ -51563,7 +51564,7 @@ func (i *IterUint32Int8) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -51579,7 +51580,7 @@ func (i *IterUint32Int8) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -51603,7 +51604,6 @@ func (i *IterUint32Int8) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint32Rune implements an associative array of rune indexed by uint32.
@@ -51697,6 +51697,10 @@ func (t *MapUint32Rune) Rem(key uint32) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint32Rune) SetP(key uint32, val *rune) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -51731,31 +51735,30 @@ func (t *MapUint32Rune) Set(key uint32, val rune) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint32Rune) GetP(key uint32) (*rune, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint32Rune) GetP(key uint32) *rune {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*rune)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*rune)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint32Rune) Get(key uint32) (rune, bool) {
-	var v rune
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero rune
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -51781,9 +51784,8 @@ type IterUint32Rune struct {
 	t       *MapUint32Rune
 	nodes   []*nodeMapuint32rune
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint32 // Key found by last call to Next, Prev.
-	Value   *rune  // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *rune  // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint32Rune.
@@ -51826,7 +51828,6 @@ func (i *IterUint32Rune) Seek(key uint32) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint32Rune) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -51842,7 +51843,7 @@ func (i *IterUint32Rune) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint32Rune) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -51850,7 +51851,7 @@ func (i *IterUint32Rune) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint32Rune) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint32Rune) step(dir int) {
@@ -51863,7 +51864,7 @@ func (i *IterUint32Rune) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -51879,7 +51880,7 @@ func (i *IterUint32Rune) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -51903,7 +51904,6 @@ func (i *IterUint32Rune) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint32String implements an associative array of string indexed by uint32.
@@ -51997,6 +51997,10 @@ func (t *MapUint32String) Rem(key uint32) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint32String) SetP(key uint32, val *string) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -52031,31 +52035,30 @@ func (t *MapUint32String) Set(key uint32, val string) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint32String) GetP(key uint32) (*string, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint32String) GetP(key uint32) *string {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*string)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*string)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint32String) Get(key uint32) (string, bool) {
-	var v string
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero string
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -52081,9 +52084,8 @@ type IterUint32String struct {
 	t       *MapUint32String
 	nodes   []*nodeMapuint32string
 	lastDir int
-	Found   bool    // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint32  // Key found by last call to Next, Prev.
-	Value   *string // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *string // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint32String.
@@ -52126,7 +52128,6 @@ func (i *IterUint32String) Seek(key uint32) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint32String) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -52142,7 +52143,7 @@ func (i *IterUint32String) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint32String) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -52150,7 +52151,7 @@ func (i *IterUint32String) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint32String) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint32String) step(dir int) {
@@ -52163,7 +52164,7 @@ func (i *IterUint32String) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -52179,7 +52180,7 @@ func (i *IterUint32String) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -52203,7 +52204,6 @@ func (i *IterUint32String) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint32Uint implements an associative array of uint indexed by uint32.
@@ -52297,6 +52297,10 @@ func (t *MapUint32Uint) Rem(key uint32) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint32Uint) SetP(key uint32, val *uint) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -52331,31 +52335,30 @@ func (t *MapUint32Uint) Set(key uint32, val uint) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint32Uint) GetP(key uint32) (*uint, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint32Uint) GetP(key uint32) *uint {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uint)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uint)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint32Uint) Get(key uint32) (uint, bool) {
-	var v uint
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uint
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -52381,9 +52384,8 @@ type IterUint32Uint struct {
 	t       *MapUint32Uint
 	nodes   []*nodeMapuint32uint
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint32 // Key found by last call to Next, Prev.
-	Value   *uint  // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uint  // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint32Uint.
@@ -52426,7 +52428,6 @@ func (i *IterUint32Uint) Seek(key uint32) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint32Uint) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -52442,7 +52443,7 @@ func (i *IterUint32Uint) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint32Uint) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -52450,7 +52451,7 @@ func (i *IterUint32Uint) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint32Uint) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint32Uint) step(dir int) {
@@ -52463,7 +52464,7 @@ func (i *IterUint32Uint) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -52479,7 +52480,7 @@ func (i *IterUint32Uint) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -52503,7 +52504,6 @@ func (i *IterUint32Uint) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint32Uint16 implements an associative array of uint16 indexed by uint32.
@@ -52597,6 +52597,10 @@ func (t *MapUint32Uint16) Rem(key uint32) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint32Uint16) SetP(key uint32, val *uint16) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -52631,31 +52635,30 @@ func (t *MapUint32Uint16) Set(key uint32, val uint16) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint32Uint16) GetP(key uint32) (*uint16, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint32Uint16) GetP(key uint32) *uint16 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uint16)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uint16)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint32Uint16) Get(key uint32) (uint16, bool) {
-	var v uint16
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uint16
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -52681,9 +52684,8 @@ type IterUint32Uint16 struct {
 	t       *MapUint32Uint16
 	nodes   []*nodeMapuint32uint16
 	lastDir int
-	Found   bool    // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint32  // Key found by last call to Next, Prev.
-	Value   *uint16 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uint16 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint32Uint16.
@@ -52726,7 +52728,6 @@ func (i *IterUint32Uint16) Seek(key uint32) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint32Uint16) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -52742,7 +52743,7 @@ func (i *IterUint32Uint16) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint32Uint16) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -52750,7 +52751,7 @@ func (i *IterUint32Uint16) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint32Uint16) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint32Uint16) step(dir int) {
@@ -52763,7 +52764,7 @@ func (i *IterUint32Uint16) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -52779,7 +52780,7 @@ func (i *IterUint32Uint16) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -52803,7 +52804,6 @@ func (i *IterUint32Uint16) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint32Uint32 implements an associative array of uint32 indexed by uint32.
@@ -52897,6 +52897,10 @@ func (t *MapUint32Uint32) Rem(key uint32) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint32Uint32) SetP(key uint32, val *uint32) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -52931,31 +52935,30 @@ func (t *MapUint32Uint32) Set(key uint32, val uint32) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint32Uint32) GetP(key uint32) (*uint32, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint32Uint32) GetP(key uint32) *uint32 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uint32)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uint32)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint32Uint32) Get(key uint32) (uint32, bool) {
-	var v uint32
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uint32
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -52981,9 +52984,8 @@ type IterUint32Uint32 struct {
 	t       *MapUint32Uint32
 	nodes   []*nodeMapuint32uint32
 	lastDir int
-	Found   bool    // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint32  // Key found by last call to Next, Prev.
-	Value   *uint32 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uint32 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint32Uint32.
@@ -53026,7 +53028,6 @@ func (i *IterUint32Uint32) Seek(key uint32) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint32Uint32) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -53042,7 +53043,7 @@ func (i *IterUint32Uint32) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint32Uint32) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -53050,7 +53051,7 @@ func (i *IterUint32Uint32) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint32Uint32) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint32Uint32) step(dir int) {
@@ -53063,7 +53064,7 @@ func (i *IterUint32Uint32) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -53079,7 +53080,7 @@ func (i *IterUint32Uint32) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -53103,7 +53104,6 @@ func (i *IterUint32Uint32) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint32Uint64 implements an associative array of uint64 indexed by uint32.
@@ -53197,6 +53197,10 @@ func (t *MapUint32Uint64) Rem(key uint32) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint32Uint64) SetP(key uint32, val *uint64) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -53231,31 +53235,30 @@ func (t *MapUint32Uint64) Set(key uint32, val uint64) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint32Uint64) GetP(key uint32) (*uint64, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint32Uint64) GetP(key uint32) *uint64 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uint64)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uint64)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint32Uint64) Get(key uint32) (uint64, bool) {
-	var v uint64
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uint64
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -53281,9 +53284,8 @@ type IterUint32Uint64 struct {
 	t       *MapUint32Uint64
 	nodes   []*nodeMapuint32uint64
 	lastDir int
-	Found   bool    // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint32  // Key found by last call to Next, Prev.
-	Value   *uint64 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uint64 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint32Uint64.
@@ -53326,7 +53328,6 @@ func (i *IterUint32Uint64) Seek(key uint32) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint32Uint64) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -53342,7 +53343,7 @@ func (i *IterUint32Uint64) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint32Uint64) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -53350,7 +53351,7 @@ func (i *IterUint32Uint64) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint32Uint64) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint32Uint64) step(dir int) {
@@ -53363,7 +53364,7 @@ func (i *IterUint32Uint64) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -53379,7 +53380,7 @@ func (i *IterUint32Uint64) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -53403,7 +53404,6 @@ func (i *IterUint32Uint64) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint32Uint8 implements an associative array of uint8 indexed by uint32.
@@ -53497,6 +53497,10 @@ func (t *MapUint32Uint8) Rem(key uint32) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint32Uint8) SetP(key uint32, val *uint8) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -53531,31 +53535,30 @@ func (t *MapUint32Uint8) Set(key uint32, val uint8) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint32Uint8) GetP(key uint32) (*uint8, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint32Uint8) GetP(key uint32) *uint8 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uint8)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uint8)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint32Uint8) Get(key uint32) (uint8, bool) {
-	var v uint8
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uint8
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -53581,9 +53584,8 @@ type IterUint32Uint8 struct {
 	t       *MapUint32Uint8
 	nodes   []*nodeMapuint32uint8
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint32 // Key found by last call to Next, Prev.
-	Value   *uint8 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uint8 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint32Uint8.
@@ -53626,7 +53628,6 @@ func (i *IterUint32Uint8) Seek(key uint32) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint32Uint8) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -53642,7 +53643,7 @@ func (i *IterUint32Uint8) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint32Uint8) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -53650,7 +53651,7 @@ func (i *IterUint32Uint8) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint32Uint8) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint32Uint8) step(dir int) {
@@ -53663,7 +53664,7 @@ func (i *IterUint32Uint8) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -53679,7 +53680,7 @@ func (i *IterUint32Uint8) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -53703,7 +53704,6 @@ func (i *IterUint32Uint8) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint32Uintptr implements an associative array of uintptr indexed by uint32.
@@ -53797,6 +53797,10 @@ func (t *MapUint32Uintptr) Rem(key uint32) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint32Uintptr) SetP(key uint32, val *uintptr) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -53831,31 +53835,30 @@ func (t *MapUint32Uintptr) Set(key uint32, val uintptr) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint32Uintptr) GetP(key uint32) (*uintptr, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint32Uintptr) GetP(key uint32) *uintptr {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uintptr)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uintptr)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint32Uintptr) Get(key uint32) (uintptr, bool) {
-	var v uintptr
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uintptr
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -53881,9 +53884,8 @@ type IterUint32Uintptr struct {
 	t       *MapUint32Uintptr
 	nodes   []*nodeMapuint32uintptr
 	lastDir int
-	Found   bool     // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint32   // Key found by last call to Next, Prev.
-	Value   *uintptr // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uintptr // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint32Uintptr.
@@ -53926,7 +53928,6 @@ func (i *IterUint32Uintptr) Seek(key uint32) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint32Uintptr) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -53942,7 +53943,7 @@ func (i *IterUint32Uintptr) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint32Uintptr) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -53950,7 +53951,7 @@ func (i *IterUint32Uintptr) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint32Uintptr) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint32Uintptr) step(dir int) {
@@ -53963,7 +53964,7 @@ func (i *IterUint32Uintptr) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -53979,7 +53980,7 @@ func (i *IterUint32Uintptr) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -54003,7 +54004,6 @@ func (i *IterUint32Uintptr) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint16Bool implements an associative array of bool indexed by uint16.
@@ -54097,6 +54097,10 @@ func (t *MapUint16Bool) Rem(key uint16) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint16Bool) SetP(key uint16, val *bool) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -54131,31 +54135,30 @@ func (t *MapUint16Bool) Set(key uint16, val bool) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint16Bool) GetP(key uint16) (*bool, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint16Bool) GetP(key uint16) *bool {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*bool)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*bool)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint16Bool) Get(key uint16) (bool, bool) {
-	var v bool
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero bool
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -54181,9 +54184,8 @@ type IterUint16Bool struct {
 	t       *MapUint16Bool
 	nodes   []*nodeMapuint16bool
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint16 // Key found by last call to Next, Prev.
-	Value   *bool  // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *bool  // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint16Bool.
@@ -54226,7 +54228,6 @@ func (i *IterUint16Bool) Seek(key uint16) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint16Bool) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -54242,7 +54243,7 @@ func (i *IterUint16Bool) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint16Bool) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -54250,7 +54251,7 @@ func (i *IterUint16Bool) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint16Bool) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint16Bool) step(dir int) {
@@ -54263,7 +54264,7 @@ func (i *IterUint16Bool) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -54279,7 +54280,7 @@ func (i *IterUint16Bool) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -54303,7 +54304,6 @@ func (i *IterUint16Bool) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint16Byte implements an associative array of byte indexed by uint16.
@@ -54397,6 +54397,10 @@ func (t *MapUint16Byte) Rem(key uint16) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint16Byte) SetP(key uint16, val *byte) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -54431,31 +54435,30 @@ func (t *MapUint16Byte) Set(key uint16, val byte) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint16Byte) GetP(key uint16) (*byte, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint16Byte) GetP(key uint16) *byte {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*byte)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*byte)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint16Byte) Get(key uint16) (byte, bool) {
-	var v byte
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero byte
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -54481,9 +54484,8 @@ type IterUint16Byte struct {
 	t       *MapUint16Byte
 	nodes   []*nodeMapuint16byte
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint16 // Key found by last call to Next, Prev.
-	Value   *byte  // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *byte  // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint16Byte.
@@ -54526,7 +54528,6 @@ func (i *IterUint16Byte) Seek(key uint16) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint16Byte) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -54542,7 +54543,7 @@ func (i *IterUint16Byte) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint16Byte) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -54550,7 +54551,7 @@ func (i *IterUint16Byte) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint16Byte) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint16Byte) step(dir int) {
@@ -54563,7 +54564,7 @@ func (i *IterUint16Byte) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -54579,7 +54580,7 @@ func (i *IterUint16Byte) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -54603,7 +54604,6 @@ func (i *IterUint16Byte) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint16Complex128 implements an associative array of complex128 indexed by uint16.
@@ -54697,6 +54697,10 @@ func (t *MapUint16Complex128) Rem(key uint16) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint16Complex128) SetP(key uint16, val *complex128) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -54731,31 +54735,30 @@ func (t *MapUint16Complex128) Set(key uint16, val complex128) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint16Complex128) GetP(key uint16) (*complex128, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint16Complex128) GetP(key uint16) *complex128 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*complex128)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*complex128)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint16Complex128) Get(key uint16) (complex128, bool) {
-	var v complex128
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero complex128
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -54781,9 +54784,8 @@ type IterUint16Complex128 struct {
 	t       *MapUint16Complex128
 	nodes   []*nodeMapuint16complex128
 	lastDir int
-	Found   bool        // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint16      // Key found by last call to Next, Prev.
-	Value   *complex128 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *complex128 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint16Complex128.
@@ -54826,7 +54828,6 @@ func (i *IterUint16Complex128) Seek(key uint16) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint16Complex128) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -54842,7 +54843,7 @@ func (i *IterUint16Complex128) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint16Complex128) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -54850,7 +54851,7 @@ func (i *IterUint16Complex128) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint16Complex128) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint16Complex128) step(dir int) {
@@ -54863,7 +54864,7 @@ func (i *IterUint16Complex128) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -54879,7 +54880,7 @@ func (i *IterUint16Complex128) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -54903,7 +54904,6 @@ func (i *IterUint16Complex128) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint16Complex64 implements an associative array of complex64 indexed by uint16.
@@ -54997,6 +54997,10 @@ func (t *MapUint16Complex64) Rem(key uint16) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint16Complex64) SetP(key uint16, val *complex64) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -55031,31 +55035,30 @@ func (t *MapUint16Complex64) Set(key uint16, val complex64) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint16Complex64) GetP(key uint16) (*complex64, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint16Complex64) GetP(key uint16) *complex64 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*complex64)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*complex64)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint16Complex64) Get(key uint16) (complex64, bool) {
-	var v complex64
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero complex64
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -55081,9 +55084,8 @@ type IterUint16Complex64 struct {
 	t       *MapUint16Complex64
 	nodes   []*nodeMapuint16complex64
 	lastDir int
-	Found   bool       // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint16     // Key found by last call to Next, Prev.
-	Value   *complex64 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *complex64 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint16Complex64.
@@ -55126,7 +55128,6 @@ func (i *IterUint16Complex64) Seek(key uint16) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint16Complex64) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -55142,7 +55143,7 @@ func (i *IterUint16Complex64) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint16Complex64) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -55150,7 +55151,7 @@ func (i *IterUint16Complex64) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint16Complex64) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint16Complex64) step(dir int) {
@@ -55163,7 +55164,7 @@ func (i *IterUint16Complex64) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -55179,7 +55180,7 @@ func (i *IterUint16Complex64) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -55203,7 +55204,6 @@ func (i *IterUint16Complex64) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint16Error implements an associative array of error indexed by uint16.
@@ -55297,6 +55297,10 @@ func (t *MapUint16Error) Rem(key uint16) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint16Error) SetP(key uint16, val *error) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -55331,31 +55335,30 @@ func (t *MapUint16Error) Set(key uint16, val error) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint16Error) GetP(key uint16) (*error, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint16Error) GetP(key uint16) *error {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*error)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*error)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint16Error) Get(key uint16) (error, bool) {
-	var v error
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero error
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -55381,9 +55384,8 @@ type IterUint16Error struct {
 	t       *MapUint16Error
 	nodes   []*nodeMapuint16error
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint16 // Key found by last call to Next, Prev.
-	Value   *error // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *error // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint16Error.
@@ -55426,7 +55428,6 @@ func (i *IterUint16Error) Seek(key uint16) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint16Error) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -55442,7 +55443,7 @@ func (i *IterUint16Error) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint16Error) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -55450,7 +55451,7 @@ func (i *IterUint16Error) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint16Error) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint16Error) step(dir int) {
@@ -55463,7 +55464,7 @@ func (i *IterUint16Error) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -55479,7 +55480,7 @@ func (i *IterUint16Error) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -55503,7 +55504,6 @@ func (i *IterUint16Error) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint16Float32 implements an associative array of float32 indexed by uint16.
@@ -55597,6 +55597,10 @@ func (t *MapUint16Float32) Rem(key uint16) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint16Float32) SetP(key uint16, val *float32) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -55631,31 +55635,30 @@ func (t *MapUint16Float32) Set(key uint16, val float32) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint16Float32) GetP(key uint16) (*float32, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint16Float32) GetP(key uint16) *float32 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*float32)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*float32)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint16Float32) Get(key uint16) (float32, bool) {
-	var v float32
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero float32
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -55681,9 +55684,8 @@ type IterUint16Float32 struct {
 	t       *MapUint16Float32
 	nodes   []*nodeMapuint16float32
 	lastDir int
-	Found   bool     // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint16   // Key found by last call to Next, Prev.
-	Value   *float32 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *float32 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint16Float32.
@@ -55726,7 +55728,6 @@ func (i *IterUint16Float32) Seek(key uint16) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint16Float32) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -55742,7 +55743,7 @@ func (i *IterUint16Float32) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint16Float32) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -55750,7 +55751,7 @@ func (i *IterUint16Float32) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint16Float32) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint16Float32) step(dir int) {
@@ -55763,7 +55764,7 @@ func (i *IterUint16Float32) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -55779,7 +55780,7 @@ func (i *IterUint16Float32) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -55803,7 +55804,6 @@ func (i *IterUint16Float32) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint16Float64 implements an associative array of float64 indexed by uint16.
@@ -55897,6 +55897,10 @@ func (t *MapUint16Float64) Rem(key uint16) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint16Float64) SetP(key uint16, val *float64) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -55931,31 +55935,30 @@ func (t *MapUint16Float64) Set(key uint16, val float64) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint16Float64) GetP(key uint16) (*float64, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint16Float64) GetP(key uint16) *float64 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*float64)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*float64)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint16Float64) Get(key uint16) (float64, bool) {
-	var v float64
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero float64
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -55981,9 +55984,8 @@ type IterUint16Float64 struct {
 	t       *MapUint16Float64
 	nodes   []*nodeMapuint16float64
 	lastDir int
-	Found   bool     // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint16   // Key found by last call to Next, Prev.
-	Value   *float64 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *float64 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint16Float64.
@@ -56026,7 +56028,6 @@ func (i *IterUint16Float64) Seek(key uint16) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint16Float64) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -56042,7 +56043,7 @@ func (i *IterUint16Float64) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint16Float64) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -56050,7 +56051,7 @@ func (i *IterUint16Float64) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint16Float64) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint16Float64) step(dir int) {
@@ -56063,7 +56064,7 @@ func (i *IterUint16Float64) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -56079,7 +56080,7 @@ func (i *IterUint16Float64) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -56103,7 +56104,6 @@ func (i *IterUint16Float64) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint16Int implements an associative array of int indexed by uint16.
@@ -56197,6 +56197,10 @@ func (t *MapUint16Int) Rem(key uint16) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint16Int) SetP(key uint16, val *int) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -56231,31 +56235,30 @@ func (t *MapUint16Int) Set(key uint16, val int) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint16Int) GetP(key uint16) (*int, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint16Int) GetP(key uint16) *int {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*int)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*int)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint16Int) Get(key uint16) (int, bool) {
-	var v int
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero int
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -56281,9 +56284,8 @@ type IterUint16Int struct {
 	t       *MapUint16Int
 	nodes   []*nodeMapuint16int
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint16 // Key found by last call to Next, Prev.
-	Value   *int   // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *int   // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint16Int.
@@ -56326,7 +56328,6 @@ func (i *IterUint16Int) Seek(key uint16) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint16Int) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -56342,7 +56343,7 @@ func (i *IterUint16Int) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint16Int) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -56350,7 +56351,7 @@ func (i *IterUint16Int) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint16Int) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint16Int) step(dir int) {
@@ -56363,7 +56364,7 @@ func (i *IterUint16Int) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -56379,7 +56380,7 @@ func (i *IterUint16Int) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -56403,7 +56404,6 @@ func (i *IterUint16Int) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint16Int16 implements an associative array of int16 indexed by uint16.
@@ -56497,6 +56497,10 @@ func (t *MapUint16Int16) Rem(key uint16) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint16Int16) SetP(key uint16, val *int16) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -56531,31 +56535,30 @@ func (t *MapUint16Int16) Set(key uint16, val int16) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint16Int16) GetP(key uint16) (*int16, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint16Int16) GetP(key uint16) *int16 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*int16)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*int16)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint16Int16) Get(key uint16) (int16, bool) {
-	var v int16
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero int16
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -56581,9 +56584,8 @@ type IterUint16Int16 struct {
 	t       *MapUint16Int16
 	nodes   []*nodeMapuint16int16
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint16 // Key found by last call to Next, Prev.
-	Value   *int16 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *int16 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint16Int16.
@@ -56626,7 +56628,6 @@ func (i *IterUint16Int16) Seek(key uint16) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint16Int16) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -56642,7 +56643,7 @@ func (i *IterUint16Int16) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint16Int16) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -56650,7 +56651,7 @@ func (i *IterUint16Int16) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint16Int16) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint16Int16) step(dir int) {
@@ -56663,7 +56664,7 @@ func (i *IterUint16Int16) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -56679,7 +56680,7 @@ func (i *IterUint16Int16) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -56703,7 +56704,6 @@ func (i *IterUint16Int16) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint16Int32 implements an associative array of int32 indexed by uint16.
@@ -56797,6 +56797,10 @@ func (t *MapUint16Int32) Rem(key uint16) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint16Int32) SetP(key uint16, val *int32) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -56831,31 +56835,30 @@ func (t *MapUint16Int32) Set(key uint16, val int32) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint16Int32) GetP(key uint16) (*int32, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint16Int32) GetP(key uint16) *int32 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*int32)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*int32)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint16Int32) Get(key uint16) (int32, bool) {
-	var v int32
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero int32
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -56881,9 +56884,8 @@ type IterUint16Int32 struct {
 	t       *MapUint16Int32
 	nodes   []*nodeMapuint16int32
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint16 // Key found by last call to Next, Prev.
-	Value   *int32 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *int32 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint16Int32.
@@ -56926,7 +56928,6 @@ func (i *IterUint16Int32) Seek(key uint16) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint16Int32) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -56942,7 +56943,7 @@ func (i *IterUint16Int32) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint16Int32) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -56950,7 +56951,7 @@ func (i *IterUint16Int32) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint16Int32) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint16Int32) step(dir int) {
@@ -56963,7 +56964,7 @@ func (i *IterUint16Int32) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -56979,7 +56980,7 @@ func (i *IterUint16Int32) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -57003,7 +57004,6 @@ func (i *IterUint16Int32) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint16Int64 implements an associative array of int64 indexed by uint16.
@@ -57097,6 +57097,10 @@ func (t *MapUint16Int64) Rem(key uint16) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint16Int64) SetP(key uint16, val *int64) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -57131,31 +57135,30 @@ func (t *MapUint16Int64) Set(key uint16, val int64) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint16Int64) GetP(key uint16) (*int64, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint16Int64) GetP(key uint16) *int64 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*int64)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*int64)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint16Int64) Get(key uint16) (int64, bool) {
-	var v int64
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero int64
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -57181,9 +57184,8 @@ type IterUint16Int64 struct {
 	t       *MapUint16Int64
 	nodes   []*nodeMapuint16int64
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint16 // Key found by last call to Next, Prev.
-	Value   *int64 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *int64 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint16Int64.
@@ -57226,7 +57228,6 @@ func (i *IterUint16Int64) Seek(key uint16) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint16Int64) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -57242,7 +57243,7 @@ func (i *IterUint16Int64) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint16Int64) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -57250,7 +57251,7 @@ func (i *IterUint16Int64) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint16Int64) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint16Int64) step(dir int) {
@@ -57263,7 +57264,7 @@ func (i *IterUint16Int64) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -57279,7 +57280,7 @@ func (i *IterUint16Int64) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -57303,7 +57304,6 @@ func (i *IterUint16Int64) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint16Int8 implements an associative array of int8 indexed by uint16.
@@ -57397,6 +57397,10 @@ func (t *MapUint16Int8) Rem(key uint16) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint16Int8) SetP(key uint16, val *int8) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -57431,31 +57435,30 @@ func (t *MapUint16Int8) Set(key uint16, val int8) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint16Int8) GetP(key uint16) (*int8, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint16Int8) GetP(key uint16) *int8 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*int8)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*int8)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint16Int8) Get(key uint16) (int8, bool) {
-	var v int8
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero int8
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -57481,9 +57484,8 @@ type IterUint16Int8 struct {
 	t       *MapUint16Int8
 	nodes   []*nodeMapuint16int8
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint16 // Key found by last call to Next, Prev.
-	Value   *int8  // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *int8  // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint16Int8.
@@ -57526,7 +57528,6 @@ func (i *IterUint16Int8) Seek(key uint16) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint16Int8) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -57542,7 +57543,7 @@ func (i *IterUint16Int8) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint16Int8) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -57550,7 +57551,7 @@ func (i *IterUint16Int8) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint16Int8) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint16Int8) step(dir int) {
@@ -57563,7 +57564,7 @@ func (i *IterUint16Int8) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -57579,7 +57580,7 @@ func (i *IterUint16Int8) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -57603,7 +57604,6 @@ func (i *IterUint16Int8) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint16Rune implements an associative array of rune indexed by uint16.
@@ -57697,6 +57697,10 @@ func (t *MapUint16Rune) Rem(key uint16) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint16Rune) SetP(key uint16, val *rune) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -57731,31 +57735,30 @@ func (t *MapUint16Rune) Set(key uint16, val rune) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint16Rune) GetP(key uint16) (*rune, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint16Rune) GetP(key uint16) *rune {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*rune)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*rune)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint16Rune) Get(key uint16) (rune, bool) {
-	var v rune
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero rune
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -57781,9 +57784,8 @@ type IterUint16Rune struct {
 	t       *MapUint16Rune
 	nodes   []*nodeMapuint16rune
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint16 // Key found by last call to Next, Prev.
-	Value   *rune  // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *rune  // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint16Rune.
@@ -57826,7 +57828,6 @@ func (i *IterUint16Rune) Seek(key uint16) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint16Rune) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -57842,7 +57843,7 @@ func (i *IterUint16Rune) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint16Rune) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -57850,7 +57851,7 @@ func (i *IterUint16Rune) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint16Rune) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint16Rune) step(dir int) {
@@ -57863,7 +57864,7 @@ func (i *IterUint16Rune) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -57879,7 +57880,7 @@ func (i *IterUint16Rune) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -57903,7 +57904,6 @@ func (i *IterUint16Rune) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint16String implements an associative array of string indexed by uint16.
@@ -57997,6 +57997,10 @@ func (t *MapUint16String) Rem(key uint16) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint16String) SetP(key uint16, val *string) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -58031,31 +58035,30 @@ func (t *MapUint16String) Set(key uint16, val string) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint16String) GetP(key uint16) (*string, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint16String) GetP(key uint16) *string {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*string)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*string)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint16String) Get(key uint16) (string, bool) {
-	var v string
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero string
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -58081,9 +58084,8 @@ type IterUint16String struct {
 	t       *MapUint16String
 	nodes   []*nodeMapuint16string
 	lastDir int
-	Found   bool    // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint16  // Key found by last call to Next, Prev.
-	Value   *string // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *string // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint16String.
@@ -58126,7 +58128,6 @@ func (i *IterUint16String) Seek(key uint16) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint16String) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -58142,7 +58143,7 @@ func (i *IterUint16String) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint16String) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -58150,7 +58151,7 @@ func (i *IterUint16String) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint16String) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint16String) step(dir int) {
@@ -58163,7 +58164,7 @@ func (i *IterUint16String) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -58179,7 +58180,7 @@ func (i *IterUint16String) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -58203,7 +58204,6 @@ func (i *IterUint16String) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint16Uint implements an associative array of uint indexed by uint16.
@@ -58297,6 +58297,10 @@ func (t *MapUint16Uint) Rem(key uint16) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint16Uint) SetP(key uint16, val *uint) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -58331,31 +58335,30 @@ func (t *MapUint16Uint) Set(key uint16, val uint) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint16Uint) GetP(key uint16) (*uint, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint16Uint) GetP(key uint16) *uint {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uint)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uint)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint16Uint) Get(key uint16) (uint, bool) {
-	var v uint
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uint
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -58381,9 +58384,8 @@ type IterUint16Uint struct {
 	t       *MapUint16Uint
 	nodes   []*nodeMapuint16uint
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint16 // Key found by last call to Next, Prev.
-	Value   *uint  // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uint  // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint16Uint.
@@ -58426,7 +58428,6 @@ func (i *IterUint16Uint) Seek(key uint16) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint16Uint) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -58442,7 +58443,7 @@ func (i *IterUint16Uint) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint16Uint) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -58450,7 +58451,7 @@ func (i *IterUint16Uint) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint16Uint) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint16Uint) step(dir int) {
@@ -58463,7 +58464,7 @@ func (i *IterUint16Uint) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -58479,7 +58480,7 @@ func (i *IterUint16Uint) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -58503,7 +58504,6 @@ func (i *IterUint16Uint) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint16Uint16 implements an associative array of uint16 indexed by uint16.
@@ -58597,6 +58597,10 @@ func (t *MapUint16Uint16) Rem(key uint16) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint16Uint16) SetP(key uint16, val *uint16) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -58631,31 +58635,30 @@ func (t *MapUint16Uint16) Set(key uint16, val uint16) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint16Uint16) GetP(key uint16) (*uint16, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint16Uint16) GetP(key uint16) *uint16 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uint16)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uint16)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint16Uint16) Get(key uint16) (uint16, bool) {
-	var v uint16
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uint16
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -58681,9 +58684,8 @@ type IterUint16Uint16 struct {
 	t       *MapUint16Uint16
 	nodes   []*nodeMapuint16uint16
 	lastDir int
-	Found   bool    // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint16  // Key found by last call to Next, Prev.
-	Value   *uint16 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uint16 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint16Uint16.
@@ -58726,7 +58728,6 @@ func (i *IterUint16Uint16) Seek(key uint16) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint16Uint16) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -58742,7 +58743,7 @@ func (i *IterUint16Uint16) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint16Uint16) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -58750,7 +58751,7 @@ func (i *IterUint16Uint16) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint16Uint16) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint16Uint16) step(dir int) {
@@ -58763,7 +58764,7 @@ func (i *IterUint16Uint16) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -58779,7 +58780,7 @@ func (i *IterUint16Uint16) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -58803,7 +58804,6 @@ func (i *IterUint16Uint16) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint16Uint32 implements an associative array of uint32 indexed by uint16.
@@ -58897,6 +58897,10 @@ func (t *MapUint16Uint32) Rem(key uint16) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint16Uint32) SetP(key uint16, val *uint32) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -58931,31 +58935,30 @@ func (t *MapUint16Uint32) Set(key uint16, val uint32) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint16Uint32) GetP(key uint16) (*uint32, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint16Uint32) GetP(key uint16) *uint32 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uint32)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uint32)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint16Uint32) Get(key uint16) (uint32, bool) {
-	var v uint32
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uint32
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -58981,9 +58984,8 @@ type IterUint16Uint32 struct {
 	t       *MapUint16Uint32
 	nodes   []*nodeMapuint16uint32
 	lastDir int
-	Found   bool    // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint16  // Key found by last call to Next, Prev.
-	Value   *uint32 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uint32 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint16Uint32.
@@ -59026,7 +59028,6 @@ func (i *IterUint16Uint32) Seek(key uint16) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint16Uint32) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -59042,7 +59043,7 @@ func (i *IterUint16Uint32) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint16Uint32) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -59050,7 +59051,7 @@ func (i *IterUint16Uint32) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint16Uint32) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint16Uint32) step(dir int) {
@@ -59063,7 +59064,7 @@ func (i *IterUint16Uint32) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -59079,7 +59080,7 @@ func (i *IterUint16Uint32) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -59103,7 +59104,6 @@ func (i *IterUint16Uint32) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint16Uint64 implements an associative array of uint64 indexed by uint16.
@@ -59197,6 +59197,10 @@ func (t *MapUint16Uint64) Rem(key uint16) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint16Uint64) SetP(key uint16, val *uint64) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -59231,31 +59235,30 @@ func (t *MapUint16Uint64) Set(key uint16, val uint64) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint16Uint64) GetP(key uint16) (*uint64, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint16Uint64) GetP(key uint16) *uint64 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uint64)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uint64)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint16Uint64) Get(key uint16) (uint64, bool) {
-	var v uint64
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uint64
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -59281,9 +59284,8 @@ type IterUint16Uint64 struct {
 	t       *MapUint16Uint64
 	nodes   []*nodeMapuint16uint64
 	lastDir int
-	Found   bool    // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint16  // Key found by last call to Next, Prev.
-	Value   *uint64 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uint64 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint16Uint64.
@@ -59326,7 +59328,6 @@ func (i *IterUint16Uint64) Seek(key uint16) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint16Uint64) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -59342,7 +59343,7 @@ func (i *IterUint16Uint64) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint16Uint64) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -59350,7 +59351,7 @@ func (i *IterUint16Uint64) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint16Uint64) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint16Uint64) step(dir int) {
@@ -59363,7 +59364,7 @@ func (i *IterUint16Uint64) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -59379,7 +59380,7 @@ func (i *IterUint16Uint64) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -59403,7 +59404,6 @@ func (i *IterUint16Uint64) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint16Uint8 implements an associative array of uint8 indexed by uint16.
@@ -59497,6 +59497,10 @@ func (t *MapUint16Uint8) Rem(key uint16) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint16Uint8) SetP(key uint16, val *uint8) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -59531,31 +59535,30 @@ func (t *MapUint16Uint8) Set(key uint16, val uint8) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint16Uint8) GetP(key uint16) (*uint8, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint16Uint8) GetP(key uint16) *uint8 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uint8)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uint8)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint16Uint8) Get(key uint16) (uint8, bool) {
-	var v uint8
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uint8
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -59581,9 +59584,8 @@ type IterUint16Uint8 struct {
 	t       *MapUint16Uint8
 	nodes   []*nodeMapuint16uint8
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint16 // Key found by last call to Next, Prev.
-	Value   *uint8 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uint8 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint16Uint8.
@@ -59626,7 +59628,6 @@ func (i *IterUint16Uint8) Seek(key uint16) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint16Uint8) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -59642,7 +59643,7 @@ func (i *IterUint16Uint8) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint16Uint8) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -59650,7 +59651,7 @@ func (i *IterUint16Uint8) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint16Uint8) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint16Uint8) step(dir int) {
@@ -59663,7 +59664,7 @@ func (i *IterUint16Uint8) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -59679,7 +59680,7 @@ func (i *IterUint16Uint8) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -59703,7 +59704,6 @@ func (i *IterUint16Uint8) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint16Uintptr implements an associative array of uintptr indexed by uint16.
@@ -59797,6 +59797,10 @@ func (t *MapUint16Uintptr) Rem(key uint16) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint16Uintptr) SetP(key uint16, val *uintptr) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -59831,31 +59835,30 @@ func (t *MapUint16Uintptr) Set(key uint16, val uintptr) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint16Uintptr) GetP(key uint16) (*uintptr, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint16Uintptr) GetP(key uint16) *uintptr {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uintptr)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uintptr)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint16Uintptr) Get(key uint16) (uintptr, bool) {
-	var v uintptr
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uintptr
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -59881,9 +59884,8 @@ type IterUint16Uintptr struct {
 	t       *MapUint16Uintptr
 	nodes   []*nodeMapuint16uintptr
 	lastDir int
-	Found   bool     // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint16   // Key found by last call to Next, Prev.
-	Value   *uintptr // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uintptr // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint16Uintptr.
@@ -59926,7 +59928,6 @@ func (i *IterUint16Uintptr) Seek(key uint16) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint16Uintptr) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -59942,7 +59943,7 @@ func (i *IterUint16Uintptr) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint16Uintptr) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -59950,7 +59951,7 @@ func (i *IterUint16Uintptr) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint16Uintptr) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint16Uintptr) step(dir int) {
@@ -59963,7 +59964,7 @@ func (i *IterUint16Uintptr) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -59979,7 +59980,7 @@ func (i *IterUint16Uintptr) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -60003,7 +60004,6 @@ func (i *IterUint16Uintptr) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint8Bool implements an associative array of bool indexed by uint8.
@@ -60097,6 +60097,10 @@ func (t *MapUint8Bool) Rem(key uint8) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint8Bool) SetP(key uint8, val *bool) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -60131,31 +60135,30 @@ func (t *MapUint8Bool) Set(key uint8, val bool) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint8Bool) GetP(key uint8) (*bool, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint8Bool) GetP(key uint8) *bool {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*bool)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*bool)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint8Bool) Get(key uint8) (bool, bool) {
-	var v bool
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero bool
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -60181,9 +60184,8 @@ type IterUint8Bool struct {
 	t       *MapUint8Bool
 	nodes   []*nodeMapuint8bool
 	lastDir int
-	Found   bool  // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint8 // Key found by last call to Next, Prev.
-	Value   *bool // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *bool // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint8Bool.
@@ -60226,7 +60228,6 @@ func (i *IterUint8Bool) Seek(key uint8) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint8Bool) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -60242,7 +60243,7 @@ func (i *IterUint8Bool) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint8Bool) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -60250,7 +60251,7 @@ func (i *IterUint8Bool) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint8Bool) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint8Bool) step(dir int) {
@@ -60263,7 +60264,7 @@ func (i *IterUint8Bool) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -60279,7 +60280,7 @@ func (i *IterUint8Bool) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -60303,7 +60304,6 @@ func (i *IterUint8Bool) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint8Byte implements an associative array of byte indexed by uint8.
@@ -60397,6 +60397,10 @@ func (t *MapUint8Byte) Rem(key uint8) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint8Byte) SetP(key uint8, val *byte) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -60431,31 +60435,30 @@ func (t *MapUint8Byte) Set(key uint8, val byte) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint8Byte) GetP(key uint8) (*byte, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint8Byte) GetP(key uint8) *byte {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*byte)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*byte)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint8Byte) Get(key uint8) (byte, bool) {
-	var v byte
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero byte
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -60481,9 +60484,8 @@ type IterUint8Byte struct {
 	t       *MapUint8Byte
 	nodes   []*nodeMapuint8byte
 	lastDir int
-	Found   bool  // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint8 // Key found by last call to Next, Prev.
-	Value   *byte // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *byte // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint8Byte.
@@ -60526,7 +60528,6 @@ func (i *IterUint8Byte) Seek(key uint8) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint8Byte) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -60542,7 +60543,7 @@ func (i *IterUint8Byte) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint8Byte) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -60550,7 +60551,7 @@ func (i *IterUint8Byte) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint8Byte) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint8Byte) step(dir int) {
@@ -60563,7 +60564,7 @@ func (i *IterUint8Byte) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -60579,7 +60580,7 @@ func (i *IterUint8Byte) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -60603,7 +60604,6 @@ func (i *IterUint8Byte) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint8Complex128 implements an associative array of complex128 indexed by uint8.
@@ -60697,6 +60697,10 @@ func (t *MapUint8Complex128) Rem(key uint8) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint8Complex128) SetP(key uint8, val *complex128) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -60731,31 +60735,30 @@ func (t *MapUint8Complex128) Set(key uint8, val complex128) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint8Complex128) GetP(key uint8) (*complex128, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint8Complex128) GetP(key uint8) *complex128 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*complex128)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*complex128)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint8Complex128) Get(key uint8) (complex128, bool) {
-	var v complex128
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero complex128
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -60781,9 +60784,8 @@ type IterUint8Complex128 struct {
 	t       *MapUint8Complex128
 	nodes   []*nodeMapuint8complex128
 	lastDir int
-	Found   bool        // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint8       // Key found by last call to Next, Prev.
-	Value   *complex128 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *complex128 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint8Complex128.
@@ -60826,7 +60828,6 @@ func (i *IterUint8Complex128) Seek(key uint8) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint8Complex128) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -60842,7 +60843,7 @@ func (i *IterUint8Complex128) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint8Complex128) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -60850,7 +60851,7 @@ func (i *IterUint8Complex128) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint8Complex128) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint8Complex128) step(dir int) {
@@ -60863,7 +60864,7 @@ func (i *IterUint8Complex128) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -60879,7 +60880,7 @@ func (i *IterUint8Complex128) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -60903,7 +60904,6 @@ func (i *IterUint8Complex128) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint8Complex64 implements an associative array of complex64 indexed by uint8.
@@ -60997,6 +60997,10 @@ func (t *MapUint8Complex64) Rem(key uint8) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint8Complex64) SetP(key uint8, val *complex64) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -61031,31 +61035,30 @@ func (t *MapUint8Complex64) Set(key uint8, val complex64) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint8Complex64) GetP(key uint8) (*complex64, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint8Complex64) GetP(key uint8) *complex64 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*complex64)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*complex64)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint8Complex64) Get(key uint8) (complex64, bool) {
-	var v complex64
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero complex64
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -61081,9 +61084,8 @@ type IterUint8Complex64 struct {
 	t       *MapUint8Complex64
 	nodes   []*nodeMapuint8complex64
 	lastDir int
-	Found   bool       // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint8      // Key found by last call to Next, Prev.
-	Value   *complex64 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *complex64 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint8Complex64.
@@ -61126,7 +61128,6 @@ func (i *IterUint8Complex64) Seek(key uint8) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint8Complex64) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -61142,7 +61143,7 @@ func (i *IterUint8Complex64) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint8Complex64) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -61150,7 +61151,7 @@ func (i *IterUint8Complex64) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint8Complex64) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint8Complex64) step(dir int) {
@@ -61163,7 +61164,7 @@ func (i *IterUint8Complex64) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -61179,7 +61180,7 @@ func (i *IterUint8Complex64) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -61203,7 +61204,6 @@ func (i *IterUint8Complex64) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint8Error implements an associative array of error indexed by uint8.
@@ -61297,6 +61297,10 @@ func (t *MapUint8Error) Rem(key uint8) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint8Error) SetP(key uint8, val *error) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -61331,31 +61335,30 @@ func (t *MapUint8Error) Set(key uint8, val error) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint8Error) GetP(key uint8) (*error, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint8Error) GetP(key uint8) *error {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*error)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*error)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint8Error) Get(key uint8) (error, bool) {
-	var v error
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero error
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -61381,9 +61384,8 @@ type IterUint8Error struct {
 	t       *MapUint8Error
 	nodes   []*nodeMapuint8error
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint8  // Key found by last call to Next, Prev.
-	Value   *error // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *error // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint8Error.
@@ -61426,7 +61428,6 @@ func (i *IterUint8Error) Seek(key uint8) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint8Error) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -61442,7 +61443,7 @@ func (i *IterUint8Error) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint8Error) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -61450,7 +61451,7 @@ func (i *IterUint8Error) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint8Error) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint8Error) step(dir int) {
@@ -61463,7 +61464,7 @@ func (i *IterUint8Error) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -61479,7 +61480,7 @@ func (i *IterUint8Error) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -61503,7 +61504,6 @@ func (i *IterUint8Error) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint8Float32 implements an associative array of float32 indexed by uint8.
@@ -61597,6 +61597,10 @@ func (t *MapUint8Float32) Rem(key uint8) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint8Float32) SetP(key uint8, val *float32) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -61631,31 +61635,30 @@ func (t *MapUint8Float32) Set(key uint8, val float32) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint8Float32) GetP(key uint8) (*float32, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint8Float32) GetP(key uint8) *float32 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*float32)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*float32)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint8Float32) Get(key uint8) (float32, bool) {
-	var v float32
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero float32
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -61681,9 +61684,8 @@ type IterUint8Float32 struct {
 	t       *MapUint8Float32
 	nodes   []*nodeMapuint8float32
 	lastDir int
-	Found   bool     // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint8    // Key found by last call to Next, Prev.
-	Value   *float32 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *float32 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint8Float32.
@@ -61726,7 +61728,6 @@ func (i *IterUint8Float32) Seek(key uint8) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint8Float32) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -61742,7 +61743,7 @@ func (i *IterUint8Float32) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint8Float32) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -61750,7 +61751,7 @@ func (i *IterUint8Float32) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint8Float32) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint8Float32) step(dir int) {
@@ -61763,7 +61764,7 @@ func (i *IterUint8Float32) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -61779,7 +61780,7 @@ func (i *IterUint8Float32) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -61803,7 +61804,6 @@ func (i *IterUint8Float32) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint8Float64 implements an associative array of float64 indexed by uint8.
@@ -61897,6 +61897,10 @@ func (t *MapUint8Float64) Rem(key uint8) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint8Float64) SetP(key uint8, val *float64) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -61931,31 +61935,30 @@ func (t *MapUint8Float64) Set(key uint8, val float64) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint8Float64) GetP(key uint8) (*float64, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint8Float64) GetP(key uint8) *float64 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*float64)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*float64)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint8Float64) Get(key uint8) (float64, bool) {
-	var v float64
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero float64
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -61981,9 +61984,8 @@ type IterUint8Float64 struct {
 	t       *MapUint8Float64
 	nodes   []*nodeMapuint8float64
 	lastDir int
-	Found   bool     // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint8    // Key found by last call to Next, Prev.
-	Value   *float64 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *float64 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint8Float64.
@@ -62026,7 +62028,6 @@ func (i *IterUint8Float64) Seek(key uint8) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint8Float64) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -62042,7 +62043,7 @@ func (i *IterUint8Float64) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint8Float64) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -62050,7 +62051,7 @@ func (i *IterUint8Float64) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint8Float64) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint8Float64) step(dir int) {
@@ -62063,7 +62064,7 @@ func (i *IterUint8Float64) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -62079,7 +62080,7 @@ func (i *IterUint8Float64) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -62103,7 +62104,6 @@ func (i *IterUint8Float64) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint8Int implements an associative array of int indexed by uint8.
@@ -62197,6 +62197,10 @@ func (t *MapUint8Int) Rem(key uint8) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint8Int) SetP(key uint8, val *int) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -62231,31 +62235,30 @@ func (t *MapUint8Int) Set(key uint8, val int) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint8Int) GetP(key uint8) (*int, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint8Int) GetP(key uint8) *int {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*int)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*int)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint8Int) Get(key uint8) (int, bool) {
-	var v int
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero int
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -62281,9 +62284,8 @@ type IterUint8Int struct {
 	t       *MapUint8Int
 	nodes   []*nodeMapuint8int
 	lastDir int
-	Found   bool  // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint8 // Key found by last call to Next, Prev.
-	Value   *int  // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *int  // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint8Int.
@@ -62326,7 +62328,6 @@ func (i *IterUint8Int) Seek(key uint8) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint8Int) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -62342,7 +62343,7 @@ func (i *IterUint8Int) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint8Int) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -62350,7 +62351,7 @@ func (i *IterUint8Int) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint8Int) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint8Int) step(dir int) {
@@ -62363,7 +62364,7 @@ func (i *IterUint8Int) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -62379,7 +62380,7 @@ func (i *IterUint8Int) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -62403,7 +62404,6 @@ func (i *IterUint8Int) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint8Int16 implements an associative array of int16 indexed by uint8.
@@ -62497,6 +62497,10 @@ func (t *MapUint8Int16) Rem(key uint8) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint8Int16) SetP(key uint8, val *int16) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -62531,31 +62535,30 @@ func (t *MapUint8Int16) Set(key uint8, val int16) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint8Int16) GetP(key uint8) (*int16, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint8Int16) GetP(key uint8) *int16 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*int16)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*int16)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint8Int16) Get(key uint8) (int16, bool) {
-	var v int16
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero int16
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -62581,9 +62584,8 @@ type IterUint8Int16 struct {
 	t       *MapUint8Int16
 	nodes   []*nodeMapuint8int16
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint8  // Key found by last call to Next, Prev.
-	Value   *int16 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *int16 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint8Int16.
@@ -62626,7 +62628,6 @@ func (i *IterUint8Int16) Seek(key uint8) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint8Int16) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -62642,7 +62643,7 @@ func (i *IterUint8Int16) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint8Int16) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -62650,7 +62651,7 @@ func (i *IterUint8Int16) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint8Int16) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint8Int16) step(dir int) {
@@ -62663,7 +62664,7 @@ func (i *IterUint8Int16) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -62679,7 +62680,7 @@ func (i *IterUint8Int16) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -62703,7 +62704,6 @@ func (i *IterUint8Int16) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint8Int32 implements an associative array of int32 indexed by uint8.
@@ -62797,6 +62797,10 @@ func (t *MapUint8Int32) Rem(key uint8) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint8Int32) SetP(key uint8, val *int32) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -62831,31 +62835,30 @@ func (t *MapUint8Int32) Set(key uint8, val int32) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint8Int32) GetP(key uint8) (*int32, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint8Int32) GetP(key uint8) *int32 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*int32)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*int32)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint8Int32) Get(key uint8) (int32, bool) {
-	var v int32
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero int32
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -62881,9 +62884,8 @@ type IterUint8Int32 struct {
 	t       *MapUint8Int32
 	nodes   []*nodeMapuint8int32
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint8  // Key found by last call to Next, Prev.
-	Value   *int32 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *int32 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint8Int32.
@@ -62926,7 +62928,6 @@ func (i *IterUint8Int32) Seek(key uint8) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint8Int32) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -62942,7 +62943,7 @@ func (i *IterUint8Int32) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint8Int32) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -62950,7 +62951,7 @@ func (i *IterUint8Int32) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint8Int32) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint8Int32) step(dir int) {
@@ -62963,7 +62964,7 @@ func (i *IterUint8Int32) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -62979,7 +62980,7 @@ func (i *IterUint8Int32) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -63003,7 +63004,6 @@ func (i *IterUint8Int32) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint8Int64 implements an associative array of int64 indexed by uint8.
@@ -63097,6 +63097,10 @@ func (t *MapUint8Int64) Rem(key uint8) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint8Int64) SetP(key uint8, val *int64) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -63131,31 +63135,30 @@ func (t *MapUint8Int64) Set(key uint8, val int64) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint8Int64) GetP(key uint8) (*int64, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint8Int64) GetP(key uint8) *int64 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*int64)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*int64)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint8Int64) Get(key uint8) (int64, bool) {
-	var v int64
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero int64
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -63181,9 +63184,8 @@ type IterUint8Int64 struct {
 	t       *MapUint8Int64
 	nodes   []*nodeMapuint8int64
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint8  // Key found by last call to Next, Prev.
-	Value   *int64 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *int64 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint8Int64.
@@ -63226,7 +63228,6 @@ func (i *IterUint8Int64) Seek(key uint8) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint8Int64) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -63242,7 +63243,7 @@ func (i *IterUint8Int64) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint8Int64) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -63250,7 +63251,7 @@ func (i *IterUint8Int64) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint8Int64) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint8Int64) step(dir int) {
@@ -63263,7 +63264,7 @@ func (i *IterUint8Int64) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -63279,7 +63280,7 @@ func (i *IterUint8Int64) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -63303,7 +63304,6 @@ func (i *IterUint8Int64) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint8Int8 implements an associative array of int8 indexed by uint8.
@@ -63397,6 +63397,10 @@ func (t *MapUint8Int8) Rem(key uint8) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint8Int8) SetP(key uint8, val *int8) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -63431,31 +63435,30 @@ func (t *MapUint8Int8) Set(key uint8, val int8) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint8Int8) GetP(key uint8) (*int8, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint8Int8) GetP(key uint8) *int8 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*int8)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*int8)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint8Int8) Get(key uint8) (int8, bool) {
-	var v int8
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero int8
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -63481,9 +63484,8 @@ type IterUint8Int8 struct {
 	t       *MapUint8Int8
 	nodes   []*nodeMapuint8int8
 	lastDir int
-	Found   bool  // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint8 // Key found by last call to Next, Prev.
-	Value   *int8 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *int8 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint8Int8.
@@ -63526,7 +63528,6 @@ func (i *IterUint8Int8) Seek(key uint8) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint8Int8) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -63542,7 +63543,7 @@ func (i *IterUint8Int8) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint8Int8) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -63550,7 +63551,7 @@ func (i *IterUint8Int8) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint8Int8) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint8Int8) step(dir int) {
@@ -63563,7 +63564,7 @@ func (i *IterUint8Int8) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -63579,7 +63580,7 @@ func (i *IterUint8Int8) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -63603,7 +63604,6 @@ func (i *IterUint8Int8) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint8Rune implements an associative array of rune indexed by uint8.
@@ -63697,6 +63697,10 @@ func (t *MapUint8Rune) Rem(key uint8) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint8Rune) SetP(key uint8, val *rune) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -63731,31 +63735,30 @@ func (t *MapUint8Rune) Set(key uint8, val rune) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint8Rune) GetP(key uint8) (*rune, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint8Rune) GetP(key uint8) *rune {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*rune)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*rune)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint8Rune) Get(key uint8) (rune, bool) {
-	var v rune
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero rune
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -63781,9 +63784,8 @@ type IterUint8Rune struct {
 	t       *MapUint8Rune
 	nodes   []*nodeMapuint8rune
 	lastDir int
-	Found   bool  // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint8 // Key found by last call to Next, Prev.
-	Value   *rune // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *rune // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint8Rune.
@@ -63826,7 +63828,6 @@ func (i *IterUint8Rune) Seek(key uint8) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint8Rune) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -63842,7 +63843,7 @@ func (i *IterUint8Rune) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint8Rune) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -63850,7 +63851,7 @@ func (i *IterUint8Rune) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint8Rune) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint8Rune) step(dir int) {
@@ -63863,7 +63864,7 @@ func (i *IterUint8Rune) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -63879,7 +63880,7 @@ func (i *IterUint8Rune) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -63903,7 +63904,6 @@ func (i *IterUint8Rune) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint8String implements an associative array of string indexed by uint8.
@@ -63997,6 +63997,10 @@ func (t *MapUint8String) Rem(key uint8) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint8String) SetP(key uint8, val *string) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -64031,31 +64035,30 @@ func (t *MapUint8String) Set(key uint8, val string) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint8String) GetP(key uint8) (*string, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint8String) GetP(key uint8) *string {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*string)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*string)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint8String) Get(key uint8) (string, bool) {
-	var v string
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero string
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -64081,9 +64084,8 @@ type IterUint8String struct {
 	t       *MapUint8String
 	nodes   []*nodeMapuint8string
 	lastDir int
-	Found   bool    // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint8   // Key found by last call to Next, Prev.
-	Value   *string // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *string // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint8String.
@@ -64126,7 +64128,6 @@ func (i *IterUint8String) Seek(key uint8) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint8String) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -64142,7 +64143,7 @@ func (i *IterUint8String) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint8String) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -64150,7 +64151,7 @@ func (i *IterUint8String) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint8String) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint8String) step(dir int) {
@@ -64163,7 +64164,7 @@ func (i *IterUint8String) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -64179,7 +64180,7 @@ func (i *IterUint8String) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -64203,7 +64204,6 @@ func (i *IterUint8String) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint8Uint implements an associative array of uint indexed by uint8.
@@ -64297,6 +64297,10 @@ func (t *MapUint8Uint) Rem(key uint8) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint8Uint) SetP(key uint8, val *uint) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -64331,31 +64335,30 @@ func (t *MapUint8Uint) Set(key uint8, val uint) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint8Uint) GetP(key uint8) (*uint, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint8Uint) GetP(key uint8) *uint {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uint)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uint)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint8Uint) Get(key uint8) (uint, bool) {
-	var v uint
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uint
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -64381,9 +64384,8 @@ type IterUint8Uint struct {
 	t       *MapUint8Uint
 	nodes   []*nodeMapuint8uint
 	lastDir int
-	Found   bool  // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint8 // Key found by last call to Next, Prev.
-	Value   *uint // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uint // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint8Uint.
@@ -64426,7 +64428,6 @@ func (i *IterUint8Uint) Seek(key uint8) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint8Uint) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -64442,7 +64443,7 @@ func (i *IterUint8Uint) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint8Uint) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -64450,7 +64451,7 @@ func (i *IterUint8Uint) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint8Uint) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint8Uint) step(dir int) {
@@ -64463,7 +64464,7 @@ func (i *IterUint8Uint) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -64479,7 +64480,7 @@ func (i *IterUint8Uint) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -64503,7 +64504,6 @@ func (i *IterUint8Uint) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint8Uint16 implements an associative array of uint16 indexed by uint8.
@@ -64597,6 +64597,10 @@ func (t *MapUint8Uint16) Rem(key uint8) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint8Uint16) SetP(key uint8, val *uint16) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -64631,31 +64635,30 @@ func (t *MapUint8Uint16) Set(key uint8, val uint16) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint8Uint16) GetP(key uint8) (*uint16, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint8Uint16) GetP(key uint8) *uint16 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uint16)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uint16)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint8Uint16) Get(key uint8) (uint16, bool) {
-	var v uint16
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uint16
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -64681,9 +64684,8 @@ type IterUint8Uint16 struct {
 	t       *MapUint8Uint16
 	nodes   []*nodeMapuint8uint16
 	lastDir int
-	Found   bool    // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint8   // Key found by last call to Next, Prev.
-	Value   *uint16 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uint16 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint8Uint16.
@@ -64726,7 +64728,6 @@ func (i *IterUint8Uint16) Seek(key uint8) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint8Uint16) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -64742,7 +64743,7 @@ func (i *IterUint8Uint16) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint8Uint16) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -64750,7 +64751,7 @@ func (i *IterUint8Uint16) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint8Uint16) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint8Uint16) step(dir int) {
@@ -64763,7 +64764,7 @@ func (i *IterUint8Uint16) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -64779,7 +64780,7 @@ func (i *IterUint8Uint16) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -64803,7 +64804,6 @@ func (i *IterUint8Uint16) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint8Uint32 implements an associative array of uint32 indexed by uint8.
@@ -64897,6 +64897,10 @@ func (t *MapUint8Uint32) Rem(key uint8) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint8Uint32) SetP(key uint8, val *uint32) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -64931,31 +64935,30 @@ func (t *MapUint8Uint32) Set(key uint8, val uint32) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint8Uint32) GetP(key uint8) (*uint32, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint8Uint32) GetP(key uint8) *uint32 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uint32)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uint32)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint8Uint32) Get(key uint8) (uint32, bool) {
-	var v uint32
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uint32
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -64981,9 +64984,8 @@ type IterUint8Uint32 struct {
 	t       *MapUint8Uint32
 	nodes   []*nodeMapuint8uint32
 	lastDir int
-	Found   bool    // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint8   // Key found by last call to Next, Prev.
-	Value   *uint32 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uint32 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint8Uint32.
@@ -65026,7 +65028,6 @@ func (i *IterUint8Uint32) Seek(key uint8) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint8Uint32) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -65042,7 +65043,7 @@ func (i *IterUint8Uint32) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint8Uint32) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -65050,7 +65051,7 @@ func (i *IterUint8Uint32) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint8Uint32) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint8Uint32) step(dir int) {
@@ -65063,7 +65064,7 @@ func (i *IterUint8Uint32) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -65079,7 +65080,7 @@ func (i *IterUint8Uint32) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -65103,7 +65104,6 @@ func (i *IterUint8Uint32) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint8Uint64 implements an associative array of uint64 indexed by uint8.
@@ -65197,6 +65197,10 @@ func (t *MapUint8Uint64) Rem(key uint8) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint8Uint64) SetP(key uint8, val *uint64) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -65231,31 +65235,30 @@ func (t *MapUint8Uint64) Set(key uint8, val uint64) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint8Uint64) GetP(key uint8) (*uint64, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint8Uint64) GetP(key uint8) *uint64 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uint64)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uint64)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint8Uint64) Get(key uint8) (uint64, bool) {
-	var v uint64
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uint64
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -65281,9 +65284,8 @@ type IterUint8Uint64 struct {
 	t       *MapUint8Uint64
 	nodes   []*nodeMapuint8uint64
 	lastDir int
-	Found   bool    // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint8   // Key found by last call to Next, Prev.
-	Value   *uint64 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uint64 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint8Uint64.
@@ -65326,7 +65328,6 @@ func (i *IterUint8Uint64) Seek(key uint8) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint8Uint64) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -65342,7 +65343,7 @@ func (i *IterUint8Uint64) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint8Uint64) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -65350,7 +65351,7 @@ func (i *IterUint8Uint64) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint8Uint64) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint8Uint64) step(dir int) {
@@ -65363,7 +65364,7 @@ func (i *IterUint8Uint64) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -65379,7 +65380,7 @@ func (i *IterUint8Uint64) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -65403,7 +65404,6 @@ func (i *IterUint8Uint64) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint8Uint8 implements an associative array of uint8 indexed by uint8.
@@ -65497,6 +65497,10 @@ func (t *MapUint8Uint8) Rem(key uint8) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint8Uint8) SetP(key uint8, val *uint8) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -65531,31 +65535,30 @@ func (t *MapUint8Uint8) Set(key uint8, val uint8) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint8Uint8) GetP(key uint8) (*uint8, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint8Uint8) GetP(key uint8) *uint8 {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uint8)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uint8)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint8Uint8) Get(key uint8) (uint8, bool) {
-	var v uint8
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uint8
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -65581,9 +65584,8 @@ type IterUint8Uint8 struct {
 	t       *MapUint8Uint8
 	nodes   []*nodeMapuint8uint8
 	lastDir int
-	Found   bool   // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint8  // Key found by last call to Next, Prev.
-	Value   *uint8 // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uint8 // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint8Uint8.
@@ -65626,7 +65628,6 @@ func (i *IterUint8Uint8) Seek(key uint8) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint8Uint8) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -65642,7 +65643,7 @@ func (i *IterUint8Uint8) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint8Uint8) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -65650,7 +65651,7 @@ func (i *IterUint8Uint8) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint8Uint8) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint8Uint8) step(dir int) {
@@ -65663,7 +65664,7 @@ func (i *IterUint8Uint8) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -65679,7 +65680,7 @@ func (i *IterUint8Uint8) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -65703,7 +65704,6 @@ func (i *IterUint8Uint8) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
 
 // MapUint8Uintptr implements an associative array of uintptr indexed by uint8.
@@ -65797,6 +65797,10 @@ func (t *MapUint8Uintptr) Rem(key uint8) {
 // SetP inserts or replaces the value associated with the specified key.
 // The specified value pointer can be used to modify the value without using Set.
 func (t *MapUint8Uintptr) SetP(key uint8, val *uintptr) {
+	if val == nil {
+		t.Rem(key)
+		return
+	}
 	key = t.transformKey(key)
 	// Make leaf node if tree is empty
 	if t.length == 0 {
@@ -65831,31 +65835,30 @@ func (t *MapUint8Uintptr) Set(key uint8, val uintptr) {
 	t.SetP(key, &val)
 }
 
-// Get returns the internal pointer to the value associated with the specified key and true if the key exists.
-// Otherwise nil and false are returned. The pointer can be used to modify the value without using Set.
-func (t *MapUint8Uintptr) GetP(key uint8) (*uintptr, bool) {
+// Get returns the internal pointer to the value associated with the specified key.
+// If the there is no such key it returns nil. The pointer can be used to modify the value without using Set.
+func (t *MapUint8Uintptr) GetP(key uint8) *uintptr {
 	key = t.transformKey(key)
-	if t.length == 0 {
-		return nil, false
+	if t.length > 0 {
+		// Find leaf node
+		var crit, l, _ = t.root.find(key)
+		if crit == ^uint(0) {
+			return (*uintptr)(l.child)
+		}
 	}
-	// Find leaf node
-	var crit, l, _ = t.root.find(key)
-	if crit == ^uint(0) {
-		return (*uintptr)(l.child), true
-	}
-	return nil, false
+	return nil
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
 func (t *MapUint8Uintptr) Get(key uint8) (uintptr, bool) {
-	var v uintptr
-	var p, ok = t.GetP(key)
-	if ok {
-		v = *p
+	var v = t.GetP(key)
+	if v == nil {
+		var zero uintptr
+		return zero, false
 	}
-	return v, ok
+	return *v, true
 }
 
 // Length returns the number of distinct keys in the multiset
@@ -65881,9 +65884,8 @@ type IterUint8Uintptr struct {
 	t       *MapUint8Uintptr
 	nodes   []*nodeMapuint8uintptr
 	lastDir int
-	Found   bool     // Initially false (also after calling Reset). Otherwise the return value of the last call to Next, Prev or Jump.
 	Key     uint8    // Key found by last call to Next, Prev.
-	Value   *uintptr // Pointer to value associated with key found by most last call to Next, Prev or Jump
+	Value   *uintptr // Initially nil (also after calling Reset). Otherwise Pointer to value associated with key found by last call to Next, Prev (nil if no key was found).
 }
 
 // Iterator returns a new IterUint8Uintptr.
@@ -65926,7 +65928,6 @@ func (i *IterUint8Uintptr) Seek(key uint8) {
 
 // Reset restores the iterator to the initial state.
 func (i *IterUint8Uintptr) Reset() {
-	i.Found = false
 	i.Key = i.t.transformKey(0)
 	i.Value = nil
 	i.lastDir = 2
@@ -65942,7 +65943,7 @@ func (i *IterUint8Uintptr) Reset() {
 // The return value is true unless there is no next higher key to advance to.
 func (i *IterUint8Uintptr) Next() bool {
 	i.step(1)
-	return i.Found
+	return i.Value != nil
 }
 
 // Prev advances the iterator to the next lower key and populates the iterators public Fields.
@@ -65950,7 +65951,7 @@ func (i *IterUint8Uintptr) Next() bool {
 // The return value is true unless there is no next lower key to advance to.
 func (i *IterUint8Uintptr) Prev() bool {
 	i.step(0)
-	return i.Found
+	return i.Value != nil
 }
 
 func (i *IterUint8Uintptr) step(dir int) {
@@ -65963,7 +65964,7 @@ func (i *IterUint8Uintptr) step(dir int) {
 			i.nodes = append(i.nodes, &i.t.root)
 		} else {
 			// End of map.
-			i.Found = false
+			i.Value = nil
 			return
 		}
 	} else if i.lastDir == 2 {
@@ -65979,7 +65980,7 @@ func (i *IterUint8Uintptr) step(dir int) {
 			if len(i.nodes) == 1 {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
-				i.Found = false
+				i.Value = nil
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -66003,5 +66004,4 @@ func (i *IterUint8Uintptr) step(dir int) {
 	// Found leaf. Store data.
 	i.Key = i.t.transformKey(current.key)
 	i.Value = current.value()
-	i.Found = true
 }
