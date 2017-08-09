@@ -152,6 +152,17 @@ func (t *MapKeyTypeValueType) GetP(key KeyType) *ValueType {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapKeyTypeValueType) GetZeroP(key KeyType) *ValueType {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero ValueType
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).

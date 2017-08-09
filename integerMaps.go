@@ -149,6 +149,17 @@ func (t *MapIntBool) GetP(key int) *bool {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapIntBool) GetZeroP(key int) *bool {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero bool
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -447,6 +458,17 @@ func (t *MapIntByte) GetP(key int) *byte {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapIntByte) GetZeroP(key int) *byte {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero byte
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -749,6 +771,17 @@ func (t *MapIntComplex128) GetP(key int) *complex128 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapIntComplex128) GetZeroP(key int) *complex128 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero complex128
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -1047,6 +1080,17 @@ func (t *MapIntComplex64) GetP(key int) *complex64 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapIntComplex64) GetZeroP(key int) *complex64 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero complex64
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -1349,6 +1393,17 @@ func (t *MapIntError) GetP(key int) *error {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapIntError) GetZeroP(key int) *error {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero error
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -1647,6 +1702,17 @@ func (t *MapIntFloat32) GetP(key int) *float32 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapIntFloat32) GetZeroP(key int) *float32 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero float32
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -1949,6 +2015,17 @@ func (t *MapIntFloat64) GetP(key int) *float64 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapIntFloat64) GetZeroP(key int) *float64 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero float64
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -2247,6 +2324,17 @@ func (t *MapIntInt) GetP(key int) *int {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapIntInt) GetZeroP(key int) *int {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero int
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -2549,6 +2637,17 @@ func (t *MapIntInt16) GetP(key int) *int16 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapIntInt16) GetZeroP(key int) *int16 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero int16
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -2847,6 +2946,17 @@ func (t *MapIntInt32) GetP(key int) *int32 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapIntInt32) GetZeroP(key int) *int32 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero int32
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -3149,6 +3259,17 @@ func (t *MapIntInt64) GetP(key int) *int64 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapIntInt64) GetZeroP(key int) *int64 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero int64
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -3447,6 +3568,17 @@ func (t *MapIntInt8) GetP(key int) *int8 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapIntInt8) GetZeroP(key int) *int8 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero int8
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -3749,6 +3881,17 @@ func (t *MapIntRune) GetP(key int) *rune {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapIntRune) GetZeroP(key int) *rune {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero rune
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -4047,6 +4190,17 @@ func (t *MapIntString) GetP(key int) *string {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapIntString) GetZeroP(key int) *string {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero string
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -4349,6 +4503,17 @@ func (t *MapIntUint) GetP(key int) *uint {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapIntUint) GetZeroP(key int) *uint {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uint
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -4647,6 +4812,17 @@ func (t *MapIntUint16) GetP(key int) *uint16 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapIntUint16) GetZeroP(key int) *uint16 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uint16
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -4949,6 +5125,17 @@ func (t *MapIntUint32) GetP(key int) *uint32 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapIntUint32) GetZeroP(key int) *uint32 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uint32
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -5247,6 +5434,17 @@ func (t *MapIntUint64) GetP(key int) *uint64 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapIntUint64) GetZeroP(key int) *uint64 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uint64
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -5549,6 +5747,17 @@ func (t *MapIntUint8) GetP(key int) *uint8 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapIntUint8) GetZeroP(key int) *uint8 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uint8
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -5847,6 +6056,17 @@ func (t *MapIntUintptr) GetP(key int) *uintptr {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapIntUintptr) GetZeroP(key int) *uintptr {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uintptr
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -6149,6 +6369,17 @@ func (t *MapInt64Bool) GetP(key int64) *bool {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt64Bool) GetZeroP(key int64) *bool {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero bool
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -6447,6 +6678,17 @@ func (t *MapInt64Byte) GetP(key int64) *byte {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt64Byte) GetZeroP(key int64) *byte {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero byte
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -6749,6 +6991,17 @@ func (t *MapInt64Complex128) GetP(key int64) *complex128 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt64Complex128) GetZeroP(key int64) *complex128 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero complex128
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -7047,6 +7300,17 @@ func (t *MapInt64Complex64) GetP(key int64) *complex64 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt64Complex64) GetZeroP(key int64) *complex64 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero complex64
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -7349,6 +7613,17 @@ func (t *MapInt64Error) GetP(key int64) *error {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt64Error) GetZeroP(key int64) *error {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero error
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -7647,6 +7922,17 @@ func (t *MapInt64Float32) GetP(key int64) *float32 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt64Float32) GetZeroP(key int64) *float32 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero float32
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -7949,6 +8235,17 @@ func (t *MapInt64Float64) GetP(key int64) *float64 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt64Float64) GetZeroP(key int64) *float64 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero float64
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -8247,6 +8544,17 @@ func (t *MapInt64Int) GetP(key int64) *int {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt64Int) GetZeroP(key int64) *int {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero int
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -8549,6 +8857,17 @@ func (t *MapInt64Int16) GetP(key int64) *int16 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt64Int16) GetZeroP(key int64) *int16 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero int16
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -8847,6 +9166,17 @@ func (t *MapInt64Int32) GetP(key int64) *int32 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt64Int32) GetZeroP(key int64) *int32 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero int32
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -9149,6 +9479,17 @@ func (t *MapInt64Int64) GetP(key int64) *int64 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt64Int64) GetZeroP(key int64) *int64 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero int64
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -9447,6 +9788,17 @@ func (t *MapInt64Int8) GetP(key int64) *int8 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt64Int8) GetZeroP(key int64) *int8 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero int8
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -9749,6 +10101,17 @@ func (t *MapInt64Rune) GetP(key int64) *rune {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt64Rune) GetZeroP(key int64) *rune {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero rune
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -10047,6 +10410,17 @@ func (t *MapInt64String) GetP(key int64) *string {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt64String) GetZeroP(key int64) *string {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero string
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -10349,6 +10723,17 @@ func (t *MapInt64Uint) GetP(key int64) *uint {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt64Uint) GetZeroP(key int64) *uint {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uint
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -10647,6 +11032,17 @@ func (t *MapInt64Uint16) GetP(key int64) *uint16 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt64Uint16) GetZeroP(key int64) *uint16 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uint16
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -10949,6 +11345,17 @@ func (t *MapInt64Uint32) GetP(key int64) *uint32 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt64Uint32) GetZeroP(key int64) *uint32 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uint32
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -11247,6 +11654,17 @@ func (t *MapInt64Uint64) GetP(key int64) *uint64 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt64Uint64) GetZeroP(key int64) *uint64 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uint64
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -11549,6 +11967,17 @@ func (t *MapInt64Uint8) GetP(key int64) *uint8 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt64Uint8) GetZeroP(key int64) *uint8 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uint8
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -11847,6 +12276,17 @@ func (t *MapInt64Uintptr) GetP(key int64) *uintptr {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt64Uintptr) GetZeroP(key int64) *uintptr {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uintptr
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -12149,6 +12589,17 @@ func (t *MapInt32Bool) GetP(key int32) *bool {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt32Bool) GetZeroP(key int32) *bool {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero bool
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -12447,6 +12898,17 @@ func (t *MapInt32Byte) GetP(key int32) *byte {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt32Byte) GetZeroP(key int32) *byte {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero byte
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -12749,6 +13211,17 @@ func (t *MapInt32Complex128) GetP(key int32) *complex128 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt32Complex128) GetZeroP(key int32) *complex128 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero complex128
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -13047,6 +13520,17 @@ func (t *MapInt32Complex64) GetP(key int32) *complex64 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt32Complex64) GetZeroP(key int32) *complex64 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero complex64
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -13349,6 +13833,17 @@ func (t *MapInt32Error) GetP(key int32) *error {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt32Error) GetZeroP(key int32) *error {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero error
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -13647,6 +14142,17 @@ func (t *MapInt32Float32) GetP(key int32) *float32 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt32Float32) GetZeroP(key int32) *float32 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero float32
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -13949,6 +14455,17 @@ func (t *MapInt32Float64) GetP(key int32) *float64 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt32Float64) GetZeroP(key int32) *float64 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero float64
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -14247,6 +14764,17 @@ func (t *MapInt32Int) GetP(key int32) *int {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt32Int) GetZeroP(key int32) *int {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero int
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -14549,6 +15077,17 @@ func (t *MapInt32Int16) GetP(key int32) *int16 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt32Int16) GetZeroP(key int32) *int16 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero int16
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -14847,6 +15386,17 @@ func (t *MapInt32Int32) GetP(key int32) *int32 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt32Int32) GetZeroP(key int32) *int32 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero int32
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -15149,6 +15699,17 @@ func (t *MapInt32Int64) GetP(key int32) *int64 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt32Int64) GetZeroP(key int32) *int64 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero int64
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -15447,6 +16008,17 @@ func (t *MapInt32Int8) GetP(key int32) *int8 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt32Int8) GetZeroP(key int32) *int8 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero int8
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -15749,6 +16321,17 @@ func (t *MapInt32Rune) GetP(key int32) *rune {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt32Rune) GetZeroP(key int32) *rune {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero rune
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -16047,6 +16630,17 @@ func (t *MapInt32String) GetP(key int32) *string {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt32String) GetZeroP(key int32) *string {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero string
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -16349,6 +16943,17 @@ func (t *MapInt32Uint) GetP(key int32) *uint {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt32Uint) GetZeroP(key int32) *uint {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uint
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -16647,6 +17252,17 @@ func (t *MapInt32Uint16) GetP(key int32) *uint16 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt32Uint16) GetZeroP(key int32) *uint16 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uint16
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -16949,6 +17565,17 @@ func (t *MapInt32Uint32) GetP(key int32) *uint32 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt32Uint32) GetZeroP(key int32) *uint32 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uint32
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -17247,6 +17874,17 @@ func (t *MapInt32Uint64) GetP(key int32) *uint64 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt32Uint64) GetZeroP(key int32) *uint64 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uint64
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -17549,6 +18187,17 @@ func (t *MapInt32Uint8) GetP(key int32) *uint8 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt32Uint8) GetZeroP(key int32) *uint8 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uint8
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -17847,6 +18496,17 @@ func (t *MapInt32Uintptr) GetP(key int32) *uintptr {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt32Uintptr) GetZeroP(key int32) *uintptr {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uintptr
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -18149,6 +18809,17 @@ func (t *MapInt16Bool) GetP(key int16) *bool {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt16Bool) GetZeroP(key int16) *bool {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero bool
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -18447,6 +19118,17 @@ func (t *MapInt16Byte) GetP(key int16) *byte {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt16Byte) GetZeroP(key int16) *byte {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero byte
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -18749,6 +19431,17 @@ func (t *MapInt16Complex128) GetP(key int16) *complex128 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt16Complex128) GetZeroP(key int16) *complex128 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero complex128
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -19047,6 +19740,17 @@ func (t *MapInt16Complex64) GetP(key int16) *complex64 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt16Complex64) GetZeroP(key int16) *complex64 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero complex64
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -19349,6 +20053,17 @@ func (t *MapInt16Error) GetP(key int16) *error {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt16Error) GetZeroP(key int16) *error {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero error
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -19647,6 +20362,17 @@ func (t *MapInt16Float32) GetP(key int16) *float32 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt16Float32) GetZeroP(key int16) *float32 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero float32
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -19949,6 +20675,17 @@ func (t *MapInt16Float64) GetP(key int16) *float64 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt16Float64) GetZeroP(key int16) *float64 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero float64
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -20247,6 +20984,17 @@ func (t *MapInt16Int) GetP(key int16) *int {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt16Int) GetZeroP(key int16) *int {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero int
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -20549,6 +21297,17 @@ func (t *MapInt16Int16) GetP(key int16) *int16 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt16Int16) GetZeroP(key int16) *int16 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero int16
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -20847,6 +21606,17 @@ func (t *MapInt16Int32) GetP(key int16) *int32 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt16Int32) GetZeroP(key int16) *int32 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero int32
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -21149,6 +21919,17 @@ func (t *MapInt16Int64) GetP(key int16) *int64 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt16Int64) GetZeroP(key int16) *int64 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero int64
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -21447,6 +22228,17 @@ func (t *MapInt16Int8) GetP(key int16) *int8 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt16Int8) GetZeroP(key int16) *int8 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero int8
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -21749,6 +22541,17 @@ func (t *MapInt16Rune) GetP(key int16) *rune {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt16Rune) GetZeroP(key int16) *rune {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero rune
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -22047,6 +22850,17 @@ func (t *MapInt16String) GetP(key int16) *string {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt16String) GetZeroP(key int16) *string {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero string
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -22349,6 +23163,17 @@ func (t *MapInt16Uint) GetP(key int16) *uint {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt16Uint) GetZeroP(key int16) *uint {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uint
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -22647,6 +23472,17 @@ func (t *MapInt16Uint16) GetP(key int16) *uint16 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt16Uint16) GetZeroP(key int16) *uint16 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uint16
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -22949,6 +23785,17 @@ func (t *MapInt16Uint32) GetP(key int16) *uint32 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt16Uint32) GetZeroP(key int16) *uint32 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uint32
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -23247,6 +24094,17 @@ func (t *MapInt16Uint64) GetP(key int16) *uint64 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt16Uint64) GetZeroP(key int16) *uint64 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uint64
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -23549,6 +24407,17 @@ func (t *MapInt16Uint8) GetP(key int16) *uint8 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt16Uint8) GetZeroP(key int16) *uint8 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uint8
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -23847,6 +24716,17 @@ func (t *MapInt16Uintptr) GetP(key int16) *uintptr {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt16Uintptr) GetZeroP(key int16) *uintptr {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uintptr
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -24149,6 +25029,17 @@ func (t *MapInt8Bool) GetP(key int8) *bool {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt8Bool) GetZeroP(key int8) *bool {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero bool
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -24447,6 +25338,17 @@ func (t *MapInt8Byte) GetP(key int8) *byte {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt8Byte) GetZeroP(key int8) *byte {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero byte
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -24749,6 +25651,17 @@ func (t *MapInt8Complex128) GetP(key int8) *complex128 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt8Complex128) GetZeroP(key int8) *complex128 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero complex128
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -25047,6 +25960,17 @@ func (t *MapInt8Complex64) GetP(key int8) *complex64 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt8Complex64) GetZeroP(key int8) *complex64 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero complex64
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -25349,6 +26273,17 @@ func (t *MapInt8Error) GetP(key int8) *error {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt8Error) GetZeroP(key int8) *error {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero error
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -25647,6 +26582,17 @@ func (t *MapInt8Float32) GetP(key int8) *float32 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt8Float32) GetZeroP(key int8) *float32 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero float32
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -25949,6 +26895,17 @@ func (t *MapInt8Float64) GetP(key int8) *float64 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt8Float64) GetZeroP(key int8) *float64 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero float64
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -26247,6 +27204,17 @@ func (t *MapInt8Int) GetP(key int8) *int {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt8Int) GetZeroP(key int8) *int {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero int
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -26549,6 +27517,17 @@ func (t *MapInt8Int16) GetP(key int8) *int16 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt8Int16) GetZeroP(key int8) *int16 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero int16
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -26847,6 +27826,17 @@ func (t *MapInt8Int32) GetP(key int8) *int32 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt8Int32) GetZeroP(key int8) *int32 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero int32
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -27149,6 +28139,17 @@ func (t *MapInt8Int64) GetP(key int8) *int64 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt8Int64) GetZeroP(key int8) *int64 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero int64
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -27447,6 +28448,17 @@ func (t *MapInt8Int8) GetP(key int8) *int8 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt8Int8) GetZeroP(key int8) *int8 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero int8
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -27749,6 +28761,17 @@ func (t *MapInt8Rune) GetP(key int8) *rune {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt8Rune) GetZeroP(key int8) *rune {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero rune
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -28047,6 +29070,17 @@ func (t *MapInt8String) GetP(key int8) *string {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt8String) GetZeroP(key int8) *string {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero string
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -28349,6 +29383,17 @@ func (t *MapInt8Uint) GetP(key int8) *uint {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt8Uint) GetZeroP(key int8) *uint {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uint
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -28647,6 +29692,17 @@ func (t *MapInt8Uint16) GetP(key int8) *uint16 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt8Uint16) GetZeroP(key int8) *uint16 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uint16
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -28949,6 +30005,17 @@ func (t *MapInt8Uint32) GetP(key int8) *uint32 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt8Uint32) GetZeroP(key int8) *uint32 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uint32
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -29247,6 +30314,17 @@ func (t *MapInt8Uint64) GetP(key int8) *uint64 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt8Uint64) GetZeroP(key int8) *uint64 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uint64
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -29549,6 +30627,17 @@ func (t *MapInt8Uint8) GetP(key int8) *uint8 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt8Uint8) GetZeroP(key int8) *uint8 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uint8
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -29847,6 +30936,17 @@ func (t *MapInt8Uintptr) GetP(key int8) *uintptr {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapInt8Uintptr) GetZeroP(key int8) *uintptr {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uintptr
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -30149,6 +31249,17 @@ func (t *MapUintBool) GetP(key uint) *bool {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUintBool) GetZeroP(key uint) *bool {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero bool
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -30447,6 +31558,17 @@ func (t *MapUintByte) GetP(key uint) *byte {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUintByte) GetZeroP(key uint) *byte {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero byte
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -30749,6 +31871,17 @@ func (t *MapUintComplex128) GetP(key uint) *complex128 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUintComplex128) GetZeroP(key uint) *complex128 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero complex128
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -31047,6 +32180,17 @@ func (t *MapUintComplex64) GetP(key uint) *complex64 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUintComplex64) GetZeroP(key uint) *complex64 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero complex64
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -31349,6 +32493,17 @@ func (t *MapUintError) GetP(key uint) *error {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUintError) GetZeroP(key uint) *error {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero error
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -31647,6 +32802,17 @@ func (t *MapUintFloat32) GetP(key uint) *float32 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUintFloat32) GetZeroP(key uint) *float32 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero float32
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -31949,6 +33115,17 @@ func (t *MapUintFloat64) GetP(key uint) *float64 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUintFloat64) GetZeroP(key uint) *float64 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero float64
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -32247,6 +33424,17 @@ func (t *MapUintInt) GetP(key uint) *int {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUintInt) GetZeroP(key uint) *int {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero int
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -32549,6 +33737,17 @@ func (t *MapUintInt16) GetP(key uint) *int16 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUintInt16) GetZeroP(key uint) *int16 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero int16
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -32847,6 +34046,17 @@ func (t *MapUintInt32) GetP(key uint) *int32 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUintInt32) GetZeroP(key uint) *int32 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero int32
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -33149,6 +34359,17 @@ func (t *MapUintInt64) GetP(key uint) *int64 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUintInt64) GetZeroP(key uint) *int64 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero int64
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -33447,6 +34668,17 @@ func (t *MapUintInt8) GetP(key uint) *int8 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUintInt8) GetZeroP(key uint) *int8 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero int8
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -33749,6 +34981,17 @@ func (t *MapUintRune) GetP(key uint) *rune {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUintRune) GetZeroP(key uint) *rune {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero rune
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -34047,6 +35290,17 @@ func (t *MapUintString) GetP(key uint) *string {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUintString) GetZeroP(key uint) *string {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero string
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -34349,6 +35603,17 @@ func (t *MapUintUint) GetP(key uint) *uint {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUintUint) GetZeroP(key uint) *uint {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uint
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -34647,6 +35912,17 @@ func (t *MapUintUint16) GetP(key uint) *uint16 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUintUint16) GetZeroP(key uint) *uint16 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uint16
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -34949,6 +36225,17 @@ func (t *MapUintUint32) GetP(key uint) *uint32 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUintUint32) GetZeroP(key uint) *uint32 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uint32
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -35247,6 +36534,17 @@ func (t *MapUintUint64) GetP(key uint) *uint64 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUintUint64) GetZeroP(key uint) *uint64 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uint64
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -35549,6 +36847,17 @@ func (t *MapUintUint8) GetP(key uint) *uint8 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUintUint8) GetZeroP(key uint) *uint8 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uint8
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -35847,6 +37156,17 @@ func (t *MapUintUintptr) GetP(key uint) *uintptr {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUintUintptr) GetZeroP(key uint) *uintptr {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uintptr
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -36149,6 +37469,17 @@ func (t *MapUintptrBool) GetP(key uintptr) *bool {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUintptrBool) GetZeroP(key uintptr) *bool {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero bool
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -36447,6 +37778,17 @@ func (t *MapUintptrByte) GetP(key uintptr) *byte {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUintptrByte) GetZeroP(key uintptr) *byte {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero byte
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -36749,6 +38091,17 @@ func (t *MapUintptrComplex128) GetP(key uintptr) *complex128 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUintptrComplex128) GetZeroP(key uintptr) *complex128 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero complex128
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -37047,6 +38400,17 @@ func (t *MapUintptrComplex64) GetP(key uintptr) *complex64 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUintptrComplex64) GetZeroP(key uintptr) *complex64 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero complex64
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -37349,6 +38713,17 @@ func (t *MapUintptrError) GetP(key uintptr) *error {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUintptrError) GetZeroP(key uintptr) *error {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero error
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -37647,6 +39022,17 @@ func (t *MapUintptrFloat32) GetP(key uintptr) *float32 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUintptrFloat32) GetZeroP(key uintptr) *float32 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero float32
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -37949,6 +39335,17 @@ func (t *MapUintptrFloat64) GetP(key uintptr) *float64 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUintptrFloat64) GetZeroP(key uintptr) *float64 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero float64
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -38247,6 +39644,17 @@ func (t *MapUintptrInt) GetP(key uintptr) *int {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUintptrInt) GetZeroP(key uintptr) *int {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero int
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -38549,6 +39957,17 @@ func (t *MapUintptrInt16) GetP(key uintptr) *int16 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUintptrInt16) GetZeroP(key uintptr) *int16 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero int16
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -38847,6 +40266,17 @@ func (t *MapUintptrInt32) GetP(key uintptr) *int32 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUintptrInt32) GetZeroP(key uintptr) *int32 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero int32
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -39149,6 +40579,17 @@ func (t *MapUintptrInt64) GetP(key uintptr) *int64 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUintptrInt64) GetZeroP(key uintptr) *int64 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero int64
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -39447,6 +40888,17 @@ func (t *MapUintptrInt8) GetP(key uintptr) *int8 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUintptrInt8) GetZeroP(key uintptr) *int8 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero int8
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -39749,6 +41201,17 @@ func (t *MapUintptrRune) GetP(key uintptr) *rune {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUintptrRune) GetZeroP(key uintptr) *rune {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero rune
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -40047,6 +41510,17 @@ func (t *MapUintptrString) GetP(key uintptr) *string {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUintptrString) GetZeroP(key uintptr) *string {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero string
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -40349,6 +41823,17 @@ func (t *MapUintptrUint) GetP(key uintptr) *uint {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUintptrUint) GetZeroP(key uintptr) *uint {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uint
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -40647,6 +42132,17 @@ func (t *MapUintptrUint16) GetP(key uintptr) *uint16 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUintptrUint16) GetZeroP(key uintptr) *uint16 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uint16
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -40949,6 +42445,17 @@ func (t *MapUintptrUint32) GetP(key uintptr) *uint32 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUintptrUint32) GetZeroP(key uintptr) *uint32 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uint32
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -41247,6 +42754,17 @@ func (t *MapUintptrUint64) GetP(key uintptr) *uint64 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUintptrUint64) GetZeroP(key uintptr) *uint64 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uint64
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -41549,6 +43067,17 @@ func (t *MapUintptrUint8) GetP(key uintptr) *uint8 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUintptrUint8) GetZeroP(key uintptr) *uint8 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uint8
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -41847,6 +43376,17 @@ func (t *MapUintptrUintptr) GetP(key uintptr) *uintptr {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUintptrUintptr) GetZeroP(key uintptr) *uintptr {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uintptr
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -42149,6 +43689,17 @@ func (t *MapUint64Bool) GetP(key uint64) *bool {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint64Bool) GetZeroP(key uint64) *bool {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero bool
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -42447,6 +43998,17 @@ func (t *MapUint64Byte) GetP(key uint64) *byte {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint64Byte) GetZeroP(key uint64) *byte {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero byte
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -42749,6 +44311,17 @@ func (t *MapUint64Complex128) GetP(key uint64) *complex128 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint64Complex128) GetZeroP(key uint64) *complex128 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero complex128
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -43047,6 +44620,17 @@ func (t *MapUint64Complex64) GetP(key uint64) *complex64 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint64Complex64) GetZeroP(key uint64) *complex64 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero complex64
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -43349,6 +44933,17 @@ func (t *MapUint64Error) GetP(key uint64) *error {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint64Error) GetZeroP(key uint64) *error {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero error
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -43647,6 +45242,17 @@ func (t *MapUint64Float32) GetP(key uint64) *float32 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint64Float32) GetZeroP(key uint64) *float32 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero float32
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -43949,6 +45555,17 @@ func (t *MapUint64Float64) GetP(key uint64) *float64 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint64Float64) GetZeroP(key uint64) *float64 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero float64
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -44247,6 +45864,17 @@ func (t *MapUint64Int) GetP(key uint64) *int {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint64Int) GetZeroP(key uint64) *int {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero int
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -44549,6 +46177,17 @@ func (t *MapUint64Int16) GetP(key uint64) *int16 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint64Int16) GetZeroP(key uint64) *int16 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero int16
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -44847,6 +46486,17 @@ func (t *MapUint64Int32) GetP(key uint64) *int32 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint64Int32) GetZeroP(key uint64) *int32 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero int32
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -45149,6 +46799,17 @@ func (t *MapUint64Int64) GetP(key uint64) *int64 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint64Int64) GetZeroP(key uint64) *int64 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero int64
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -45447,6 +47108,17 @@ func (t *MapUint64Int8) GetP(key uint64) *int8 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint64Int8) GetZeroP(key uint64) *int8 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero int8
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -45749,6 +47421,17 @@ func (t *MapUint64Rune) GetP(key uint64) *rune {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint64Rune) GetZeroP(key uint64) *rune {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero rune
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -46047,6 +47730,17 @@ func (t *MapUint64String) GetP(key uint64) *string {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint64String) GetZeroP(key uint64) *string {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero string
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -46349,6 +48043,17 @@ func (t *MapUint64Uint) GetP(key uint64) *uint {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint64Uint) GetZeroP(key uint64) *uint {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uint
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -46647,6 +48352,17 @@ func (t *MapUint64Uint16) GetP(key uint64) *uint16 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint64Uint16) GetZeroP(key uint64) *uint16 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uint16
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -46949,6 +48665,17 @@ func (t *MapUint64Uint32) GetP(key uint64) *uint32 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint64Uint32) GetZeroP(key uint64) *uint32 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uint32
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -47247,6 +48974,17 @@ func (t *MapUint64Uint64) GetP(key uint64) *uint64 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint64Uint64) GetZeroP(key uint64) *uint64 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uint64
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -47549,6 +49287,17 @@ func (t *MapUint64Uint8) GetP(key uint64) *uint8 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint64Uint8) GetZeroP(key uint64) *uint8 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uint8
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -47847,6 +49596,17 @@ func (t *MapUint64Uintptr) GetP(key uint64) *uintptr {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint64Uintptr) GetZeroP(key uint64) *uintptr {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uintptr
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -48149,6 +49909,17 @@ func (t *MapUint32Bool) GetP(key uint32) *bool {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint32Bool) GetZeroP(key uint32) *bool {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero bool
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -48447,6 +50218,17 @@ func (t *MapUint32Byte) GetP(key uint32) *byte {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint32Byte) GetZeroP(key uint32) *byte {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero byte
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -48749,6 +50531,17 @@ func (t *MapUint32Complex128) GetP(key uint32) *complex128 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint32Complex128) GetZeroP(key uint32) *complex128 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero complex128
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -49047,6 +50840,17 @@ func (t *MapUint32Complex64) GetP(key uint32) *complex64 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint32Complex64) GetZeroP(key uint32) *complex64 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero complex64
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -49349,6 +51153,17 @@ func (t *MapUint32Error) GetP(key uint32) *error {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint32Error) GetZeroP(key uint32) *error {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero error
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -49647,6 +51462,17 @@ func (t *MapUint32Float32) GetP(key uint32) *float32 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint32Float32) GetZeroP(key uint32) *float32 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero float32
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -49949,6 +51775,17 @@ func (t *MapUint32Float64) GetP(key uint32) *float64 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint32Float64) GetZeroP(key uint32) *float64 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero float64
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -50247,6 +52084,17 @@ func (t *MapUint32Int) GetP(key uint32) *int {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint32Int) GetZeroP(key uint32) *int {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero int
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -50549,6 +52397,17 @@ func (t *MapUint32Int16) GetP(key uint32) *int16 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint32Int16) GetZeroP(key uint32) *int16 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero int16
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -50847,6 +52706,17 @@ func (t *MapUint32Int32) GetP(key uint32) *int32 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint32Int32) GetZeroP(key uint32) *int32 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero int32
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -51149,6 +53019,17 @@ func (t *MapUint32Int64) GetP(key uint32) *int64 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint32Int64) GetZeroP(key uint32) *int64 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero int64
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -51447,6 +53328,17 @@ func (t *MapUint32Int8) GetP(key uint32) *int8 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint32Int8) GetZeroP(key uint32) *int8 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero int8
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -51749,6 +53641,17 @@ func (t *MapUint32Rune) GetP(key uint32) *rune {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint32Rune) GetZeroP(key uint32) *rune {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero rune
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -52047,6 +53950,17 @@ func (t *MapUint32String) GetP(key uint32) *string {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint32String) GetZeroP(key uint32) *string {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero string
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -52349,6 +54263,17 @@ func (t *MapUint32Uint) GetP(key uint32) *uint {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint32Uint) GetZeroP(key uint32) *uint {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uint
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -52647,6 +54572,17 @@ func (t *MapUint32Uint16) GetP(key uint32) *uint16 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint32Uint16) GetZeroP(key uint32) *uint16 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uint16
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -52949,6 +54885,17 @@ func (t *MapUint32Uint32) GetP(key uint32) *uint32 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint32Uint32) GetZeroP(key uint32) *uint32 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uint32
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -53247,6 +55194,17 @@ func (t *MapUint32Uint64) GetP(key uint32) *uint64 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint32Uint64) GetZeroP(key uint32) *uint64 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uint64
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -53549,6 +55507,17 @@ func (t *MapUint32Uint8) GetP(key uint32) *uint8 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint32Uint8) GetZeroP(key uint32) *uint8 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uint8
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -53847,6 +55816,17 @@ func (t *MapUint32Uintptr) GetP(key uint32) *uintptr {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint32Uintptr) GetZeroP(key uint32) *uintptr {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uintptr
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -54149,6 +56129,17 @@ func (t *MapUint16Bool) GetP(key uint16) *bool {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint16Bool) GetZeroP(key uint16) *bool {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero bool
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -54447,6 +56438,17 @@ func (t *MapUint16Byte) GetP(key uint16) *byte {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint16Byte) GetZeroP(key uint16) *byte {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero byte
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -54749,6 +56751,17 @@ func (t *MapUint16Complex128) GetP(key uint16) *complex128 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint16Complex128) GetZeroP(key uint16) *complex128 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero complex128
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -55047,6 +57060,17 @@ func (t *MapUint16Complex64) GetP(key uint16) *complex64 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint16Complex64) GetZeroP(key uint16) *complex64 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero complex64
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -55349,6 +57373,17 @@ func (t *MapUint16Error) GetP(key uint16) *error {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint16Error) GetZeroP(key uint16) *error {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero error
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -55647,6 +57682,17 @@ func (t *MapUint16Float32) GetP(key uint16) *float32 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint16Float32) GetZeroP(key uint16) *float32 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero float32
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -55949,6 +57995,17 @@ func (t *MapUint16Float64) GetP(key uint16) *float64 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint16Float64) GetZeroP(key uint16) *float64 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero float64
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -56247,6 +58304,17 @@ func (t *MapUint16Int) GetP(key uint16) *int {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint16Int) GetZeroP(key uint16) *int {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero int
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -56549,6 +58617,17 @@ func (t *MapUint16Int16) GetP(key uint16) *int16 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint16Int16) GetZeroP(key uint16) *int16 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero int16
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -56847,6 +58926,17 @@ func (t *MapUint16Int32) GetP(key uint16) *int32 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint16Int32) GetZeroP(key uint16) *int32 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero int32
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -57149,6 +59239,17 @@ func (t *MapUint16Int64) GetP(key uint16) *int64 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint16Int64) GetZeroP(key uint16) *int64 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero int64
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -57447,6 +59548,17 @@ func (t *MapUint16Int8) GetP(key uint16) *int8 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint16Int8) GetZeroP(key uint16) *int8 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero int8
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -57749,6 +59861,17 @@ func (t *MapUint16Rune) GetP(key uint16) *rune {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint16Rune) GetZeroP(key uint16) *rune {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero rune
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -58047,6 +60170,17 @@ func (t *MapUint16String) GetP(key uint16) *string {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint16String) GetZeroP(key uint16) *string {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero string
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -58349,6 +60483,17 @@ func (t *MapUint16Uint) GetP(key uint16) *uint {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint16Uint) GetZeroP(key uint16) *uint {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uint
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -58647,6 +60792,17 @@ func (t *MapUint16Uint16) GetP(key uint16) *uint16 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint16Uint16) GetZeroP(key uint16) *uint16 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uint16
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -58949,6 +61105,17 @@ func (t *MapUint16Uint32) GetP(key uint16) *uint32 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint16Uint32) GetZeroP(key uint16) *uint32 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uint32
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -59247,6 +61414,17 @@ func (t *MapUint16Uint64) GetP(key uint16) *uint64 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint16Uint64) GetZeroP(key uint16) *uint64 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uint64
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -59549,6 +61727,17 @@ func (t *MapUint16Uint8) GetP(key uint16) *uint8 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint16Uint8) GetZeroP(key uint16) *uint8 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uint8
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -59847,6 +62036,17 @@ func (t *MapUint16Uintptr) GetP(key uint16) *uintptr {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint16Uintptr) GetZeroP(key uint16) *uintptr {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uintptr
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -60149,6 +62349,17 @@ func (t *MapUint8Bool) GetP(key uint8) *bool {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint8Bool) GetZeroP(key uint8) *bool {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero bool
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -60447,6 +62658,17 @@ func (t *MapUint8Byte) GetP(key uint8) *byte {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint8Byte) GetZeroP(key uint8) *byte {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero byte
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -60749,6 +62971,17 @@ func (t *MapUint8Complex128) GetP(key uint8) *complex128 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint8Complex128) GetZeroP(key uint8) *complex128 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero complex128
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -61047,6 +63280,17 @@ func (t *MapUint8Complex64) GetP(key uint8) *complex64 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint8Complex64) GetZeroP(key uint8) *complex64 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero complex64
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -61349,6 +63593,17 @@ func (t *MapUint8Error) GetP(key uint8) *error {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint8Error) GetZeroP(key uint8) *error {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero error
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -61647,6 +63902,17 @@ func (t *MapUint8Float32) GetP(key uint8) *float32 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint8Float32) GetZeroP(key uint8) *float32 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero float32
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -61949,6 +64215,17 @@ func (t *MapUint8Float64) GetP(key uint8) *float64 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint8Float64) GetZeroP(key uint8) *float64 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero float64
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -62247,6 +64524,17 @@ func (t *MapUint8Int) GetP(key uint8) *int {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint8Int) GetZeroP(key uint8) *int {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero int
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -62549,6 +64837,17 @@ func (t *MapUint8Int16) GetP(key uint8) *int16 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint8Int16) GetZeroP(key uint8) *int16 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero int16
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -62847,6 +65146,17 @@ func (t *MapUint8Int32) GetP(key uint8) *int32 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint8Int32) GetZeroP(key uint8) *int32 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero int32
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -63149,6 +65459,17 @@ func (t *MapUint8Int64) GetP(key uint8) *int64 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint8Int64) GetZeroP(key uint8) *int64 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero int64
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -63447,6 +65768,17 @@ func (t *MapUint8Int8) GetP(key uint8) *int8 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint8Int8) GetZeroP(key uint8) *int8 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero int8
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -63749,6 +66081,17 @@ func (t *MapUint8Rune) GetP(key uint8) *rune {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint8Rune) GetZeroP(key uint8) *rune {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero rune
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -64047,6 +66390,17 @@ func (t *MapUint8String) GetP(key uint8) *string {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint8String) GetZeroP(key uint8) *string {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero string
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -64349,6 +66703,17 @@ func (t *MapUint8Uint) GetP(key uint8) *uint {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint8Uint) GetZeroP(key uint8) *uint {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uint
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -64647,6 +67012,17 @@ func (t *MapUint8Uint16) GetP(key uint8) *uint16 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint8Uint16) GetZeroP(key uint8) *uint16 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uint16
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -64949,6 +67325,17 @@ func (t *MapUint8Uint32) GetP(key uint8) *uint32 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint8Uint32) GetZeroP(key uint8) *uint32 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uint32
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -65247,6 +67634,17 @@ func (t *MapUint8Uint64) GetP(key uint8) *uint64 {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint8Uint64) GetZeroP(key uint8) *uint64 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uint64
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
@@ -65549,6 +67947,17 @@ func (t *MapUint8Uint8) GetP(key uint8) *uint8 {
 	return nil
 }
 
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint8Uint8) GetZeroP(key uint8) *uint8 {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uint8
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
+}
+
 // Get returns the value associated with the specified key and true if the key exists.
 // Otherwise 0 and false are returned. If a nil pointer was associated with the key,
 // Get will panic (use GetP instead).
@@ -65847,6 +68256,17 @@ func (t *MapUint8Uintptr) GetP(key uint8) *uintptr {
 		}
 	}
 	return nil
+}
+
+// Same as GetP, but if no value is associated with the key, a zero value is inserted and returned.
+func (t *MapUint8Uintptr) GetZeroP(key uint8) *uintptr {
+	var p = t.GetP(key)
+	if p == nil {
+		var zero uintptr
+		p = &zero
+		t.SetP(key, p)
+	}
+	return p
 }
 
 // Get returns the value associated with the specified key and true if the key exists.
