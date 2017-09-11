@@ -177,6 +177,36 @@ func (t *MapIntBool) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapIntBool
+	gob.Register(t)
+}
+
+func (t *MapIntBool) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapIntBool) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int
+var value bool
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapintbool) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -216,24 +246,35 @@ func (i *IterIntBool) Seek(key int) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -279,10 +320,11 @@ func (i *IterIntBool) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -292,6 +334,7 @@ func (i *IterIntBool) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -488,6 +531,36 @@ func (t *MapIntByte) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapIntByte
+	gob.Register(t)
+}
+
+func (t *MapIntByte) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapIntByte) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int
+var value byte
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapintbyte) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -527,24 +600,35 @@ func (i *IterIntByte) Seek(key int) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -590,10 +674,11 @@ func (i *IterIntByte) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -603,6 +688,7 @@ func (i *IterIntByte) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -799,6 +885,36 @@ func (t *MapIntComplex128) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapIntComplex128
+	gob.Register(t)
+}
+
+func (t *MapIntComplex128) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapIntComplex128) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int
+var value complex128
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapintcomplex128) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -838,24 +954,35 @@ func (i *IterIntComplex128) Seek(key int) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -901,10 +1028,11 @@ func (i *IterIntComplex128) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -914,6 +1042,7 @@ func (i *IterIntComplex128) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -1110,6 +1239,36 @@ func (t *MapIntComplex64) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapIntComplex64
+	gob.Register(t)
+}
+
+func (t *MapIntComplex64) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapIntComplex64) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int
+var value complex64
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapintcomplex64) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -1149,24 +1308,35 @@ func (i *IterIntComplex64) Seek(key int) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -1212,10 +1382,11 @@ func (i *IterIntComplex64) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -1225,6 +1396,7 @@ func (i *IterIntComplex64) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -1421,6 +1593,36 @@ func (t *MapIntError) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapIntError
+	gob.Register(t)
+}
+
+func (t *MapIntError) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapIntError) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int
+var value error
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapinterror) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -1460,24 +1662,35 @@ func (i *IterIntError) Seek(key int) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -1523,10 +1736,11 @@ func (i *IterIntError) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -1536,6 +1750,7 @@ func (i *IterIntError) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -1732,6 +1947,36 @@ func (t *MapIntFloat32) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapIntFloat32
+	gob.Register(t)
+}
+
+func (t *MapIntFloat32) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapIntFloat32) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int
+var value float32
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapintfloat32) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -1771,24 +2016,35 @@ func (i *IterIntFloat32) Seek(key int) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -1834,10 +2090,11 @@ func (i *IterIntFloat32) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -1847,6 +2104,7 @@ func (i *IterIntFloat32) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -2043,6 +2301,36 @@ func (t *MapIntFloat64) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapIntFloat64
+	gob.Register(t)
+}
+
+func (t *MapIntFloat64) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapIntFloat64) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int
+var value float64
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapintfloat64) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -2082,24 +2370,35 @@ func (i *IterIntFloat64) Seek(key int) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -2145,10 +2444,11 @@ func (i *IterIntFloat64) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -2158,6 +2458,7 @@ func (i *IterIntFloat64) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -2354,6 +2655,36 @@ func (t *MapIntInt) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapIntInt
+	gob.Register(t)
+}
+
+func (t *MapIntInt) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapIntInt) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int
+var value int
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapintint) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -2393,24 +2724,35 @@ func (i *IterIntInt) Seek(key int) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -2456,10 +2798,11 @@ func (i *IterIntInt) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -2469,6 +2812,7 @@ func (i *IterIntInt) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -2665,6 +3009,36 @@ func (t *MapIntInt16) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapIntInt16
+	gob.Register(t)
+}
+
+func (t *MapIntInt16) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapIntInt16) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int
+var value int16
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapintint16) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -2704,24 +3078,35 @@ func (i *IterIntInt16) Seek(key int) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -2767,10 +3152,11 @@ func (i *IterIntInt16) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -2780,6 +3166,7 @@ func (i *IterIntInt16) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -2976,6 +3363,36 @@ func (t *MapIntInt32) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapIntInt32
+	gob.Register(t)
+}
+
+func (t *MapIntInt32) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapIntInt32) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int
+var value int32
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapintint32) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -3015,24 +3432,35 @@ func (i *IterIntInt32) Seek(key int) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -3078,10 +3506,11 @@ func (i *IterIntInt32) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -3091,6 +3520,7 @@ func (i *IterIntInt32) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -3287,6 +3717,36 @@ func (t *MapIntInt64) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapIntInt64
+	gob.Register(t)
+}
+
+func (t *MapIntInt64) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapIntInt64) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int
+var value int64
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapintint64) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -3326,24 +3786,35 @@ func (i *IterIntInt64) Seek(key int) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -3389,10 +3860,11 @@ func (i *IterIntInt64) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -3402,6 +3874,7 @@ func (i *IterIntInt64) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -3598,6 +4071,36 @@ func (t *MapIntInt8) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapIntInt8
+	gob.Register(t)
+}
+
+func (t *MapIntInt8) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapIntInt8) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int
+var value int8
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapintint8) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -3637,24 +4140,35 @@ func (i *IterIntInt8) Seek(key int) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -3700,10 +4214,11 @@ func (i *IterIntInt8) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -3713,6 +4228,7 @@ func (i *IterIntInt8) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -3909,6 +4425,36 @@ func (t *MapIntRune) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapIntRune
+	gob.Register(t)
+}
+
+func (t *MapIntRune) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapIntRune) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int
+var value rune
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapintrune) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -3948,24 +4494,35 @@ func (i *IterIntRune) Seek(key int) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -4011,10 +4568,11 @@ func (i *IterIntRune) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -4024,6 +4582,7 @@ func (i *IterIntRune) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -4220,6 +4779,36 @@ func (t *MapIntString) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapIntString
+	gob.Register(t)
+}
+
+func (t *MapIntString) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapIntString) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int
+var value string
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapintstring) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -4259,24 +4848,35 @@ func (i *IterIntString) Seek(key int) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -4322,10 +4922,11 @@ func (i *IterIntString) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -4335,6 +4936,7 @@ func (i *IterIntString) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -4531,6 +5133,36 @@ func (t *MapIntUint) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapIntUint
+	gob.Register(t)
+}
+
+func (t *MapIntUint) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapIntUint) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int
+var value uint
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapintuint) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -4570,24 +5202,35 @@ func (i *IterIntUint) Seek(key int) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -4633,10 +5276,11 @@ func (i *IterIntUint) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -4646,6 +5290,7 @@ func (i *IterIntUint) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -4842,6 +5487,36 @@ func (t *MapIntUint16) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapIntUint16
+	gob.Register(t)
+}
+
+func (t *MapIntUint16) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapIntUint16) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int
+var value uint16
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapintuint16) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -4881,24 +5556,35 @@ func (i *IterIntUint16) Seek(key int) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -4944,10 +5630,11 @@ func (i *IterIntUint16) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -4957,6 +5644,7 @@ func (i *IterIntUint16) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -5153,6 +5841,36 @@ func (t *MapIntUint32) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapIntUint32
+	gob.Register(t)
+}
+
+func (t *MapIntUint32) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapIntUint32) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int
+var value uint32
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapintuint32) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -5192,24 +5910,35 @@ func (i *IterIntUint32) Seek(key int) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -5255,10 +5984,11 @@ func (i *IterIntUint32) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -5268,6 +5998,7 @@ func (i *IterIntUint32) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -5464,6 +6195,36 @@ func (t *MapIntUint64) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapIntUint64
+	gob.Register(t)
+}
+
+func (t *MapIntUint64) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapIntUint64) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int
+var value uint64
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapintuint64) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -5503,24 +6264,35 @@ func (i *IterIntUint64) Seek(key int) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -5566,10 +6338,11 @@ func (i *IterIntUint64) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -5579,6 +6352,7 @@ func (i *IterIntUint64) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -5775,6 +6549,36 @@ func (t *MapIntUint8) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapIntUint8
+	gob.Register(t)
+}
+
+func (t *MapIntUint8) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapIntUint8) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int
+var value uint8
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapintuint8) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -5814,24 +6618,35 @@ func (i *IterIntUint8) Seek(key int) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -5877,10 +6692,11 @@ func (i *IterIntUint8) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -5890,6 +6706,7 @@ func (i *IterIntUint8) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -6086,6 +6903,36 @@ func (t *MapIntUintptr) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapIntUintptr
+	gob.Register(t)
+}
+
+func (t *MapIntUintptr) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapIntUintptr) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int
+var value uintptr
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapintuintptr) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -6125,24 +6972,35 @@ func (i *IterIntUintptr) Seek(key int) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -6188,10 +7046,11 @@ func (i *IterIntUintptr) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -6201,6 +7060,7 @@ func (i *IterIntUintptr) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -6397,6 +7257,36 @@ func (t *MapInt64Bool) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt64Bool
+	gob.Register(t)
+}
+
+func (t *MapInt64Bool) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt64Bool) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int64
+var value bool
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint64bool) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -6436,24 +7326,35 @@ func (i *IterInt64Bool) Seek(key int64) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -6499,10 +7400,11 @@ func (i *IterInt64Bool) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -6512,6 +7414,7 @@ func (i *IterInt64Bool) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -6708,6 +7611,36 @@ func (t *MapInt64Byte) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt64Byte
+	gob.Register(t)
+}
+
+func (t *MapInt64Byte) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt64Byte) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int64
+var value byte
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint64byte) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -6747,24 +7680,35 @@ func (i *IterInt64Byte) Seek(key int64) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -6810,10 +7754,11 @@ func (i *IterInt64Byte) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -6823,6 +7768,7 @@ func (i *IterInt64Byte) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -7019,6 +7965,36 @@ func (t *MapInt64Complex128) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt64Complex128
+	gob.Register(t)
+}
+
+func (t *MapInt64Complex128) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt64Complex128) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int64
+var value complex128
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint64complex128) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -7058,24 +8034,35 @@ func (i *IterInt64Complex128) Seek(key int64) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -7121,10 +8108,11 @@ func (i *IterInt64Complex128) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -7134,6 +8122,7 @@ func (i *IterInt64Complex128) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -7330,6 +8319,36 @@ func (t *MapInt64Complex64) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt64Complex64
+	gob.Register(t)
+}
+
+func (t *MapInt64Complex64) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt64Complex64) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int64
+var value complex64
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint64complex64) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -7369,24 +8388,35 @@ func (i *IterInt64Complex64) Seek(key int64) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -7432,10 +8462,11 @@ func (i *IterInt64Complex64) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -7445,6 +8476,7 @@ func (i *IterInt64Complex64) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -7641,6 +8673,36 @@ func (t *MapInt64Error) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt64Error
+	gob.Register(t)
+}
+
+func (t *MapInt64Error) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt64Error) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int64
+var value error
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint64error) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -7680,24 +8742,35 @@ func (i *IterInt64Error) Seek(key int64) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -7743,10 +8816,11 @@ func (i *IterInt64Error) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -7756,6 +8830,7 @@ func (i *IterInt64Error) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -7952,6 +9027,36 @@ func (t *MapInt64Float32) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt64Float32
+	gob.Register(t)
+}
+
+func (t *MapInt64Float32) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt64Float32) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int64
+var value float32
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint64float32) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -7991,24 +9096,35 @@ func (i *IterInt64Float32) Seek(key int64) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -8054,10 +9170,11 @@ func (i *IterInt64Float32) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -8067,6 +9184,7 @@ func (i *IterInt64Float32) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -8263,6 +9381,36 @@ func (t *MapInt64Float64) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt64Float64
+	gob.Register(t)
+}
+
+func (t *MapInt64Float64) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt64Float64) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int64
+var value float64
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint64float64) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -8302,24 +9450,35 @@ func (i *IterInt64Float64) Seek(key int64) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -8365,10 +9524,11 @@ func (i *IterInt64Float64) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -8378,6 +9538,7 @@ func (i *IterInt64Float64) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -8574,6 +9735,36 @@ func (t *MapInt64Int) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt64Int
+	gob.Register(t)
+}
+
+func (t *MapInt64Int) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt64Int) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int64
+var value int
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint64int) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -8613,24 +9804,35 @@ func (i *IterInt64Int) Seek(key int64) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -8676,10 +9878,11 @@ func (i *IterInt64Int) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -8689,6 +9892,7 @@ func (i *IterInt64Int) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -8885,6 +10089,36 @@ func (t *MapInt64Int16) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt64Int16
+	gob.Register(t)
+}
+
+func (t *MapInt64Int16) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt64Int16) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int64
+var value int16
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint64int16) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -8924,24 +10158,35 @@ func (i *IterInt64Int16) Seek(key int64) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -8987,10 +10232,11 @@ func (i *IterInt64Int16) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -9000,6 +10246,7 @@ func (i *IterInt64Int16) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -9196,6 +10443,36 @@ func (t *MapInt64Int32) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt64Int32
+	gob.Register(t)
+}
+
+func (t *MapInt64Int32) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt64Int32) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int64
+var value int32
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint64int32) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -9235,24 +10512,35 @@ func (i *IterInt64Int32) Seek(key int64) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -9298,10 +10586,11 @@ func (i *IterInt64Int32) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -9311,6 +10600,7 @@ func (i *IterInt64Int32) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -9507,6 +10797,36 @@ func (t *MapInt64Int64) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt64Int64
+	gob.Register(t)
+}
+
+func (t *MapInt64Int64) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt64Int64) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int64
+var value int64
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint64int64) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -9546,24 +10866,35 @@ func (i *IterInt64Int64) Seek(key int64) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -9609,10 +10940,11 @@ func (i *IterInt64Int64) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -9622,6 +10954,7 @@ func (i *IterInt64Int64) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -9818,6 +11151,36 @@ func (t *MapInt64Int8) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt64Int8
+	gob.Register(t)
+}
+
+func (t *MapInt64Int8) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt64Int8) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int64
+var value int8
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint64int8) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -9857,24 +11220,35 @@ func (i *IterInt64Int8) Seek(key int64) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -9920,10 +11294,11 @@ func (i *IterInt64Int8) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -9933,6 +11308,7 @@ func (i *IterInt64Int8) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -10129,6 +11505,36 @@ func (t *MapInt64Rune) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt64Rune
+	gob.Register(t)
+}
+
+func (t *MapInt64Rune) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt64Rune) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int64
+var value rune
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint64rune) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -10168,24 +11574,35 @@ func (i *IterInt64Rune) Seek(key int64) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -10231,10 +11648,11 @@ func (i *IterInt64Rune) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -10244,6 +11662,7 @@ func (i *IterInt64Rune) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -10440,6 +11859,36 @@ func (t *MapInt64String) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt64String
+	gob.Register(t)
+}
+
+func (t *MapInt64String) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt64String) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int64
+var value string
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint64string) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -10479,24 +11928,35 @@ func (i *IterInt64String) Seek(key int64) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -10542,10 +12002,11 @@ func (i *IterInt64String) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -10555,6 +12016,7 @@ func (i *IterInt64String) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -10751,6 +12213,36 @@ func (t *MapInt64Uint) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt64Uint
+	gob.Register(t)
+}
+
+func (t *MapInt64Uint) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt64Uint) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int64
+var value uint
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint64uint) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -10790,24 +12282,35 @@ func (i *IterInt64Uint) Seek(key int64) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -10853,10 +12356,11 @@ func (i *IterInt64Uint) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -10866,6 +12370,7 @@ func (i *IterInt64Uint) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -11062,6 +12567,36 @@ func (t *MapInt64Uint16) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt64Uint16
+	gob.Register(t)
+}
+
+func (t *MapInt64Uint16) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt64Uint16) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int64
+var value uint16
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint64uint16) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -11101,24 +12636,35 @@ func (i *IterInt64Uint16) Seek(key int64) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -11164,10 +12710,11 @@ func (i *IterInt64Uint16) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -11177,6 +12724,7 @@ func (i *IterInt64Uint16) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -11373,6 +12921,36 @@ func (t *MapInt64Uint32) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt64Uint32
+	gob.Register(t)
+}
+
+func (t *MapInt64Uint32) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt64Uint32) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int64
+var value uint32
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint64uint32) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -11412,24 +12990,35 @@ func (i *IterInt64Uint32) Seek(key int64) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -11475,10 +13064,11 @@ func (i *IterInt64Uint32) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -11488,6 +13078,7 @@ func (i *IterInt64Uint32) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -11684,6 +13275,36 @@ func (t *MapInt64Uint64) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt64Uint64
+	gob.Register(t)
+}
+
+func (t *MapInt64Uint64) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt64Uint64) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int64
+var value uint64
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint64uint64) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -11723,24 +13344,35 @@ func (i *IterInt64Uint64) Seek(key int64) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -11786,10 +13418,11 @@ func (i *IterInt64Uint64) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -11799,6 +13432,7 @@ func (i *IterInt64Uint64) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -11995,6 +13629,36 @@ func (t *MapInt64Uint8) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt64Uint8
+	gob.Register(t)
+}
+
+func (t *MapInt64Uint8) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt64Uint8) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int64
+var value uint8
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint64uint8) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -12034,24 +13698,35 @@ func (i *IterInt64Uint8) Seek(key int64) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -12097,10 +13772,11 @@ func (i *IterInt64Uint8) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -12110,6 +13786,7 @@ func (i *IterInt64Uint8) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -12306,6 +13983,36 @@ func (t *MapInt64Uintptr) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt64Uintptr
+	gob.Register(t)
+}
+
+func (t *MapInt64Uintptr) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt64Uintptr) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int64
+var value uintptr
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint64uintptr) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -12345,24 +14052,35 @@ func (i *IterInt64Uintptr) Seek(key int64) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -12408,10 +14126,11 @@ func (i *IterInt64Uintptr) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -12421,6 +14140,7 @@ func (i *IterInt64Uintptr) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -12617,6 +14337,36 @@ func (t *MapInt32Bool) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt32Bool
+	gob.Register(t)
+}
+
+func (t *MapInt32Bool) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt32Bool) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int32
+var value bool
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint32bool) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -12656,24 +14406,35 @@ func (i *IterInt32Bool) Seek(key int32) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -12719,10 +14480,11 @@ func (i *IterInt32Bool) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -12732,6 +14494,7 @@ func (i *IterInt32Bool) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -12928,6 +14691,36 @@ func (t *MapInt32Byte) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt32Byte
+	gob.Register(t)
+}
+
+func (t *MapInt32Byte) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt32Byte) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int32
+var value byte
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint32byte) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -12967,24 +14760,35 @@ func (i *IterInt32Byte) Seek(key int32) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -13030,10 +14834,11 @@ func (i *IterInt32Byte) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -13043,6 +14848,7 @@ func (i *IterInt32Byte) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -13239,6 +15045,36 @@ func (t *MapInt32Complex128) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt32Complex128
+	gob.Register(t)
+}
+
+func (t *MapInt32Complex128) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt32Complex128) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int32
+var value complex128
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint32complex128) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -13278,24 +15114,35 @@ func (i *IterInt32Complex128) Seek(key int32) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -13341,10 +15188,11 @@ func (i *IterInt32Complex128) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -13354,6 +15202,7 @@ func (i *IterInt32Complex128) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -13550,6 +15399,36 @@ func (t *MapInt32Complex64) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt32Complex64
+	gob.Register(t)
+}
+
+func (t *MapInt32Complex64) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt32Complex64) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int32
+var value complex64
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint32complex64) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -13589,24 +15468,35 @@ func (i *IterInt32Complex64) Seek(key int32) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -13652,10 +15542,11 @@ func (i *IterInt32Complex64) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -13665,6 +15556,7 @@ func (i *IterInt32Complex64) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -13861,6 +15753,36 @@ func (t *MapInt32Error) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt32Error
+	gob.Register(t)
+}
+
+func (t *MapInt32Error) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt32Error) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int32
+var value error
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint32error) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -13900,24 +15822,35 @@ func (i *IterInt32Error) Seek(key int32) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -13963,10 +15896,11 @@ func (i *IterInt32Error) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -13976,6 +15910,7 @@ func (i *IterInt32Error) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -14172,6 +16107,36 @@ func (t *MapInt32Float32) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt32Float32
+	gob.Register(t)
+}
+
+func (t *MapInt32Float32) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt32Float32) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int32
+var value float32
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint32float32) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -14211,24 +16176,35 @@ func (i *IterInt32Float32) Seek(key int32) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -14274,10 +16250,11 @@ func (i *IterInt32Float32) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -14287,6 +16264,7 @@ func (i *IterInt32Float32) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -14483,6 +16461,36 @@ func (t *MapInt32Float64) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt32Float64
+	gob.Register(t)
+}
+
+func (t *MapInt32Float64) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt32Float64) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int32
+var value float64
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint32float64) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -14522,24 +16530,35 @@ func (i *IterInt32Float64) Seek(key int32) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -14585,10 +16604,11 @@ func (i *IterInt32Float64) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -14598,6 +16618,7 @@ func (i *IterInt32Float64) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -14794,6 +16815,36 @@ func (t *MapInt32Int) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt32Int
+	gob.Register(t)
+}
+
+func (t *MapInt32Int) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt32Int) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int32
+var value int
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint32int) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -14833,24 +16884,35 @@ func (i *IterInt32Int) Seek(key int32) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -14896,10 +16958,11 @@ func (i *IterInt32Int) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -14909,6 +16972,7 @@ func (i *IterInt32Int) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -15105,6 +17169,36 @@ func (t *MapInt32Int16) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt32Int16
+	gob.Register(t)
+}
+
+func (t *MapInt32Int16) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt32Int16) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int32
+var value int16
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint32int16) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -15144,24 +17238,35 @@ func (i *IterInt32Int16) Seek(key int32) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -15207,10 +17312,11 @@ func (i *IterInt32Int16) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -15220,6 +17326,7 @@ func (i *IterInt32Int16) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -15416,6 +17523,36 @@ func (t *MapInt32Int32) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt32Int32
+	gob.Register(t)
+}
+
+func (t *MapInt32Int32) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt32Int32) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int32
+var value int32
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint32int32) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -15455,24 +17592,35 @@ func (i *IterInt32Int32) Seek(key int32) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -15518,10 +17666,11 @@ func (i *IterInt32Int32) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -15531,6 +17680,7 @@ func (i *IterInt32Int32) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -15727,6 +17877,36 @@ func (t *MapInt32Int64) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt32Int64
+	gob.Register(t)
+}
+
+func (t *MapInt32Int64) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt32Int64) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int32
+var value int64
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint32int64) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -15766,24 +17946,35 @@ func (i *IterInt32Int64) Seek(key int32) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -15829,10 +18020,11 @@ func (i *IterInt32Int64) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -15842,6 +18034,7 @@ func (i *IterInt32Int64) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -16038,6 +18231,36 @@ func (t *MapInt32Int8) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt32Int8
+	gob.Register(t)
+}
+
+func (t *MapInt32Int8) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt32Int8) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int32
+var value int8
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint32int8) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -16077,24 +18300,35 @@ func (i *IterInt32Int8) Seek(key int32) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -16140,10 +18374,11 @@ func (i *IterInt32Int8) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -16153,6 +18388,7 @@ func (i *IterInt32Int8) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -16349,6 +18585,36 @@ func (t *MapInt32Rune) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt32Rune
+	gob.Register(t)
+}
+
+func (t *MapInt32Rune) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt32Rune) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int32
+var value rune
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint32rune) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -16388,24 +18654,35 @@ func (i *IterInt32Rune) Seek(key int32) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -16451,10 +18728,11 @@ func (i *IterInt32Rune) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -16464,6 +18742,7 @@ func (i *IterInt32Rune) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -16660,6 +18939,36 @@ func (t *MapInt32String) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt32String
+	gob.Register(t)
+}
+
+func (t *MapInt32String) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt32String) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int32
+var value string
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint32string) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -16699,24 +19008,35 @@ func (i *IterInt32String) Seek(key int32) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -16762,10 +19082,11 @@ func (i *IterInt32String) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -16775,6 +19096,7 @@ func (i *IterInt32String) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -16971,6 +19293,36 @@ func (t *MapInt32Uint) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt32Uint
+	gob.Register(t)
+}
+
+func (t *MapInt32Uint) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt32Uint) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int32
+var value uint
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint32uint) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -17010,24 +19362,35 @@ func (i *IterInt32Uint) Seek(key int32) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -17073,10 +19436,11 @@ func (i *IterInt32Uint) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -17086,6 +19450,7 @@ func (i *IterInt32Uint) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -17282,6 +19647,36 @@ func (t *MapInt32Uint16) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt32Uint16
+	gob.Register(t)
+}
+
+func (t *MapInt32Uint16) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt32Uint16) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int32
+var value uint16
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint32uint16) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -17321,24 +19716,35 @@ func (i *IterInt32Uint16) Seek(key int32) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -17384,10 +19790,11 @@ func (i *IterInt32Uint16) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -17397,6 +19804,7 @@ func (i *IterInt32Uint16) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -17593,6 +20001,36 @@ func (t *MapInt32Uint32) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt32Uint32
+	gob.Register(t)
+}
+
+func (t *MapInt32Uint32) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt32Uint32) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int32
+var value uint32
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint32uint32) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -17632,24 +20070,35 @@ func (i *IterInt32Uint32) Seek(key int32) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -17695,10 +20144,11 @@ func (i *IterInt32Uint32) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -17708,6 +20158,7 @@ func (i *IterInt32Uint32) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -17904,6 +20355,36 @@ func (t *MapInt32Uint64) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt32Uint64
+	gob.Register(t)
+}
+
+func (t *MapInt32Uint64) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt32Uint64) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int32
+var value uint64
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint32uint64) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -17943,24 +20424,35 @@ func (i *IterInt32Uint64) Seek(key int32) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -18006,10 +20498,11 @@ func (i *IterInt32Uint64) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -18019,6 +20512,7 @@ func (i *IterInt32Uint64) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -18215,6 +20709,36 @@ func (t *MapInt32Uint8) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt32Uint8
+	gob.Register(t)
+}
+
+func (t *MapInt32Uint8) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt32Uint8) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int32
+var value uint8
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint32uint8) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -18254,24 +20778,35 @@ func (i *IterInt32Uint8) Seek(key int32) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -18317,10 +20852,11 @@ func (i *IterInt32Uint8) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -18330,6 +20866,7 @@ func (i *IterInt32Uint8) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -18526,6 +21063,36 @@ func (t *MapInt32Uintptr) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt32Uintptr
+	gob.Register(t)
+}
+
+func (t *MapInt32Uintptr) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt32Uintptr) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int32
+var value uintptr
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint32uintptr) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -18565,24 +21132,35 @@ func (i *IterInt32Uintptr) Seek(key int32) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -18628,10 +21206,11 @@ func (i *IterInt32Uintptr) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -18641,6 +21220,7 @@ func (i *IterInt32Uintptr) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -18837,6 +21417,36 @@ func (t *MapInt16Bool) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt16Bool
+	gob.Register(t)
+}
+
+func (t *MapInt16Bool) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt16Bool) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int16
+var value bool
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint16bool) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -18876,24 +21486,35 @@ func (i *IterInt16Bool) Seek(key int16) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -18939,10 +21560,11 @@ func (i *IterInt16Bool) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -18952,6 +21574,7 @@ func (i *IterInt16Bool) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -19148,6 +21771,36 @@ func (t *MapInt16Byte) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt16Byte
+	gob.Register(t)
+}
+
+func (t *MapInt16Byte) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt16Byte) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int16
+var value byte
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint16byte) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -19187,24 +21840,35 @@ func (i *IterInt16Byte) Seek(key int16) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -19250,10 +21914,11 @@ func (i *IterInt16Byte) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -19263,6 +21928,7 @@ func (i *IterInt16Byte) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -19459,6 +22125,36 @@ func (t *MapInt16Complex128) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt16Complex128
+	gob.Register(t)
+}
+
+func (t *MapInt16Complex128) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt16Complex128) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int16
+var value complex128
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint16complex128) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -19498,24 +22194,35 @@ func (i *IterInt16Complex128) Seek(key int16) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -19561,10 +22268,11 @@ func (i *IterInt16Complex128) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -19574,6 +22282,7 @@ func (i *IterInt16Complex128) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -19770,6 +22479,36 @@ func (t *MapInt16Complex64) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt16Complex64
+	gob.Register(t)
+}
+
+func (t *MapInt16Complex64) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt16Complex64) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int16
+var value complex64
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint16complex64) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -19809,24 +22548,35 @@ func (i *IterInt16Complex64) Seek(key int16) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -19872,10 +22622,11 @@ func (i *IterInt16Complex64) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -19885,6 +22636,7 @@ func (i *IterInt16Complex64) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -20081,6 +22833,36 @@ func (t *MapInt16Error) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt16Error
+	gob.Register(t)
+}
+
+func (t *MapInt16Error) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt16Error) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int16
+var value error
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint16error) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -20120,24 +22902,35 @@ func (i *IterInt16Error) Seek(key int16) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -20183,10 +22976,11 @@ func (i *IterInt16Error) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -20196,6 +22990,7 @@ func (i *IterInt16Error) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -20392,6 +23187,36 @@ func (t *MapInt16Float32) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt16Float32
+	gob.Register(t)
+}
+
+func (t *MapInt16Float32) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt16Float32) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int16
+var value float32
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint16float32) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -20431,24 +23256,35 @@ func (i *IterInt16Float32) Seek(key int16) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -20494,10 +23330,11 @@ func (i *IterInt16Float32) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -20507,6 +23344,7 @@ func (i *IterInt16Float32) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -20703,6 +23541,36 @@ func (t *MapInt16Float64) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt16Float64
+	gob.Register(t)
+}
+
+func (t *MapInt16Float64) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt16Float64) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int16
+var value float64
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint16float64) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -20742,24 +23610,35 @@ func (i *IterInt16Float64) Seek(key int16) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -20805,10 +23684,11 @@ func (i *IterInt16Float64) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -20818,6 +23698,7 @@ func (i *IterInt16Float64) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -21014,6 +23895,36 @@ func (t *MapInt16Int) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt16Int
+	gob.Register(t)
+}
+
+func (t *MapInt16Int) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt16Int) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int16
+var value int
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint16int) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -21053,24 +23964,35 @@ func (i *IterInt16Int) Seek(key int16) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -21116,10 +24038,11 @@ func (i *IterInt16Int) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -21129,6 +24052,7 @@ func (i *IterInt16Int) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -21325,6 +24249,36 @@ func (t *MapInt16Int16) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt16Int16
+	gob.Register(t)
+}
+
+func (t *MapInt16Int16) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt16Int16) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int16
+var value int16
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint16int16) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -21364,24 +24318,35 @@ func (i *IterInt16Int16) Seek(key int16) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -21427,10 +24392,11 @@ func (i *IterInt16Int16) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -21440,6 +24406,7 @@ func (i *IterInt16Int16) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -21636,6 +24603,36 @@ func (t *MapInt16Int32) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt16Int32
+	gob.Register(t)
+}
+
+func (t *MapInt16Int32) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt16Int32) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int16
+var value int32
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint16int32) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -21675,24 +24672,35 @@ func (i *IterInt16Int32) Seek(key int16) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -21738,10 +24746,11 @@ func (i *IterInt16Int32) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -21751,6 +24760,7 @@ func (i *IterInt16Int32) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -21947,6 +24957,36 @@ func (t *MapInt16Int64) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt16Int64
+	gob.Register(t)
+}
+
+func (t *MapInt16Int64) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt16Int64) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int16
+var value int64
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint16int64) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -21986,24 +25026,35 @@ func (i *IterInt16Int64) Seek(key int16) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -22049,10 +25100,11 @@ func (i *IterInt16Int64) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -22062,6 +25114,7 @@ func (i *IterInt16Int64) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -22258,6 +25311,36 @@ func (t *MapInt16Int8) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt16Int8
+	gob.Register(t)
+}
+
+func (t *MapInt16Int8) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt16Int8) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int16
+var value int8
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint16int8) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -22297,24 +25380,35 @@ func (i *IterInt16Int8) Seek(key int16) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -22360,10 +25454,11 @@ func (i *IterInt16Int8) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -22373,6 +25468,7 @@ func (i *IterInt16Int8) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -22569,6 +25665,36 @@ func (t *MapInt16Rune) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt16Rune
+	gob.Register(t)
+}
+
+func (t *MapInt16Rune) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt16Rune) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int16
+var value rune
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint16rune) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -22608,24 +25734,35 @@ func (i *IterInt16Rune) Seek(key int16) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -22671,10 +25808,11 @@ func (i *IterInt16Rune) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -22684,6 +25822,7 @@ func (i *IterInt16Rune) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -22880,6 +26019,36 @@ func (t *MapInt16String) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt16String
+	gob.Register(t)
+}
+
+func (t *MapInt16String) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt16String) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int16
+var value string
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint16string) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -22919,24 +26088,35 @@ func (i *IterInt16String) Seek(key int16) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -22982,10 +26162,11 @@ func (i *IterInt16String) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -22995,6 +26176,7 @@ func (i *IterInt16String) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -23191,6 +26373,36 @@ func (t *MapInt16Uint) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt16Uint
+	gob.Register(t)
+}
+
+func (t *MapInt16Uint) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt16Uint) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int16
+var value uint
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint16uint) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -23230,24 +26442,35 @@ func (i *IterInt16Uint) Seek(key int16) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -23293,10 +26516,11 @@ func (i *IterInt16Uint) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -23306,6 +26530,7 @@ func (i *IterInt16Uint) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -23502,6 +26727,36 @@ func (t *MapInt16Uint16) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt16Uint16
+	gob.Register(t)
+}
+
+func (t *MapInt16Uint16) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt16Uint16) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int16
+var value uint16
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint16uint16) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -23541,24 +26796,35 @@ func (i *IterInt16Uint16) Seek(key int16) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -23604,10 +26870,11 @@ func (i *IterInt16Uint16) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -23617,6 +26884,7 @@ func (i *IterInt16Uint16) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -23813,6 +27081,36 @@ func (t *MapInt16Uint32) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt16Uint32
+	gob.Register(t)
+}
+
+func (t *MapInt16Uint32) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt16Uint32) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int16
+var value uint32
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint16uint32) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -23852,24 +27150,35 @@ func (i *IterInt16Uint32) Seek(key int16) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -23915,10 +27224,11 @@ func (i *IterInt16Uint32) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -23928,6 +27238,7 @@ func (i *IterInt16Uint32) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -24124,6 +27435,36 @@ func (t *MapInt16Uint64) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt16Uint64
+	gob.Register(t)
+}
+
+func (t *MapInt16Uint64) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt16Uint64) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int16
+var value uint64
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint16uint64) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -24163,24 +27504,35 @@ func (i *IterInt16Uint64) Seek(key int16) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -24226,10 +27578,11 @@ func (i *IterInt16Uint64) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -24239,6 +27592,7 @@ func (i *IterInt16Uint64) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -24435,6 +27789,36 @@ func (t *MapInt16Uint8) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt16Uint8
+	gob.Register(t)
+}
+
+func (t *MapInt16Uint8) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt16Uint8) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int16
+var value uint8
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint16uint8) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -24474,24 +27858,35 @@ func (i *IterInt16Uint8) Seek(key int16) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -24537,10 +27932,11 @@ func (i *IterInt16Uint8) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -24550,6 +27946,7 @@ func (i *IterInt16Uint8) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -24746,6 +28143,36 @@ func (t *MapInt16Uintptr) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt16Uintptr
+	gob.Register(t)
+}
+
+func (t *MapInt16Uintptr) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt16Uintptr) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int16
+var value uintptr
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint16uintptr) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -24785,24 +28212,35 @@ func (i *IterInt16Uintptr) Seek(key int16) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -24848,10 +28286,11 @@ func (i *IterInt16Uintptr) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -24861,6 +28300,7 @@ func (i *IterInt16Uintptr) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -25057,6 +28497,36 @@ func (t *MapInt8Bool) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt8Bool
+	gob.Register(t)
+}
+
+func (t *MapInt8Bool) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt8Bool) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int8
+var value bool
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint8bool) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -25096,24 +28566,35 @@ func (i *IterInt8Bool) Seek(key int8) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -25159,10 +28640,11 @@ func (i *IterInt8Bool) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -25172,6 +28654,7 @@ func (i *IterInt8Bool) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -25368,6 +28851,36 @@ func (t *MapInt8Byte) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt8Byte
+	gob.Register(t)
+}
+
+func (t *MapInt8Byte) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt8Byte) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int8
+var value byte
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint8byte) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -25407,24 +28920,35 @@ func (i *IterInt8Byte) Seek(key int8) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -25470,10 +28994,11 @@ func (i *IterInt8Byte) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -25483,6 +29008,7 @@ func (i *IterInt8Byte) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -25679,6 +29205,36 @@ func (t *MapInt8Complex128) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt8Complex128
+	gob.Register(t)
+}
+
+func (t *MapInt8Complex128) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt8Complex128) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int8
+var value complex128
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint8complex128) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -25718,24 +29274,35 @@ func (i *IterInt8Complex128) Seek(key int8) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -25781,10 +29348,11 @@ func (i *IterInt8Complex128) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -25794,6 +29362,7 @@ func (i *IterInt8Complex128) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -25990,6 +29559,36 @@ func (t *MapInt8Complex64) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt8Complex64
+	gob.Register(t)
+}
+
+func (t *MapInt8Complex64) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt8Complex64) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int8
+var value complex64
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint8complex64) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -26029,24 +29628,35 @@ func (i *IterInt8Complex64) Seek(key int8) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -26092,10 +29702,11 @@ func (i *IterInt8Complex64) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -26105,6 +29716,7 @@ func (i *IterInt8Complex64) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -26301,6 +29913,36 @@ func (t *MapInt8Error) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt8Error
+	gob.Register(t)
+}
+
+func (t *MapInt8Error) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt8Error) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int8
+var value error
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint8error) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -26340,24 +29982,35 @@ func (i *IterInt8Error) Seek(key int8) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -26403,10 +30056,11 @@ func (i *IterInt8Error) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -26416,6 +30070,7 @@ func (i *IterInt8Error) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -26612,6 +30267,36 @@ func (t *MapInt8Float32) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt8Float32
+	gob.Register(t)
+}
+
+func (t *MapInt8Float32) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt8Float32) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int8
+var value float32
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint8float32) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -26651,24 +30336,35 @@ func (i *IterInt8Float32) Seek(key int8) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -26714,10 +30410,11 @@ func (i *IterInt8Float32) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -26727,6 +30424,7 @@ func (i *IterInt8Float32) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -26923,6 +30621,36 @@ func (t *MapInt8Float64) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt8Float64
+	gob.Register(t)
+}
+
+func (t *MapInt8Float64) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt8Float64) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int8
+var value float64
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint8float64) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -26962,24 +30690,35 @@ func (i *IterInt8Float64) Seek(key int8) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -27025,10 +30764,11 @@ func (i *IterInt8Float64) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -27038,6 +30778,7 @@ func (i *IterInt8Float64) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -27234,6 +30975,36 @@ func (t *MapInt8Int) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt8Int
+	gob.Register(t)
+}
+
+func (t *MapInt8Int) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt8Int) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int8
+var value int
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint8int) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -27273,24 +31044,35 @@ func (i *IterInt8Int) Seek(key int8) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -27336,10 +31118,11 @@ func (i *IterInt8Int) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -27349,6 +31132,7 @@ func (i *IterInt8Int) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -27545,6 +31329,36 @@ func (t *MapInt8Int16) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt8Int16
+	gob.Register(t)
+}
+
+func (t *MapInt8Int16) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt8Int16) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int8
+var value int16
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint8int16) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -27584,24 +31398,35 @@ func (i *IterInt8Int16) Seek(key int8) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -27647,10 +31472,11 @@ func (i *IterInt8Int16) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -27660,6 +31486,7 @@ func (i *IterInt8Int16) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -27856,6 +31683,36 @@ func (t *MapInt8Int32) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt8Int32
+	gob.Register(t)
+}
+
+func (t *MapInt8Int32) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt8Int32) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int8
+var value int32
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint8int32) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -27895,24 +31752,35 @@ func (i *IterInt8Int32) Seek(key int8) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -27958,10 +31826,11 @@ func (i *IterInt8Int32) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -27971,6 +31840,7 @@ func (i *IterInt8Int32) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -28167,6 +32037,36 @@ func (t *MapInt8Int64) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt8Int64
+	gob.Register(t)
+}
+
+func (t *MapInt8Int64) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt8Int64) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int8
+var value int64
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint8int64) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -28206,24 +32106,35 @@ func (i *IterInt8Int64) Seek(key int8) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -28269,10 +32180,11 @@ func (i *IterInt8Int64) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -28282,6 +32194,7 @@ func (i *IterInt8Int64) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -28478,6 +32391,36 @@ func (t *MapInt8Int8) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt8Int8
+	gob.Register(t)
+}
+
+func (t *MapInt8Int8) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt8Int8) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int8
+var value int8
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint8int8) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -28517,24 +32460,35 @@ func (i *IterInt8Int8) Seek(key int8) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -28580,10 +32534,11 @@ func (i *IterInt8Int8) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -28593,6 +32548,7 @@ func (i *IterInt8Int8) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -28789,6 +32745,36 @@ func (t *MapInt8Rune) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt8Rune
+	gob.Register(t)
+}
+
+func (t *MapInt8Rune) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt8Rune) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int8
+var value rune
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint8rune) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -28828,24 +32814,35 @@ func (i *IterInt8Rune) Seek(key int8) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -28891,10 +32888,11 @@ func (i *IterInt8Rune) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -28904,6 +32902,7 @@ func (i *IterInt8Rune) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -29100,6 +33099,36 @@ func (t *MapInt8String) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt8String
+	gob.Register(t)
+}
+
+func (t *MapInt8String) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt8String) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int8
+var value string
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint8string) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -29139,24 +33168,35 @@ func (i *IterInt8String) Seek(key int8) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -29202,10 +33242,11 @@ func (i *IterInt8String) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -29215,6 +33256,7 @@ func (i *IterInt8String) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -29411,6 +33453,36 @@ func (t *MapInt8Uint) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt8Uint
+	gob.Register(t)
+}
+
+func (t *MapInt8Uint) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt8Uint) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int8
+var value uint
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint8uint) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -29450,24 +33522,35 @@ func (i *IterInt8Uint) Seek(key int8) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -29513,10 +33596,11 @@ func (i *IterInt8Uint) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -29526,6 +33610,7 @@ func (i *IterInt8Uint) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -29722,6 +33807,36 @@ func (t *MapInt8Uint16) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt8Uint16
+	gob.Register(t)
+}
+
+func (t *MapInt8Uint16) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt8Uint16) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int8
+var value uint16
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint8uint16) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -29761,24 +33876,35 @@ func (i *IterInt8Uint16) Seek(key int8) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -29824,10 +33950,11 @@ func (i *IterInt8Uint16) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -29837,6 +33964,7 @@ func (i *IterInt8Uint16) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -30033,6 +34161,36 @@ func (t *MapInt8Uint32) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt8Uint32
+	gob.Register(t)
+}
+
+func (t *MapInt8Uint32) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt8Uint32) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int8
+var value uint32
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint8uint32) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -30072,24 +34230,35 @@ func (i *IterInt8Uint32) Seek(key int8) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -30135,10 +34304,11 @@ func (i *IterInt8Uint32) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -30148,6 +34318,7 @@ func (i *IterInt8Uint32) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -30344,6 +34515,36 @@ func (t *MapInt8Uint64) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt8Uint64
+	gob.Register(t)
+}
+
+func (t *MapInt8Uint64) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt8Uint64) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int8
+var value uint64
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint8uint64) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -30383,24 +34584,35 @@ func (i *IterInt8Uint64) Seek(key int8) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -30446,10 +34658,11 @@ func (i *IterInt8Uint64) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -30459,6 +34672,7 @@ func (i *IterInt8Uint64) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -30655,6 +34869,36 @@ func (t *MapInt8Uint8) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt8Uint8
+	gob.Register(t)
+}
+
+func (t *MapInt8Uint8) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt8Uint8) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int8
+var value uint8
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint8uint8) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -30694,24 +34938,35 @@ func (i *IterInt8Uint8) Seek(key int8) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -30757,10 +35012,11 @@ func (i *IterInt8Uint8) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -30770,6 +35026,7 @@ func (i *IterInt8Uint8) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -30966,6 +35223,36 @@ func (t *MapInt8Uintptr) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapInt8Uintptr
+	gob.Register(t)
+}
+
+func (t *MapInt8Uintptr) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapInt8Uintptr) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key int8
+var value uintptr
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapint8uintptr) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -31005,24 +35292,35 @@ func (i *IterInt8Uintptr) Seek(key int8) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -31068,10 +35366,11 @@ func (i *IterInt8Uintptr) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -31081,6 +35380,7 @@ func (i *IterInt8Uintptr) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -31277,6 +35577,36 @@ func (t *MapUintBool) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUintBool
+	gob.Register(t)
+}
+
+func (t *MapUintBool) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUintBool) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint
+var value bool
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuintbool) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -31316,24 +35646,35 @@ func (i *IterUintBool) Seek(key uint) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -31379,10 +35720,11 @@ func (i *IterUintBool) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -31392,6 +35734,7 @@ func (i *IterUintBool) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -31588,6 +35931,36 @@ func (t *MapUintByte) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUintByte
+	gob.Register(t)
+}
+
+func (t *MapUintByte) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUintByte) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint
+var value byte
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuintbyte) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -31627,24 +36000,35 @@ func (i *IterUintByte) Seek(key uint) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -31690,10 +36074,11 @@ func (i *IterUintByte) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -31703,6 +36088,7 @@ func (i *IterUintByte) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -31899,6 +36285,36 @@ func (t *MapUintComplex128) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUintComplex128
+	gob.Register(t)
+}
+
+func (t *MapUintComplex128) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUintComplex128) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint
+var value complex128
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuintcomplex128) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -31938,24 +36354,35 @@ func (i *IterUintComplex128) Seek(key uint) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -32001,10 +36428,11 @@ func (i *IterUintComplex128) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -32014,6 +36442,7 @@ func (i *IterUintComplex128) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -32210,6 +36639,36 @@ func (t *MapUintComplex64) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUintComplex64
+	gob.Register(t)
+}
+
+func (t *MapUintComplex64) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUintComplex64) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint
+var value complex64
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuintcomplex64) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -32249,24 +36708,35 @@ func (i *IterUintComplex64) Seek(key uint) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -32312,10 +36782,11 @@ func (i *IterUintComplex64) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -32325,6 +36796,7 @@ func (i *IterUintComplex64) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -32521,6 +36993,36 @@ func (t *MapUintError) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUintError
+	gob.Register(t)
+}
+
+func (t *MapUintError) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUintError) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint
+var value error
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuinterror) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -32560,24 +37062,35 @@ func (i *IterUintError) Seek(key uint) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -32623,10 +37136,11 @@ func (i *IterUintError) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -32636,6 +37150,7 @@ func (i *IterUintError) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -32832,6 +37347,36 @@ func (t *MapUintFloat32) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUintFloat32
+	gob.Register(t)
+}
+
+func (t *MapUintFloat32) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUintFloat32) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint
+var value float32
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuintfloat32) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -32871,24 +37416,35 @@ func (i *IterUintFloat32) Seek(key uint) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -32934,10 +37490,11 @@ func (i *IterUintFloat32) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -32947,6 +37504,7 @@ func (i *IterUintFloat32) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -33143,6 +37701,36 @@ func (t *MapUintFloat64) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUintFloat64
+	gob.Register(t)
+}
+
+func (t *MapUintFloat64) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUintFloat64) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint
+var value float64
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuintfloat64) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -33182,24 +37770,35 @@ func (i *IterUintFloat64) Seek(key uint) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -33245,10 +37844,11 @@ func (i *IterUintFloat64) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -33258,6 +37858,7 @@ func (i *IterUintFloat64) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -33454,6 +38055,36 @@ func (t *MapUintInt) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUintInt
+	gob.Register(t)
+}
+
+func (t *MapUintInt) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUintInt) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint
+var value int
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuintint) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -33493,24 +38124,35 @@ func (i *IterUintInt) Seek(key uint) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -33556,10 +38198,11 @@ func (i *IterUintInt) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -33569,6 +38212,7 @@ func (i *IterUintInt) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -33765,6 +38409,36 @@ func (t *MapUintInt16) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUintInt16
+	gob.Register(t)
+}
+
+func (t *MapUintInt16) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUintInt16) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint
+var value int16
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuintint16) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -33804,24 +38478,35 @@ func (i *IterUintInt16) Seek(key uint) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -33867,10 +38552,11 @@ func (i *IterUintInt16) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -33880,6 +38566,7 @@ func (i *IterUintInt16) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -34076,6 +38763,36 @@ func (t *MapUintInt32) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUintInt32
+	gob.Register(t)
+}
+
+func (t *MapUintInt32) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUintInt32) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint
+var value int32
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuintint32) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -34115,24 +38832,35 @@ func (i *IterUintInt32) Seek(key uint) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -34178,10 +38906,11 @@ func (i *IterUintInt32) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -34191,6 +38920,7 @@ func (i *IterUintInt32) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -34387,6 +39117,36 @@ func (t *MapUintInt64) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUintInt64
+	gob.Register(t)
+}
+
+func (t *MapUintInt64) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUintInt64) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint
+var value int64
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuintint64) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -34426,24 +39186,35 @@ func (i *IterUintInt64) Seek(key uint) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -34489,10 +39260,11 @@ func (i *IterUintInt64) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -34502,6 +39274,7 @@ func (i *IterUintInt64) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -34698,6 +39471,36 @@ func (t *MapUintInt8) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUintInt8
+	gob.Register(t)
+}
+
+func (t *MapUintInt8) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUintInt8) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint
+var value int8
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuintint8) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -34737,24 +39540,35 @@ func (i *IterUintInt8) Seek(key uint) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -34800,10 +39614,11 @@ func (i *IterUintInt8) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -34813,6 +39628,7 @@ func (i *IterUintInt8) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -35009,6 +39825,36 @@ func (t *MapUintRune) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUintRune
+	gob.Register(t)
+}
+
+func (t *MapUintRune) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUintRune) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint
+var value rune
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuintrune) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -35048,24 +39894,35 @@ func (i *IterUintRune) Seek(key uint) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -35111,10 +39968,11 @@ func (i *IterUintRune) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -35124,6 +39982,7 @@ func (i *IterUintRune) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -35320,6 +40179,36 @@ func (t *MapUintString) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUintString
+	gob.Register(t)
+}
+
+func (t *MapUintString) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUintString) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint
+var value string
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuintstring) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -35359,24 +40248,35 @@ func (i *IterUintString) Seek(key uint) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -35422,10 +40322,11 @@ func (i *IterUintString) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -35435,6 +40336,7 @@ func (i *IterUintString) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -35631,6 +40533,36 @@ func (t *MapUintUint) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUintUint
+	gob.Register(t)
+}
+
+func (t *MapUintUint) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUintUint) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint
+var value uint
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuintuint) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -35670,24 +40602,35 @@ func (i *IterUintUint) Seek(key uint) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -35733,10 +40676,11 @@ func (i *IterUintUint) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -35746,6 +40690,7 @@ func (i *IterUintUint) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -35942,6 +40887,36 @@ func (t *MapUintUint16) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUintUint16
+	gob.Register(t)
+}
+
+func (t *MapUintUint16) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUintUint16) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint
+var value uint16
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuintuint16) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -35981,24 +40956,35 @@ func (i *IterUintUint16) Seek(key uint) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -36044,10 +41030,11 @@ func (i *IterUintUint16) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -36057,6 +41044,7 @@ func (i *IterUintUint16) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -36253,6 +41241,36 @@ func (t *MapUintUint32) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUintUint32
+	gob.Register(t)
+}
+
+func (t *MapUintUint32) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUintUint32) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint
+var value uint32
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuintuint32) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -36292,24 +41310,35 @@ func (i *IterUintUint32) Seek(key uint) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -36355,10 +41384,11 @@ func (i *IterUintUint32) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -36368,6 +41398,7 @@ func (i *IterUintUint32) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -36564,6 +41595,36 @@ func (t *MapUintUint64) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUintUint64
+	gob.Register(t)
+}
+
+func (t *MapUintUint64) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUintUint64) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint
+var value uint64
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuintuint64) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -36603,24 +41664,35 @@ func (i *IterUintUint64) Seek(key uint) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -36666,10 +41738,11 @@ func (i *IterUintUint64) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -36679,6 +41752,7 @@ func (i *IterUintUint64) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -36875,6 +41949,36 @@ func (t *MapUintUint8) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUintUint8
+	gob.Register(t)
+}
+
+func (t *MapUintUint8) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUintUint8) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint
+var value uint8
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuintuint8) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -36914,24 +42018,35 @@ func (i *IterUintUint8) Seek(key uint) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -36977,10 +42092,11 @@ func (i *IterUintUint8) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -36990,6 +42106,7 @@ func (i *IterUintUint8) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -37186,6 +42303,36 @@ func (t *MapUintUintptr) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUintUintptr
+	gob.Register(t)
+}
+
+func (t *MapUintUintptr) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUintUintptr) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint
+var value uintptr
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuintuintptr) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -37225,24 +42372,35 @@ func (i *IterUintUintptr) Seek(key uint) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -37288,10 +42446,11 @@ func (i *IterUintUintptr) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -37301,6 +42460,7 @@ func (i *IterUintUintptr) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -37497,6 +42657,36 @@ func (t *MapUintptrBool) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUintptrBool
+	gob.Register(t)
+}
+
+func (t *MapUintptrBool) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUintptrBool) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uintptr
+var value bool
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuintptrbool) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -37536,24 +42726,35 @@ func (i *IterUintptrBool) Seek(key uintptr) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -37599,10 +42800,11 @@ func (i *IterUintptrBool) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -37612,6 +42814,7 @@ func (i *IterUintptrBool) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -37808,6 +43011,36 @@ func (t *MapUintptrByte) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUintptrByte
+	gob.Register(t)
+}
+
+func (t *MapUintptrByte) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUintptrByte) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uintptr
+var value byte
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuintptrbyte) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -37847,24 +43080,35 @@ func (i *IterUintptrByte) Seek(key uintptr) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -37910,10 +43154,11 @@ func (i *IterUintptrByte) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -37923,6 +43168,7 @@ func (i *IterUintptrByte) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -38119,6 +43365,36 @@ func (t *MapUintptrComplex128) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUintptrComplex128
+	gob.Register(t)
+}
+
+func (t *MapUintptrComplex128) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUintptrComplex128) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uintptr
+var value complex128
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuintptrcomplex128) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -38158,24 +43434,35 @@ func (i *IterUintptrComplex128) Seek(key uintptr) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -38221,10 +43508,11 @@ func (i *IterUintptrComplex128) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -38234,6 +43522,7 @@ func (i *IterUintptrComplex128) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -38430,6 +43719,36 @@ func (t *MapUintptrComplex64) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUintptrComplex64
+	gob.Register(t)
+}
+
+func (t *MapUintptrComplex64) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUintptrComplex64) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uintptr
+var value complex64
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuintptrcomplex64) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -38469,24 +43788,35 @@ func (i *IterUintptrComplex64) Seek(key uintptr) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -38532,10 +43862,11 @@ func (i *IterUintptrComplex64) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -38545,6 +43876,7 @@ func (i *IterUintptrComplex64) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -38741,6 +44073,36 @@ func (t *MapUintptrError) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUintptrError
+	gob.Register(t)
+}
+
+func (t *MapUintptrError) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUintptrError) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uintptr
+var value error
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuintptrerror) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -38780,24 +44142,35 @@ func (i *IterUintptrError) Seek(key uintptr) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -38843,10 +44216,11 @@ func (i *IterUintptrError) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -38856,6 +44230,7 @@ func (i *IterUintptrError) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -39052,6 +44427,36 @@ func (t *MapUintptrFloat32) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUintptrFloat32
+	gob.Register(t)
+}
+
+func (t *MapUintptrFloat32) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUintptrFloat32) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uintptr
+var value float32
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuintptrfloat32) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -39091,24 +44496,35 @@ func (i *IterUintptrFloat32) Seek(key uintptr) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -39154,10 +44570,11 @@ func (i *IterUintptrFloat32) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -39167,6 +44584,7 @@ func (i *IterUintptrFloat32) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -39363,6 +44781,36 @@ func (t *MapUintptrFloat64) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUintptrFloat64
+	gob.Register(t)
+}
+
+func (t *MapUintptrFloat64) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUintptrFloat64) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uintptr
+var value float64
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuintptrfloat64) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -39402,24 +44850,35 @@ func (i *IterUintptrFloat64) Seek(key uintptr) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -39465,10 +44924,11 @@ func (i *IterUintptrFloat64) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -39478,6 +44938,7 @@ func (i *IterUintptrFloat64) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -39674,6 +45135,36 @@ func (t *MapUintptrInt) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUintptrInt
+	gob.Register(t)
+}
+
+func (t *MapUintptrInt) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUintptrInt) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uintptr
+var value int
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuintptrint) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -39713,24 +45204,35 @@ func (i *IterUintptrInt) Seek(key uintptr) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -39776,10 +45278,11 @@ func (i *IterUintptrInt) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -39789,6 +45292,7 @@ func (i *IterUintptrInt) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -39985,6 +45489,36 @@ func (t *MapUintptrInt16) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUintptrInt16
+	gob.Register(t)
+}
+
+func (t *MapUintptrInt16) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUintptrInt16) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uintptr
+var value int16
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuintptrint16) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -40024,24 +45558,35 @@ func (i *IterUintptrInt16) Seek(key uintptr) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -40087,10 +45632,11 @@ func (i *IterUintptrInt16) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -40100,6 +45646,7 @@ func (i *IterUintptrInt16) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -40296,6 +45843,36 @@ func (t *MapUintptrInt32) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUintptrInt32
+	gob.Register(t)
+}
+
+func (t *MapUintptrInt32) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUintptrInt32) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uintptr
+var value int32
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuintptrint32) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -40335,24 +45912,35 @@ func (i *IterUintptrInt32) Seek(key uintptr) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -40398,10 +45986,11 @@ func (i *IterUintptrInt32) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -40411,6 +46000,7 @@ func (i *IterUintptrInt32) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -40607,6 +46197,36 @@ func (t *MapUintptrInt64) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUintptrInt64
+	gob.Register(t)
+}
+
+func (t *MapUintptrInt64) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUintptrInt64) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uintptr
+var value int64
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuintptrint64) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -40646,24 +46266,35 @@ func (i *IterUintptrInt64) Seek(key uintptr) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -40709,10 +46340,11 @@ func (i *IterUintptrInt64) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -40722,6 +46354,7 @@ func (i *IterUintptrInt64) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -40918,6 +46551,36 @@ func (t *MapUintptrInt8) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUintptrInt8
+	gob.Register(t)
+}
+
+func (t *MapUintptrInt8) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUintptrInt8) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uintptr
+var value int8
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuintptrint8) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -40957,24 +46620,35 @@ func (i *IterUintptrInt8) Seek(key uintptr) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -41020,10 +46694,11 @@ func (i *IterUintptrInt8) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -41033,6 +46708,7 @@ func (i *IterUintptrInt8) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -41229,6 +46905,36 @@ func (t *MapUintptrRune) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUintptrRune
+	gob.Register(t)
+}
+
+func (t *MapUintptrRune) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUintptrRune) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uintptr
+var value rune
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuintptrrune) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -41268,24 +46974,35 @@ func (i *IterUintptrRune) Seek(key uintptr) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -41331,10 +47048,11 @@ func (i *IterUintptrRune) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -41344,6 +47062,7 @@ func (i *IterUintptrRune) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -41540,6 +47259,36 @@ func (t *MapUintptrString) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUintptrString
+	gob.Register(t)
+}
+
+func (t *MapUintptrString) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUintptrString) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uintptr
+var value string
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuintptrstring) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -41579,24 +47328,35 @@ func (i *IterUintptrString) Seek(key uintptr) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -41642,10 +47402,11 @@ func (i *IterUintptrString) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -41655,6 +47416,7 @@ func (i *IterUintptrString) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -41851,6 +47613,36 @@ func (t *MapUintptrUint) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUintptrUint
+	gob.Register(t)
+}
+
+func (t *MapUintptrUint) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUintptrUint) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uintptr
+var value uint
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuintptruint) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -41890,24 +47682,35 @@ func (i *IterUintptrUint) Seek(key uintptr) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -41953,10 +47756,11 @@ func (i *IterUintptrUint) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -41966,6 +47770,7 @@ func (i *IterUintptrUint) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -42162,6 +47967,36 @@ func (t *MapUintptrUint16) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUintptrUint16
+	gob.Register(t)
+}
+
+func (t *MapUintptrUint16) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUintptrUint16) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uintptr
+var value uint16
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuintptruint16) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -42201,24 +48036,35 @@ func (i *IterUintptrUint16) Seek(key uintptr) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -42264,10 +48110,11 @@ func (i *IterUintptrUint16) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -42277,6 +48124,7 @@ func (i *IterUintptrUint16) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -42473,6 +48321,36 @@ func (t *MapUintptrUint32) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUintptrUint32
+	gob.Register(t)
+}
+
+func (t *MapUintptrUint32) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUintptrUint32) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uintptr
+var value uint32
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuintptruint32) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -42512,24 +48390,35 @@ func (i *IterUintptrUint32) Seek(key uintptr) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -42575,10 +48464,11 @@ func (i *IterUintptrUint32) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -42588,6 +48478,7 @@ func (i *IterUintptrUint32) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -42784,6 +48675,36 @@ func (t *MapUintptrUint64) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUintptrUint64
+	gob.Register(t)
+}
+
+func (t *MapUintptrUint64) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUintptrUint64) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uintptr
+var value uint64
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuintptruint64) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -42823,24 +48744,35 @@ func (i *IterUintptrUint64) Seek(key uintptr) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -42886,10 +48818,11 @@ func (i *IterUintptrUint64) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -42899,6 +48832,7 @@ func (i *IterUintptrUint64) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -43095,6 +49029,36 @@ func (t *MapUintptrUint8) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUintptrUint8
+	gob.Register(t)
+}
+
+func (t *MapUintptrUint8) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUintptrUint8) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uintptr
+var value uint8
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuintptruint8) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -43134,24 +49098,35 @@ func (i *IterUintptrUint8) Seek(key uintptr) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -43197,10 +49172,11 @@ func (i *IterUintptrUint8) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -43210,6 +49186,7 @@ func (i *IterUintptrUint8) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -43406,6 +49383,36 @@ func (t *MapUintptrUintptr) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUintptrUintptr
+	gob.Register(t)
+}
+
+func (t *MapUintptrUintptr) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUintptrUintptr) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uintptr
+var value uintptr
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuintptruintptr) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -43445,24 +49452,35 @@ func (i *IterUintptrUintptr) Seek(key uintptr) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -43508,10 +49526,11 @@ func (i *IterUintptrUintptr) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -43521,6 +49540,7 @@ func (i *IterUintptrUintptr) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -43717,6 +49737,36 @@ func (t *MapUint64Bool) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint64Bool
+	gob.Register(t)
+}
+
+func (t *MapUint64Bool) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint64Bool) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint64
+var value bool
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint64bool) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -43756,24 +49806,35 @@ func (i *IterUint64Bool) Seek(key uint64) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -43819,10 +49880,11 @@ func (i *IterUint64Bool) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -43832,6 +49894,7 @@ func (i *IterUint64Bool) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -44028,6 +50091,36 @@ func (t *MapUint64Byte) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint64Byte
+	gob.Register(t)
+}
+
+func (t *MapUint64Byte) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint64Byte) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint64
+var value byte
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint64byte) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -44067,24 +50160,35 @@ func (i *IterUint64Byte) Seek(key uint64) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -44130,10 +50234,11 @@ func (i *IterUint64Byte) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -44143,6 +50248,7 @@ func (i *IterUint64Byte) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -44339,6 +50445,36 @@ func (t *MapUint64Complex128) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint64Complex128
+	gob.Register(t)
+}
+
+func (t *MapUint64Complex128) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint64Complex128) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint64
+var value complex128
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint64complex128) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -44378,24 +50514,35 @@ func (i *IterUint64Complex128) Seek(key uint64) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -44441,10 +50588,11 @@ func (i *IterUint64Complex128) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -44454,6 +50602,7 @@ func (i *IterUint64Complex128) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -44650,6 +50799,36 @@ func (t *MapUint64Complex64) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint64Complex64
+	gob.Register(t)
+}
+
+func (t *MapUint64Complex64) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint64Complex64) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint64
+var value complex64
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint64complex64) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -44689,24 +50868,35 @@ func (i *IterUint64Complex64) Seek(key uint64) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -44752,10 +50942,11 @@ func (i *IterUint64Complex64) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -44765,6 +50956,7 @@ func (i *IterUint64Complex64) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -44961,6 +51153,36 @@ func (t *MapUint64Error) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint64Error
+	gob.Register(t)
+}
+
+func (t *MapUint64Error) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint64Error) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint64
+var value error
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint64error) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -45000,24 +51222,35 @@ func (i *IterUint64Error) Seek(key uint64) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -45063,10 +51296,11 @@ func (i *IterUint64Error) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -45076,6 +51310,7 @@ func (i *IterUint64Error) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -45272,6 +51507,36 @@ func (t *MapUint64Float32) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint64Float32
+	gob.Register(t)
+}
+
+func (t *MapUint64Float32) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint64Float32) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint64
+var value float32
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint64float32) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -45311,24 +51576,35 @@ func (i *IterUint64Float32) Seek(key uint64) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -45374,10 +51650,11 @@ func (i *IterUint64Float32) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -45387,6 +51664,7 @@ func (i *IterUint64Float32) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -45583,6 +51861,36 @@ func (t *MapUint64Float64) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint64Float64
+	gob.Register(t)
+}
+
+func (t *MapUint64Float64) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint64Float64) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint64
+var value float64
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint64float64) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -45622,24 +51930,35 @@ func (i *IterUint64Float64) Seek(key uint64) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -45685,10 +52004,11 @@ func (i *IterUint64Float64) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -45698,6 +52018,7 @@ func (i *IterUint64Float64) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -45894,6 +52215,36 @@ func (t *MapUint64Int) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint64Int
+	gob.Register(t)
+}
+
+func (t *MapUint64Int) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint64Int) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint64
+var value int
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint64int) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -45933,24 +52284,35 @@ func (i *IterUint64Int) Seek(key uint64) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -45996,10 +52358,11 @@ func (i *IterUint64Int) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -46009,6 +52372,7 @@ func (i *IterUint64Int) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -46205,6 +52569,36 @@ func (t *MapUint64Int16) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint64Int16
+	gob.Register(t)
+}
+
+func (t *MapUint64Int16) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint64Int16) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint64
+var value int16
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint64int16) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -46244,24 +52638,35 @@ func (i *IterUint64Int16) Seek(key uint64) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -46307,10 +52712,11 @@ func (i *IterUint64Int16) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -46320,6 +52726,7 @@ func (i *IterUint64Int16) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -46516,6 +52923,36 @@ func (t *MapUint64Int32) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint64Int32
+	gob.Register(t)
+}
+
+func (t *MapUint64Int32) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint64Int32) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint64
+var value int32
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint64int32) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -46555,24 +52992,35 @@ func (i *IterUint64Int32) Seek(key uint64) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -46618,10 +53066,11 @@ func (i *IterUint64Int32) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -46631,6 +53080,7 @@ func (i *IterUint64Int32) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -46827,6 +53277,36 @@ func (t *MapUint64Int64) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint64Int64
+	gob.Register(t)
+}
+
+func (t *MapUint64Int64) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint64Int64) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint64
+var value int64
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint64int64) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -46866,24 +53346,35 @@ func (i *IterUint64Int64) Seek(key uint64) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -46929,10 +53420,11 @@ func (i *IterUint64Int64) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -46942,6 +53434,7 @@ func (i *IterUint64Int64) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -47138,6 +53631,36 @@ func (t *MapUint64Int8) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint64Int8
+	gob.Register(t)
+}
+
+func (t *MapUint64Int8) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint64Int8) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint64
+var value int8
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint64int8) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -47177,24 +53700,35 @@ func (i *IterUint64Int8) Seek(key uint64) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -47240,10 +53774,11 @@ func (i *IterUint64Int8) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -47253,6 +53788,7 @@ func (i *IterUint64Int8) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -47449,6 +53985,36 @@ func (t *MapUint64Rune) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint64Rune
+	gob.Register(t)
+}
+
+func (t *MapUint64Rune) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint64Rune) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint64
+var value rune
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint64rune) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -47488,24 +54054,35 @@ func (i *IterUint64Rune) Seek(key uint64) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -47551,10 +54128,11 @@ func (i *IterUint64Rune) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -47564,6 +54142,7 @@ func (i *IterUint64Rune) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -47760,6 +54339,36 @@ func (t *MapUint64String) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint64String
+	gob.Register(t)
+}
+
+func (t *MapUint64String) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint64String) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint64
+var value string
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint64string) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -47799,24 +54408,35 @@ func (i *IterUint64String) Seek(key uint64) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -47862,10 +54482,11 @@ func (i *IterUint64String) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -47875,6 +54496,7 @@ func (i *IterUint64String) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -48071,6 +54693,36 @@ func (t *MapUint64Uint) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint64Uint
+	gob.Register(t)
+}
+
+func (t *MapUint64Uint) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint64Uint) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint64
+var value uint
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint64uint) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -48110,24 +54762,35 @@ func (i *IterUint64Uint) Seek(key uint64) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -48173,10 +54836,11 @@ func (i *IterUint64Uint) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -48186,6 +54850,7 @@ func (i *IterUint64Uint) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -48382,6 +55047,36 @@ func (t *MapUint64Uint16) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint64Uint16
+	gob.Register(t)
+}
+
+func (t *MapUint64Uint16) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint64Uint16) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint64
+var value uint16
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint64uint16) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -48421,24 +55116,35 @@ func (i *IterUint64Uint16) Seek(key uint64) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -48484,10 +55190,11 @@ func (i *IterUint64Uint16) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -48497,6 +55204,7 @@ func (i *IterUint64Uint16) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -48693,6 +55401,36 @@ func (t *MapUint64Uint32) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint64Uint32
+	gob.Register(t)
+}
+
+func (t *MapUint64Uint32) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint64Uint32) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint64
+var value uint32
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint64uint32) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -48732,24 +55470,35 @@ func (i *IterUint64Uint32) Seek(key uint64) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -48795,10 +55544,11 @@ func (i *IterUint64Uint32) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -48808,6 +55558,7 @@ func (i *IterUint64Uint32) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -49004,6 +55755,36 @@ func (t *MapUint64Uint64) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint64Uint64
+	gob.Register(t)
+}
+
+func (t *MapUint64Uint64) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint64Uint64) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint64
+var value uint64
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint64uint64) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -49043,24 +55824,35 @@ func (i *IterUint64Uint64) Seek(key uint64) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -49106,10 +55898,11 @@ func (i *IterUint64Uint64) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -49119,6 +55912,7 @@ func (i *IterUint64Uint64) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -49315,6 +56109,36 @@ func (t *MapUint64Uint8) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint64Uint8
+	gob.Register(t)
+}
+
+func (t *MapUint64Uint8) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint64Uint8) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint64
+var value uint8
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint64uint8) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -49354,24 +56178,35 @@ func (i *IterUint64Uint8) Seek(key uint64) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -49417,10 +56252,11 @@ func (i *IterUint64Uint8) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -49430,6 +56266,7 @@ func (i *IterUint64Uint8) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -49626,6 +56463,36 @@ func (t *MapUint64Uintptr) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint64Uintptr
+	gob.Register(t)
+}
+
+func (t *MapUint64Uintptr) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint64Uintptr) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint64
+var value uintptr
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint64uintptr) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -49665,24 +56532,35 @@ func (i *IterUint64Uintptr) Seek(key uint64) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -49728,10 +56606,11 @@ func (i *IterUint64Uintptr) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -49741,6 +56620,7 @@ func (i *IterUint64Uintptr) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -49937,6 +56817,36 @@ func (t *MapUint32Bool) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint32Bool
+	gob.Register(t)
+}
+
+func (t *MapUint32Bool) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint32Bool) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint32
+var value bool
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint32bool) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -49976,24 +56886,35 @@ func (i *IterUint32Bool) Seek(key uint32) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -50039,10 +56960,11 @@ func (i *IterUint32Bool) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -50052,6 +56974,7 @@ func (i *IterUint32Bool) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -50248,6 +57171,36 @@ func (t *MapUint32Byte) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint32Byte
+	gob.Register(t)
+}
+
+func (t *MapUint32Byte) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint32Byte) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint32
+var value byte
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint32byte) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -50287,24 +57240,35 @@ func (i *IterUint32Byte) Seek(key uint32) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -50350,10 +57314,11 @@ func (i *IterUint32Byte) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -50363,6 +57328,7 @@ func (i *IterUint32Byte) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -50559,6 +57525,36 @@ func (t *MapUint32Complex128) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint32Complex128
+	gob.Register(t)
+}
+
+func (t *MapUint32Complex128) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint32Complex128) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint32
+var value complex128
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint32complex128) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -50598,24 +57594,35 @@ func (i *IterUint32Complex128) Seek(key uint32) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -50661,10 +57668,11 @@ func (i *IterUint32Complex128) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -50674,6 +57682,7 @@ func (i *IterUint32Complex128) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -50870,6 +57879,36 @@ func (t *MapUint32Complex64) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint32Complex64
+	gob.Register(t)
+}
+
+func (t *MapUint32Complex64) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint32Complex64) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint32
+var value complex64
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint32complex64) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -50909,24 +57948,35 @@ func (i *IterUint32Complex64) Seek(key uint32) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -50972,10 +58022,11 @@ func (i *IterUint32Complex64) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -50985,6 +58036,7 @@ func (i *IterUint32Complex64) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -51181,6 +58233,36 @@ func (t *MapUint32Error) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint32Error
+	gob.Register(t)
+}
+
+func (t *MapUint32Error) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint32Error) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint32
+var value error
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint32error) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -51220,24 +58302,35 @@ func (i *IterUint32Error) Seek(key uint32) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -51283,10 +58376,11 @@ func (i *IterUint32Error) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -51296,6 +58390,7 @@ func (i *IterUint32Error) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -51492,6 +58587,36 @@ func (t *MapUint32Float32) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint32Float32
+	gob.Register(t)
+}
+
+func (t *MapUint32Float32) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint32Float32) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint32
+var value float32
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint32float32) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -51531,24 +58656,35 @@ func (i *IterUint32Float32) Seek(key uint32) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -51594,10 +58730,11 @@ func (i *IterUint32Float32) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -51607,6 +58744,7 @@ func (i *IterUint32Float32) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -51803,6 +58941,36 @@ func (t *MapUint32Float64) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint32Float64
+	gob.Register(t)
+}
+
+func (t *MapUint32Float64) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint32Float64) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint32
+var value float64
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint32float64) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -51842,24 +59010,35 @@ func (i *IterUint32Float64) Seek(key uint32) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -51905,10 +59084,11 @@ func (i *IterUint32Float64) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -51918,6 +59098,7 @@ func (i *IterUint32Float64) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -52114,6 +59295,36 @@ func (t *MapUint32Int) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint32Int
+	gob.Register(t)
+}
+
+func (t *MapUint32Int) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint32Int) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint32
+var value int
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint32int) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -52153,24 +59364,35 @@ func (i *IterUint32Int) Seek(key uint32) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -52216,10 +59438,11 @@ func (i *IterUint32Int) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -52229,6 +59452,7 @@ func (i *IterUint32Int) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -52425,6 +59649,36 @@ func (t *MapUint32Int16) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint32Int16
+	gob.Register(t)
+}
+
+func (t *MapUint32Int16) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint32Int16) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint32
+var value int16
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint32int16) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -52464,24 +59718,35 @@ func (i *IterUint32Int16) Seek(key uint32) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -52527,10 +59792,11 @@ func (i *IterUint32Int16) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -52540,6 +59806,7 @@ func (i *IterUint32Int16) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -52736,6 +60003,36 @@ func (t *MapUint32Int32) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint32Int32
+	gob.Register(t)
+}
+
+func (t *MapUint32Int32) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint32Int32) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint32
+var value int32
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint32int32) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -52775,24 +60072,35 @@ func (i *IterUint32Int32) Seek(key uint32) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -52838,10 +60146,11 @@ func (i *IterUint32Int32) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -52851,6 +60160,7 @@ func (i *IterUint32Int32) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -53047,6 +60357,36 @@ func (t *MapUint32Int64) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint32Int64
+	gob.Register(t)
+}
+
+func (t *MapUint32Int64) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint32Int64) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint32
+var value int64
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint32int64) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -53086,24 +60426,35 @@ func (i *IterUint32Int64) Seek(key uint32) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -53149,10 +60500,11 @@ func (i *IterUint32Int64) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -53162,6 +60514,7 @@ func (i *IterUint32Int64) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -53358,6 +60711,36 @@ func (t *MapUint32Int8) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint32Int8
+	gob.Register(t)
+}
+
+func (t *MapUint32Int8) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint32Int8) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint32
+var value int8
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint32int8) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -53397,24 +60780,35 @@ func (i *IterUint32Int8) Seek(key uint32) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -53460,10 +60854,11 @@ func (i *IterUint32Int8) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -53473,6 +60868,7 @@ func (i *IterUint32Int8) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -53669,6 +61065,36 @@ func (t *MapUint32Rune) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint32Rune
+	gob.Register(t)
+}
+
+func (t *MapUint32Rune) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint32Rune) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint32
+var value rune
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint32rune) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -53708,24 +61134,35 @@ func (i *IterUint32Rune) Seek(key uint32) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -53771,10 +61208,11 @@ func (i *IterUint32Rune) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -53784,6 +61222,7 @@ func (i *IterUint32Rune) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -53980,6 +61419,36 @@ func (t *MapUint32String) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint32String
+	gob.Register(t)
+}
+
+func (t *MapUint32String) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint32String) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint32
+var value string
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint32string) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -54019,24 +61488,35 @@ func (i *IterUint32String) Seek(key uint32) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -54082,10 +61562,11 @@ func (i *IterUint32String) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -54095,6 +61576,7 @@ func (i *IterUint32String) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -54291,6 +61773,36 @@ func (t *MapUint32Uint) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint32Uint
+	gob.Register(t)
+}
+
+func (t *MapUint32Uint) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint32Uint) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint32
+var value uint
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint32uint) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -54330,24 +61842,35 @@ func (i *IterUint32Uint) Seek(key uint32) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -54393,10 +61916,11 @@ func (i *IterUint32Uint) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -54406,6 +61930,7 @@ func (i *IterUint32Uint) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -54602,6 +62127,36 @@ func (t *MapUint32Uint16) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint32Uint16
+	gob.Register(t)
+}
+
+func (t *MapUint32Uint16) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint32Uint16) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint32
+var value uint16
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint32uint16) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -54641,24 +62196,35 @@ func (i *IterUint32Uint16) Seek(key uint32) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -54704,10 +62270,11 @@ func (i *IterUint32Uint16) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -54717,6 +62284,7 @@ func (i *IterUint32Uint16) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -54913,6 +62481,36 @@ func (t *MapUint32Uint32) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint32Uint32
+	gob.Register(t)
+}
+
+func (t *MapUint32Uint32) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint32Uint32) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint32
+var value uint32
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint32uint32) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -54952,24 +62550,35 @@ func (i *IterUint32Uint32) Seek(key uint32) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -55015,10 +62624,11 @@ func (i *IterUint32Uint32) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -55028,6 +62638,7 @@ func (i *IterUint32Uint32) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -55224,6 +62835,36 @@ func (t *MapUint32Uint64) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint32Uint64
+	gob.Register(t)
+}
+
+func (t *MapUint32Uint64) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint32Uint64) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint32
+var value uint64
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint32uint64) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -55263,24 +62904,35 @@ func (i *IterUint32Uint64) Seek(key uint32) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -55326,10 +62978,11 @@ func (i *IterUint32Uint64) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -55339,6 +62992,7 @@ func (i *IterUint32Uint64) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -55535,6 +63189,36 @@ func (t *MapUint32Uint8) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint32Uint8
+	gob.Register(t)
+}
+
+func (t *MapUint32Uint8) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint32Uint8) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint32
+var value uint8
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint32uint8) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -55574,24 +63258,35 @@ func (i *IterUint32Uint8) Seek(key uint32) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -55637,10 +63332,11 @@ func (i *IterUint32Uint8) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -55650,6 +63346,7 @@ func (i *IterUint32Uint8) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -55846,6 +63543,36 @@ func (t *MapUint32Uintptr) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint32Uintptr
+	gob.Register(t)
+}
+
+func (t *MapUint32Uintptr) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint32Uintptr) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint32
+var value uintptr
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint32uintptr) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -55885,24 +63612,35 @@ func (i *IterUint32Uintptr) Seek(key uint32) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -55948,10 +63686,11 @@ func (i *IterUint32Uintptr) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -55961,6 +63700,7 @@ func (i *IterUint32Uintptr) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -56157,6 +63897,36 @@ func (t *MapUint16Bool) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint16Bool
+	gob.Register(t)
+}
+
+func (t *MapUint16Bool) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint16Bool) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint16
+var value bool
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint16bool) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -56196,24 +63966,35 @@ func (i *IterUint16Bool) Seek(key uint16) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -56259,10 +64040,11 @@ func (i *IterUint16Bool) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -56272,6 +64054,7 @@ func (i *IterUint16Bool) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -56468,6 +64251,36 @@ func (t *MapUint16Byte) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint16Byte
+	gob.Register(t)
+}
+
+func (t *MapUint16Byte) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint16Byte) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint16
+var value byte
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint16byte) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -56507,24 +64320,35 @@ func (i *IterUint16Byte) Seek(key uint16) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -56570,10 +64394,11 @@ func (i *IterUint16Byte) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -56583,6 +64408,7 @@ func (i *IterUint16Byte) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -56779,6 +64605,36 @@ func (t *MapUint16Complex128) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint16Complex128
+	gob.Register(t)
+}
+
+func (t *MapUint16Complex128) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint16Complex128) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint16
+var value complex128
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint16complex128) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -56818,24 +64674,35 @@ func (i *IterUint16Complex128) Seek(key uint16) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -56881,10 +64748,11 @@ func (i *IterUint16Complex128) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -56894,6 +64762,7 @@ func (i *IterUint16Complex128) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -57090,6 +64959,36 @@ func (t *MapUint16Complex64) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint16Complex64
+	gob.Register(t)
+}
+
+func (t *MapUint16Complex64) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint16Complex64) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint16
+var value complex64
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint16complex64) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -57129,24 +65028,35 @@ func (i *IterUint16Complex64) Seek(key uint16) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -57192,10 +65102,11 @@ func (i *IterUint16Complex64) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -57205,6 +65116,7 @@ func (i *IterUint16Complex64) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -57401,6 +65313,36 @@ func (t *MapUint16Error) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint16Error
+	gob.Register(t)
+}
+
+func (t *MapUint16Error) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint16Error) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint16
+var value error
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint16error) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -57440,24 +65382,35 @@ func (i *IterUint16Error) Seek(key uint16) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -57503,10 +65456,11 @@ func (i *IterUint16Error) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -57516,6 +65470,7 @@ func (i *IterUint16Error) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -57712,6 +65667,36 @@ func (t *MapUint16Float32) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint16Float32
+	gob.Register(t)
+}
+
+func (t *MapUint16Float32) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint16Float32) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint16
+var value float32
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint16float32) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -57751,24 +65736,35 @@ func (i *IterUint16Float32) Seek(key uint16) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -57814,10 +65810,11 @@ func (i *IterUint16Float32) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -57827,6 +65824,7 @@ func (i *IterUint16Float32) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -58023,6 +66021,36 @@ func (t *MapUint16Float64) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint16Float64
+	gob.Register(t)
+}
+
+func (t *MapUint16Float64) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint16Float64) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint16
+var value float64
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint16float64) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -58062,24 +66090,35 @@ func (i *IterUint16Float64) Seek(key uint16) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -58125,10 +66164,11 @@ func (i *IterUint16Float64) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -58138,6 +66178,7 @@ func (i *IterUint16Float64) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -58334,6 +66375,36 @@ func (t *MapUint16Int) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint16Int
+	gob.Register(t)
+}
+
+func (t *MapUint16Int) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint16Int) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint16
+var value int
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint16int) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -58373,24 +66444,35 @@ func (i *IterUint16Int) Seek(key uint16) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -58436,10 +66518,11 @@ func (i *IterUint16Int) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -58449,6 +66532,7 @@ func (i *IterUint16Int) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -58645,6 +66729,36 @@ func (t *MapUint16Int16) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint16Int16
+	gob.Register(t)
+}
+
+func (t *MapUint16Int16) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint16Int16) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint16
+var value int16
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint16int16) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -58684,24 +66798,35 @@ func (i *IterUint16Int16) Seek(key uint16) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -58747,10 +66872,11 @@ func (i *IterUint16Int16) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -58760,6 +66886,7 @@ func (i *IterUint16Int16) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -58956,6 +67083,36 @@ func (t *MapUint16Int32) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint16Int32
+	gob.Register(t)
+}
+
+func (t *MapUint16Int32) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint16Int32) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint16
+var value int32
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint16int32) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -58995,24 +67152,35 @@ func (i *IterUint16Int32) Seek(key uint16) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -59058,10 +67226,11 @@ func (i *IterUint16Int32) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -59071,6 +67240,7 @@ func (i *IterUint16Int32) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -59267,6 +67437,36 @@ func (t *MapUint16Int64) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint16Int64
+	gob.Register(t)
+}
+
+func (t *MapUint16Int64) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint16Int64) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint16
+var value int64
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint16int64) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -59306,24 +67506,35 @@ func (i *IterUint16Int64) Seek(key uint16) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -59369,10 +67580,11 @@ func (i *IterUint16Int64) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -59382,6 +67594,7 @@ func (i *IterUint16Int64) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -59578,6 +67791,36 @@ func (t *MapUint16Int8) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint16Int8
+	gob.Register(t)
+}
+
+func (t *MapUint16Int8) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint16Int8) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint16
+var value int8
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint16int8) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -59617,24 +67860,35 @@ func (i *IterUint16Int8) Seek(key uint16) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -59680,10 +67934,11 @@ func (i *IterUint16Int8) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -59693,6 +67948,7 @@ func (i *IterUint16Int8) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -59889,6 +68145,36 @@ func (t *MapUint16Rune) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint16Rune
+	gob.Register(t)
+}
+
+func (t *MapUint16Rune) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint16Rune) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint16
+var value rune
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint16rune) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -59928,24 +68214,35 @@ func (i *IterUint16Rune) Seek(key uint16) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -59991,10 +68288,11 @@ func (i *IterUint16Rune) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -60004,6 +68302,7 @@ func (i *IterUint16Rune) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -60200,6 +68499,36 @@ func (t *MapUint16String) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint16String
+	gob.Register(t)
+}
+
+func (t *MapUint16String) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint16String) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint16
+var value string
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint16string) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -60239,24 +68568,35 @@ func (i *IterUint16String) Seek(key uint16) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -60302,10 +68642,11 @@ func (i *IterUint16String) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -60315,6 +68656,7 @@ func (i *IterUint16String) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -60511,6 +68853,36 @@ func (t *MapUint16Uint) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint16Uint
+	gob.Register(t)
+}
+
+func (t *MapUint16Uint) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint16Uint) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint16
+var value uint
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint16uint) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -60550,24 +68922,35 @@ func (i *IterUint16Uint) Seek(key uint16) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -60613,10 +68996,11 @@ func (i *IterUint16Uint) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -60626,6 +69010,7 @@ func (i *IterUint16Uint) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -60822,6 +69207,36 @@ func (t *MapUint16Uint16) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint16Uint16
+	gob.Register(t)
+}
+
+func (t *MapUint16Uint16) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint16Uint16) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint16
+var value uint16
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint16uint16) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -60861,24 +69276,35 @@ func (i *IterUint16Uint16) Seek(key uint16) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -60924,10 +69350,11 @@ func (i *IterUint16Uint16) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -60937,6 +69364,7 @@ func (i *IterUint16Uint16) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -61133,6 +69561,36 @@ func (t *MapUint16Uint32) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint16Uint32
+	gob.Register(t)
+}
+
+func (t *MapUint16Uint32) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint16Uint32) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint16
+var value uint32
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint16uint32) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -61172,24 +69630,35 @@ func (i *IterUint16Uint32) Seek(key uint16) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -61235,10 +69704,11 @@ func (i *IterUint16Uint32) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -61248,6 +69718,7 @@ func (i *IterUint16Uint32) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -61444,6 +69915,36 @@ func (t *MapUint16Uint64) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint16Uint64
+	gob.Register(t)
+}
+
+func (t *MapUint16Uint64) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint16Uint64) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint16
+var value uint64
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint16uint64) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -61483,24 +69984,35 @@ func (i *IterUint16Uint64) Seek(key uint16) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -61546,10 +70058,11 @@ func (i *IterUint16Uint64) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -61559,6 +70072,7 @@ func (i *IterUint16Uint64) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -61755,6 +70269,36 @@ func (t *MapUint16Uint8) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint16Uint8
+	gob.Register(t)
+}
+
+func (t *MapUint16Uint8) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint16Uint8) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint16
+var value uint8
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint16uint8) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -61794,24 +70338,35 @@ func (i *IterUint16Uint8) Seek(key uint16) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -61857,10 +70412,11 @@ func (i *IterUint16Uint8) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -61870,6 +70426,7 @@ func (i *IterUint16Uint8) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -62066,6 +70623,36 @@ func (t *MapUint16Uintptr) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint16Uintptr
+	gob.Register(t)
+}
+
+func (t *MapUint16Uintptr) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint16Uintptr) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint16
+var value uintptr
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint16uintptr) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -62105,24 +70692,35 @@ func (i *IterUint16Uintptr) Seek(key uint16) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -62168,10 +70766,11 @@ func (i *IterUint16Uintptr) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -62181,6 +70780,7 @@ func (i *IterUint16Uintptr) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -62377,6 +70977,36 @@ func (t *MapUint8Bool) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint8Bool
+	gob.Register(t)
+}
+
+func (t *MapUint8Bool) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint8Bool) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint8
+var value bool
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint8bool) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -62416,24 +71046,35 @@ func (i *IterUint8Bool) Seek(key uint8) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -62479,10 +71120,11 @@ func (i *IterUint8Bool) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -62492,6 +71134,7 @@ func (i *IterUint8Bool) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -62688,6 +71331,36 @@ func (t *MapUint8Byte) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint8Byte
+	gob.Register(t)
+}
+
+func (t *MapUint8Byte) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint8Byte) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint8
+var value byte
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint8byte) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -62727,24 +71400,35 @@ func (i *IterUint8Byte) Seek(key uint8) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -62790,10 +71474,11 @@ func (i *IterUint8Byte) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -62803,6 +71488,7 @@ func (i *IterUint8Byte) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -62999,6 +71685,36 @@ func (t *MapUint8Complex128) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint8Complex128
+	gob.Register(t)
+}
+
+func (t *MapUint8Complex128) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint8Complex128) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint8
+var value complex128
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint8complex128) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -63038,24 +71754,35 @@ func (i *IterUint8Complex128) Seek(key uint8) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -63101,10 +71828,11 @@ func (i *IterUint8Complex128) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -63114,6 +71842,7 @@ func (i *IterUint8Complex128) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -63310,6 +72039,36 @@ func (t *MapUint8Complex64) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint8Complex64
+	gob.Register(t)
+}
+
+func (t *MapUint8Complex64) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint8Complex64) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint8
+var value complex64
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint8complex64) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -63349,24 +72108,35 @@ func (i *IterUint8Complex64) Seek(key uint8) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -63412,10 +72182,11 @@ func (i *IterUint8Complex64) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -63425,6 +72196,7 @@ func (i *IterUint8Complex64) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -63621,6 +72393,36 @@ func (t *MapUint8Error) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint8Error
+	gob.Register(t)
+}
+
+func (t *MapUint8Error) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint8Error) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint8
+var value error
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint8error) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -63660,24 +72462,35 @@ func (i *IterUint8Error) Seek(key uint8) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -63723,10 +72536,11 @@ func (i *IterUint8Error) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -63736,6 +72550,7 @@ func (i *IterUint8Error) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -63932,6 +72747,36 @@ func (t *MapUint8Float32) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint8Float32
+	gob.Register(t)
+}
+
+func (t *MapUint8Float32) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint8Float32) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint8
+var value float32
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint8float32) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -63971,24 +72816,35 @@ func (i *IterUint8Float32) Seek(key uint8) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -64034,10 +72890,11 @@ func (i *IterUint8Float32) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -64047,6 +72904,7 @@ func (i *IterUint8Float32) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -64243,6 +73101,36 @@ func (t *MapUint8Float64) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint8Float64
+	gob.Register(t)
+}
+
+func (t *MapUint8Float64) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint8Float64) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint8
+var value float64
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint8float64) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -64282,24 +73170,35 @@ func (i *IterUint8Float64) Seek(key uint8) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -64345,10 +73244,11 @@ func (i *IterUint8Float64) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -64358,6 +73258,7 @@ func (i *IterUint8Float64) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -64554,6 +73455,36 @@ func (t *MapUint8Int) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint8Int
+	gob.Register(t)
+}
+
+func (t *MapUint8Int) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint8Int) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint8
+var value int
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint8int) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -64593,24 +73524,35 @@ func (i *IterUint8Int) Seek(key uint8) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -64656,10 +73598,11 @@ func (i *IterUint8Int) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -64669,6 +73612,7 @@ func (i *IterUint8Int) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -64865,6 +73809,36 @@ func (t *MapUint8Int16) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint8Int16
+	gob.Register(t)
+}
+
+func (t *MapUint8Int16) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint8Int16) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint8
+var value int16
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint8int16) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -64904,24 +73878,35 @@ func (i *IterUint8Int16) Seek(key uint8) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -64967,10 +73952,11 @@ func (i *IterUint8Int16) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -64980,6 +73966,7 @@ func (i *IterUint8Int16) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -65176,6 +74163,36 @@ func (t *MapUint8Int32) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint8Int32
+	gob.Register(t)
+}
+
+func (t *MapUint8Int32) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint8Int32) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint8
+var value int32
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint8int32) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -65215,24 +74232,35 @@ func (i *IterUint8Int32) Seek(key uint8) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -65278,10 +74306,11 @@ func (i *IterUint8Int32) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -65291,6 +74320,7 @@ func (i *IterUint8Int32) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -65487,6 +74517,36 @@ func (t *MapUint8Int64) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint8Int64
+	gob.Register(t)
+}
+
+func (t *MapUint8Int64) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint8Int64) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint8
+var value int64
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint8int64) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -65526,24 +74586,35 @@ func (i *IterUint8Int64) Seek(key uint8) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -65589,10 +74660,11 @@ func (i *IterUint8Int64) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -65602,6 +74674,7 @@ func (i *IterUint8Int64) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -65798,6 +74871,36 @@ func (t *MapUint8Int8) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint8Int8
+	gob.Register(t)
+}
+
+func (t *MapUint8Int8) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint8Int8) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint8
+var value int8
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint8int8) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -65837,24 +74940,35 @@ func (i *IterUint8Int8) Seek(key uint8) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -65900,10 +75014,11 @@ func (i *IterUint8Int8) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -65913,6 +75028,7 @@ func (i *IterUint8Int8) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -66109,6 +75225,36 @@ func (t *MapUint8Rune) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint8Rune
+	gob.Register(t)
+}
+
+func (t *MapUint8Rune) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint8Rune) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint8
+var value rune
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint8rune) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -66148,24 +75294,35 @@ func (i *IterUint8Rune) Seek(key uint8) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -66211,10 +75368,11 @@ func (i *IterUint8Rune) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -66224,6 +75382,7 @@ func (i *IterUint8Rune) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -66420,6 +75579,36 @@ func (t *MapUint8String) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint8String
+	gob.Register(t)
+}
+
+func (t *MapUint8String) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint8String) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint8
+var value string
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint8string) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -66459,24 +75648,35 @@ func (i *IterUint8String) Seek(key uint8) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -66522,10 +75722,11 @@ func (i *IterUint8String) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -66535,6 +75736,7 @@ func (i *IterUint8String) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -66731,6 +75933,36 @@ func (t *MapUint8Uint) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint8Uint
+	gob.Register(t)
+}
+
+func (t *MapUint8Uint) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint8Uint) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint8
+var value uint
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint8uint) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -66770,24 +76002,35 @@ func (i *IterUint8Uint) Seek(key uint8) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -66833,10 +76076,11 @@ func (i *IterUint8Uint) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -66846,6 +76090,7 @@ func (i *IterUint8Uint) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -67042,6 +76287,36 @@ func (t *MapUint8Uint16) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint8Uint16
+	gob.Register(t)
+}
+
+func (t *MapUint8Uint16) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint8Uint16) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint8
+var value uint16
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint8uint16) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -67081,24 +76356,35 @@ func (i *IterUint8Uint16) Seek(key uint8) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -67144,10 +76430,11 @@ func (i *IterUint8Uint16) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -67157,6 +76444,7 @@ func (i *IterUint8Uint16) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -67353,6 +76641,36 @@ func (t *MapUint8Uint32) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint8Uint32
+	gob.Register(t)
+}
+
+func (t *MapUint8Uint32) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint8Uint32) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint8
+var value uint32
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint8uint32) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -67392,24 +76710,35 @@ func (i *IterUint8Uint32) Seek(key uint8) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -67455,10 +76784,11 @@ func (i *IterUint8Uint32) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -67468,6 +76798,7 @@ func (i *IterUint8Uint32) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -67664,6 +76995,36 @@ func (t *MapUint8Uint64) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint8Uint64
+	gob.Register(t)
+}
+
+func (t *MapUint8Uint64) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint8Uint64) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint8
+var value uint64
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint8uint64) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -67703,24 +77064,35 @@ func (i *IterUint8Uint64) Seek(key uint8) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -67766,10 +77138,11 @@ func (i *IterUint8Uint64) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -67779,6 +77152,7 @@ func (i *IterUint8Uint64) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -67975,6 +77349,36 @@ func (t *MapUint8Uint8) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint8Uint8
+	gob.Register(t)
+}
+
+func (t *MapUint8Uint8) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint8Uint8) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint8
+var value uint8
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint8uint8) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -68014,24 +77418,35 @@ func (i *IterUint8Uint8) Seek(key uint8) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -68077,10 +77492,11 @@ func (i *IterUint8Uint8) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -68090,6 +77506,7 @@ func (i *IterUint8Uint8) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.
@@ -68286,6 +77703,36 @@ func (t *MapUint8Uintptr) Length() int {
 	return t.length
 }
 
+/*
+func init() {
+var t MapUint8Uintptr
+	gob.Register(t)
+}
+
+func (t *MapUint8Uintptr) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	var encoder = gob.NewEncoder(&buffer)
+	for it := t.Iterator(); it.Next(); {
+		encoder.Encode(it.Key)
+		encoder.Encode(it.Value)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (t *MapUint8Uintptr) GobDecode(buffer []byte) error {
+	var reader = bytes.NewReader(buffer)
+	var decoder = gob.NewDecoder(reader)
+	for {
+var key uint8
+var value uintptr
+		decoder.Decode(&key)
+		decoder.Decode(&value)
+		t.SetP(key, &value)
+	}
+	return nil
+}
+*/
+
 // func (c *nodeMapuint8uintptr) dbg(p string) {
 // 	if c.crit != ^uint(0) {
 // 		fmt.Printf(p+"Node: %08b %d\n", ((c.key>>c.crit)|1)<<c.crit, c.crit)
@@ -68325,24 +77772,35 @@ func (i *IterUint8Uintptr) Seek(key uint8) {
 	if i.t.length == 0 {
 		return
 	}
+	// Walk down tree until leaf node is found or critical bit differs
 	var last = &i.t.root
 	for last.crit != ^uint(0) && last.findCrit(key) == last.crit {
 		i.nodes = append(i.nodes, last)
 		last = &last.children()[last.dir(key)]
 	}
-	if last.crit != ^uint(0) || key != last.key {
-		// Key not found.
-		if len(i.nodes) == 1 {
-			// Didn't get beyond root node. There are no keys this high or low. Simulate a Next or Prev call that reached the end
-			i.lastDir = 1
-			if key > last.key {
-				i.lastDir = 0
-			}
-			i.nodes = i.nodes[0:0]
-		}
-	} else {
-		// Key found
+	// Done if last node matches key
+	if last.crit == ^uint(0) && key == last.key {
 		i.nodes = append(i.nodes, last)
+		return
+	}
+	// No exact match for key found. Check if correct node would be left (smaller key) or right (larger key) of the last one.
+	var dir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		dir = 1
+	}
+	// Walk upwards until the shared parent of previous and next key is found.
+	for l := len(i.nodes); l > 0; l-- {
+		// The shared parent has the last removed node as a child on the opposite side of the direction where the correct node would be.
+		if &i.nodes[l-1].children()[1-dir] == last {
+			return
+		}
+		last = i.nodes[l-1]
+		i.nodes = i.nodes[0 : l-1]
+	}
+	// There are no other keys as high or low as the correct one. Simulate a Next or Prev call that reached the end
+	i.lastDir = 0
+	if i.t.transformKey(key) > i.t.transformKey(last.key) {
+		i.lastDir = 1
 	}
 }
 
@@ -68388,10 +77846,11 @@ func (i *IterUint8Uintptr) step(dir int) {
 			return
 		}
 	} else if i.lastDir == 2 {
-		// At node from Seek. Do nothing if this is a leaf. Otherwise take one step in the opposite direction of dir.
+		// At node from Seek. Stay if this is a leaf. Otherwise take one step in the direction of dir.
 		if current := i.nodes[len(i.nodes)-1]; current.crit != ^uint(0) {
 			i.nodes = append(i.nodes, &current.children()[dir])
 		}
+		i.lastDir = dir
 	} else {
 		// Iterator is at some leaf from previous call to step. Comments describe behavior with dir == 1 (left to right).
 		// Go up until we are at a left child. Then go to the sibling.
@@ -68401,6 +77860,7 @@ func (i *IterUint8Uintptr) step(dir int) {
 				// No parent. Set end of map state.
 				i.nodes = i.nodes[0:0]
 				i.Value = nil
+				i.lastDir = dir
 				return
 			}
 			// If current node is left, replace it with the right one and stop going up.

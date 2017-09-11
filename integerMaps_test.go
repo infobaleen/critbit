@@ -97,9 +97,17 @@ func TestSeek(t *testing.T) {
 	if it.Key != 4 || it.Value == nil || *it.Value != 4 {
 		t.Fatal("Wrong key or value from Next after Seek with non-existent key", 4, it.Key, it.Value)
 	}
+	it.Next()
+	if it.Key != 5 || it.Value == nil || *it.Value != 5 {
+		t.Fatal("Wrong key or value from second Next after Seek with non-existent key", 5, it.Key, it.Value)
+	}
 	it.Seek(2)
 	it.Prev()
 	if it.Key != 1 || it.Value == nil || *it.Value != 1 {
-		t.Fatal("Wrong key or value from Prev after Seek with non-existent key", 4, it.Key, it.Value)
+		t.Fatal("Wrong key or value from Prev after Seek with non-existent key", 1, it.Key, it.Value)
+	}
+	it.Prev()
+	if it.Key != 0 || it.Value == nil || *it.Value != 0 {
+		t.Fatal("Wrong key or value from second Prev after Seek with non-existent key", 0, it.Key, it.Value)
 	}
 }
