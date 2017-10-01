@@ -1,6 +1,7 @@
 package critbit
 
 import (
+	"math/bits"
 	"unsafe"
 
 	"github.com/cheekybits/genny/generic"
@@ -35,15 +36,7 @@ func (c nodeMapKeyTypeValueType) dir(key KeyType) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapKeyTypeValueType) findCrit(key KeyType) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapKeyTypeValueType) children() *[2]nodeMapKeyTypeValueType {

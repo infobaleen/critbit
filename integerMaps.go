@@ -4,7 +4,10 @@
 
 package critbit
 
-import "unsafe"
+import (
+	"math/bits"
+	"unsafe"
+)
 
 // MapIntBool implements an associative array of bool indexed by int.
 type MapIntBool struct {
@@ -32,15 +35,7 @@ func (c nodeMapintbool) dir(key int) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapintbool) findCrit(key int) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapintbool) children() *[2]nodeMapintbool {
@@ -387,15 +382,7 @@ func (c nodeMapintbyte) dir(key int) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapintbyte) findCrit(key int) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapintbyte) children() *[2]nodeMapintbyte {
@@ -742,15 +729,7 @@ func (c nodeMapintcomplex128) dir(key int) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapintcomplex128) findCrit(key int) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapintcomplex128) children() *[2]nodeMapintcomplex128 {
@@ -1097,15 +1076,7 @@ func (c nodeMapintcomplex64) dir(key int) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapintcomplex64) findCrit(key int) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapintcomplex64) children() *[2]nodeMapintcomplex64 {
@@ -1452,15 +1423,7 @@ func (c nodeMapinterror) dir(key int) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapinterror) findCrit(key int) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapinterror) children() *[2]nodeMapinterror {
@@ -1807,15 +1770,7 @@ func (c nodeMapintfloat32) dir(key int) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapintfloat32) findCrit(key int) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapintfloat32) children() *[2]nodeMapintfloat32 {
@@ -2162,15 +2117,7 @@ func (c nodeMapintfloat64) dir(key int) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapintfloat64) findCrit(key int) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapintfloat64) children() *[2]nodeMapintfloat64 {
@@ -2517,15 +2464,7 @@ func (c nodeMapintint) dir(key int) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapintint) findCrit(key int) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapintint) children() *[2]nodeMapintint {
@@ -2872,15 +2811,7 @@ func (c nodeMapintint16) dir(key int) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapintint16) findCrit(key int) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapintint16) children() *[2]nodeMapintint16 {
@@ -3227,15 +3158,7 @@ func (c nodeMapintint32) dir(key int) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapintint32) findCrit(key int) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapintint32) children() *[2]nodeMapintint32 {
@@ -3582,15 +3505,7 @@ func (c nodeMapintint64) dir(key int) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapintint64) findCrit(key int) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapintint64) children() *[2]nodeMapintint64 {
@@ -3937,15 +3852,7 @@ func (c nodeMapintint8) dir(key int) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapintint8) findCrit(key int) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapintint8) children() *[2]nodeMapintint8 {
@@ -4292,15 +4199,7 @@ func (c nodeMapintrune) dir(key int) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapintrune) findCrit(key int) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapintrune) children() *[2]nodeMapintrune {
@@ -4647,15 +4546,7 @@ func (c nodeMapintstring) dir(key int) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapintstring) findCrit(key int) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapintstring) children() *[2]nodeMapintstring {
@@ -5002,15 +4893,7 @@ func (c nodeMapintuint) dir(key int) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapintuint) findCrit(key int) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapintuint) children() *[2]nodeMapintuint {
@@ -5357,15 +5240,7 @@ func (c nodeMapintuint16) dir(key int) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapintuint16) findCrit(key int) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapintuint16) children() *[2]nodeMapintuint16 {
@@ -5712,15 +5587,7 @@ func (c nodeMapintuint32) dir(key int) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapintuint32) findCrit(key int) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapintuint32) children() *[2]nodeMapintuint32 {
@@ -6067,15 +5934,7 @@ func (c nodeMapintuint64) dir(key int) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapintuint64) findCrit(key int) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapintuint64) children() *[2]nodeMapintuint64 {
@@ -6422,15 +6281,7 @@ func (c nodeMapintuint8) dir(key int) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapintuint8) findCrit(key int) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapintuint8) children() *[2]nodeMapintuint8 {
@@ -6777,15 +6628,7 @@ func (c nodeMapintuintptr) dir(key int) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapintuintptr) findCrit(key int) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapintuintptr) children() *[2]nodeMapintuintptr {
@@ -7132,15 +6975,7 @@ func (c nodeMapint64bool) dir(key int64) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint64bool) findCrit(key int64) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint64bool) children() *[2]nodeMapint64bool {
@@ -7487,15 +7322,7 @@ func (c nodeMapint64byte) dir(key int64) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint64byte) findCrit(key int64) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint64byte) children() *[2]nodeMapint64byte {
@@ -7842,15 +7669,7 @@ func (c nodeMapint64complex128) dir(key int64) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint64complex128) findCrit(key int64) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint64complex128) children() *[2]nodeMapint64complex128 {
@@ -8197,15 +8016,7 @@ func (c nodeMapint64complex64) dir(key int64) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint64complex64) findCrit(key int64) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint64complex64) children() *[2]nodeMapint64complex64 {
@@ -8552,15 +8363,7 @@ func (c nodeMapint64error) dir(key int64) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint64error) findCrit(key int64) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint64error) children() *[2]nodeMapint64error {
@@ -8907,15 +8710,7 @@ func (c nodeMapint64float32) dir(key int64) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint64float32) findCrit(key int64) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint64float32) children() *[2]nodeMapint64float32 {
@@ -9262,15 +9057,7 @@ func (c nodeMapint64float64) dir(key int64) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint64float64) findCrit(key int64) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint64float64) children() *[2]nodeMapint64float64 {
@@ -9617,15 +9404,7 @@ func (c nodeMapint64int) dir(key int64) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint64int) findCrit(key int64) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint64int) children() *[2]nodeMapint64int {
@@ -9972,15 +9751,7 @@ func (c nodeMapint64int16) dir(key int64) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint64int16) findCrit(key int64) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint64int16) children() *[2]nodeMapint64int16 {
@@ -10327,15 +10098,7 @@ func (c nodeMapint64int32) dir(key int64) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint64int32) findCrit(key int64) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint64int32) children() *[2]nodeMapint64int32 {
@@ -10682,15 +10445,7 @@ func (c nodeMapint64int64) dir(key int64) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint64int64) findCrit(key int64) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint64int64) children() *[2]nodeMapint64int64 {
@@ -11037,15 +10792,7 @@ func (c nodeMapint64int8) dir(key int64) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint64int8) findCrit(key int64) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint64int8) children() *[2]nodeMapint64int8 {
@@ -11392,15 +11139,7 @@ func (c nodeMapint64rune) dir(key int64) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint64rune) findCrit(key int64) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint64rune) children() *[2]nodeMapint64rune {
@@ -11747,15 +11486,7 @@ func (c nodeMapint64string) dir(key int64) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint64string) findCrit(key int64) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint64string) children() *[2]nodeMapint64string {
@@ -12102,15 +11833,7 @@ func (c nodeMapint64uint) dir(key int64) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint64uint) findCrit(key int64) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint64uint) children() *[2]nodeMapint64uint {
@@ -12457,15 +12180,7 @@ func (c nodeMapint64uint16) dir(key int64) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint64uint16) findCrit(key int64) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint64uint16) children() *[2]nodeMapint64uint16 {
@@ -12812,15 +12527,7 @@ func (c nodeMapint64uint32) dir(key int64) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint64uint32) findCrit(key int64) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint64uint32) children() *[2]nodeMapint64uint32 {
@@ -13167,15 +12874,7 @@ func (c nodeMapint64uint64) dir(key int64) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint64uint64) findCrit(key int64) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint64uint64) children() *[2]nodeMapint64uint64 {
@@ -13522,15 +13221,7 @@ func (c nodeMapint64uint8) dir(key int64) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint64uint8) findCrit(key int64) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint64uint8) children() *[2]nodeMapint64uint8 {
@@ -13877,15 +13568,7 @@ func (c nodeMapint64uintptr) dir(key int64) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint64uintptr) findCrit(key int64) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint64uintptr) children() *[2]nodeMapint64uintptr {
@@ -14232,15 +13915,7 @@ func (c nodeMapint32bool) dir(key int32) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint32bool) findCrit(key int32) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint32bool) children() *[2]nodeMapint32bool {
@@ -14587,15 +14262,7 @@ func (c nodeMapint32byte) dir(key int32) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint32byte) findCrit(key int32) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint32byte) children() *[2]nodeMapint32byte {
@@ -14942,15 +14609,7 @@ func (c nodeMapint32complex128) dir(key int32) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint32complex128) findCrit(key int32) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint32complex128) children() *[2]nodeMapint32complex128 {
@@ -15297,15 +14956,7 @@ func (c nodeMapint32complex64) dir(key int32) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint32complex64) findCrit(key int32) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint32complex64) children() *[2]nodeMapint32complex64 {
@@ -15652,15 +15303,7 @@ func (c nodeMapint32error) dir(key int32) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint32error) findCrit(key int32) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint32error) children() *[2]nodeMapint32error {
@@ -16007,15 +15650,7 @@ func (c nodeMapint32float32) dir(key int32) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint32float32) findCrit(key int32) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint32float32) children() *[2]nodeMapint32float32 {
@@ -16362,15 +15997,7 @@ func (c nodeMapint32float64) dir(key int32) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint32float64) findCrit(key int32) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint32float64) children() *[2]nodeMapint32float64 {
@@ -16717,15 +16344,7 @@ func (c nodeMapint32int) dir(key int32) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint32int) findCrit(key int32) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint32int) children() *[2]nodeMapint32int {
@@ -17072,15 +16691,7 @@ func (c nodeMapint32int16) dir(key int32) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint32int16) findCrit(key int32) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint32int16) children() *[2]nodeMapint32int16 {
@@ -17427,15 +17038,7 @@ func (c nodeMapint32int32) dir(key int32) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint32int32) findCrit(key int32) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint32int32) children() *[2]nodeMapint32int32 {
@@ -17782,15 +17385,7 @@ func (c nodeMapint32int64) dir(key int32) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint32int64) findCrit(key int32) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint32int64) children() *[2]nodeMapint32int64 {
@@ -18137,15 +17732,7 @@ func (c nodeMapint32int8) dir(key int32) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint32int8) findCrit(key int32) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint32int8) children() *[2]nodeMapint32int8 {
@@ -18492,15 +18079,7 @@ func (c nodeMapint32rune) dir(key int32) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint32rune) findCrit(key int32) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint32rune) children() *[2]nodeMapint32rune {
@@ -18847,15 +18426,7 @@ func (c nodeMapint32string) dir(key int32) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint32string) findCrit(key int32) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint32string) children() *[2]nodeMapint32string {
@@ -19202,15 +18773,7 @@ func (c nodeMapint32uint) dir(key int32) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint32uint) findCrit(key int32) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint32uint) children() *[2]nodeMapint32uint {
@@ -19557,15 +19120,7 @@ func (c nodeMapint32uint16) dir(key int32) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint32uint16) findCrit(key int32) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint32uint16) children() *[2]nodeMapint32uint16 {
@@ -19912,15 +19467,7 @@ func (c nodeMapint32uint32) dir(key int32) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint32uint32) findCrit(key int32) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint32uint32) children() *[2]nodeMapint32uint32 {
@@ -20267,15 +19814,7 @@ func (c nodeMapint32uint64) dir(key int32) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint32uint64) findCrit(key int32) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint32uint64) children() *[2]nodeMapint32uint64 {
@@ -20622,15 +20161,7 @@ func (c nodeMapint32uint8) dir(key int32) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint32uint8) findCrit(key int32) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint32uint8) children() *[2]nodeMapint32uint8 {
@@ -20977,15 +20508,7 @@ func (c nodeMapint32uintptr) dir(key int32) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint32uintptr) findCrit(key int32) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint32uintptr) children() *[2]nodeMapint32uintptr {
@@ -21332,15 +20855,7 @@ func (c nodeMapint16bool) dir(key int16) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint16bool) findCrit(key int16) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint16bool) children() *[2]nodeMapint16bool {
@@ -21687,15 +21202,7 @@ func (c nodeMapint16byte) dir(key int16) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint16byte) findCrit(key int16) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint16byte) children() *[2]nodeMapint16byte {
@@ -22042,15 +21549,7 @@ func (c nodeMapint16complex128) dir(key int16) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint16complex128) findCrit(key int16) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint16complex128) children() *[2]nodeMapint16complex128 {
@@ -22397,15 +21896,7 @@ func (c nodeMapint16complex64) dir(key int16) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint16complex64) findCrit(key int16) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint16complex64) children() *[2]nodeMapint16complex64 {
@@ -22752,15 +22243,7 @@ func (c nodeMapint16error) dir(key int16) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint16error) findCrit(key int16) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint16error) children() *[2]nodeMapint16error {
@@ -23107,15 +22590,7 @@ func (c nodeMapint16float32) dir(key int16) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint16float32) findCrit(key int16) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint16float32) children() *[2]nodeMapint16float32 {
@@ -23462,15 +22937,7 @@ func (c nodeMapint16float64) dir(key int16) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint16float64) findCrit(key int16) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint16float64) children() *[2]nodeMapint16float64 {
@@ -23817,15 +23284,7 @@ func (c nodeMapint16int) dir(key int16) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint16int) findCrit(key int16) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint16int) children() *[2]nodeMapint16int {
@@ -24172,15 +23631,7 @@ func (c nodeMapint16int16) dir(key int16) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint16int16) findCrit(key int16) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint16int16) children() *[2]nodeMapint16int16 {
@@ -24527,15 +23978,7 @@ func (c nodeMapint16int32) dir(key int16) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint16int32) findCrit(key int16) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint16int32) children() *[2]nodeMapint16int32 {
@@ -24882,15 +24325,7 @@ func (c nodeMapint16int64) dir(key int16) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint16int64) findCrit(key int16) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint16int64) children() *[2]nodeMapint16int64 {
@@ -25237,15 +24672,7 @@ func (c nodeMapint16int8) dir(key int16) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint16int8) findCrit(key int16) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint16int8) children() *[2]nodeMapint16int8 {
@@ -25592,15 +25019,7 @@ func (c nodeMapint16rune) dir(key int16) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint16rune) findCrit(key int16) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint16rune) children() *[2]nodeMapint16rune {
@@ -25947,15 +25366,7 @@ func (c nodeMapint16string) dir(key int16) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint16string) findCrit(key int16) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint16string) children() *[2]nodeMapint16string {
@@ -26302,15 +25713,7 @@ func (c nodeMapint16uint) dir(key int16) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint16uint) findCrit(key int16) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint16uint) children() *[2]nodeMapint16uint {
@@ -26657,15 +26060,7 @@ func (c nodeMapint16uint16) dir(key int16) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint16uint16) findCrit(key int16) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint16uint16) children() *[2]nodeMapint16uint16 {
@@ -27012,15 +26407,7 @@ func (c nodeMapint16uint32) dir(key int16) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint16uint32) findCrit(key int16) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint16uint32) children() *[2]nodeMapint16uint32 {
@@ -27367,15 +26754,7 @@ func (c nodeMapint16uint64) dir(key int16) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint16uint64) findCrit(key int16) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint16uint64) children() *[2]nodeMapint16uint64 {
@@ -27722,15 +27101,7 @@ func (c nodeMapint16uint8) dir(key int16) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint16uint8) findCrit(key int16) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint16uint8) children() *[2]nodeMapint16uint8 {
@@ -28077,15 +27448,7 @@ func (c nodeMapint16uintptr) dir(key int16) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint16uintptr) findCrit(key int16) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint16uintptr) children() *[2]nodeMapint16uintptr {
@@ -28432,15 +27795,7 @@ func (c nodeMapint8bool) dir(key int8) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint8bool) findCrit(key int8) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint8bool) children() *[2]nodeMapint8bool {
@@ -28787,15 +28142,7 @@ func (c nodeMapint8byte) dir(key int8) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint8byte) findCrit(key int8) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint8byte) children() *[2]nodeMapint8byte {
@@ -29142,15 +28489,7 @@ func (c nodeMapint8complex128) dir(key int8) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint8complex128) findCrit(key int8) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint8complex128) children() *[2]nodeMapint8complex128 {
@@ -29497,15 +28836,7 @@ func (c nodeMapint8complex64) dir(key int8) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint8complex64) findCrit(key int8) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint8complex64) children() *[2]nodeMapint8complex64 {
@@ -29852,15 +29183,7 @@ func (c nodeMapint8error) dir(key int8) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint8error) findCrit(key int8) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint8error) children() *[2]nodeMapint8error {
@@ -30207,15 +29530,7 @@ func (c nodeMapint8float32) dir(key int8) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint8float32) findCrit(key int8) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint8float32) children() *[2]nodeMapint8float32 {
@@ -30562,15 +29877,7 @@ func (c nodeMapint8float64) dir(key int8) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint8float64) findCrit(key int8) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint8float64) children() *[2]nodeMapint8float64 {
@@ -30917,15 +30224,7 @@ func (c nodeMapint8int) dir(key int8) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint8int) findCrit(key int8) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint8int) children() *[2]nodeMapint8int {
@@ -31272,15 +30571,7 @@ func (c nodeMapint8int16) dir(key int8) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint8int16) findCrit(key int8) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint8int16) children() *[2]nodeMapint8int16 {
@@ -31627,15 +30918,7 @@ func (c nodeMapint8int32) dir(key int8) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint8int32) findCrit(key int8) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint8int32) children() *[2]nodeMapint8int32 {
@@ -31982,15 +31265,7 @@ func (c nodeMapint8int64) dir(key int8) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint8int64) findCrit(key int8) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint8int64) children() *[2]nodeMapint8int64 {
@@ -32337,15 +31612,7 @@ func (c nodeMapint8int8) dir(key int8) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint8int8) findCrit(key int8) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint8int8) children() *[2]nodeMapint8int8 {
@@ -32692,15 +31959,7 @@ func (c nodeMapint8rune) dir(key int8) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint8rune) findCrit(key int8) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint8rune) children() *[2]nodeMapint8rune {
@@ -33047,15 +32306,7 @@ func (c nodeMapint8string) dir(key int8) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint8string) findCrit(key int8) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint8string) children() *[2]nodeMapint8string {
@@ -33402,15 +32653,7 @@ func (c nodeMapint8uint) dir(key int8) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint8uint) findCrit(key int8) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint8uint) children() *[2]nodeMapint8uint {
@@ -33757,15 +33000,7 @@ func (c nodeMapint8uint16) dir(key int8) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint8uint16) findCrit(key int8) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint8uint16) children() *[2]nodeMapint8uint16 {
@@ -34112,15 +33347,7 @@ func (c nodeMapint8uint32) dir(key int8) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint8uint32) findCrit(key int8) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint8uint32) children() *[2]nodeMapint8uint32 {
@@ -34467,15 +33694,7 @@ func (c nodeMapint8uint64) dir(key int8) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint8uint64) findCrit(key int8) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint8uint64) children() *[2]nodeMapint8uint64 {
@@ -34822,15 +34041,7 @@ func (c nodeMapint8uint8) dir(key int8) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint8uint8) findCrit(key int8) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint8uint8) children() *[2]nodeMapint8uint8 {
@@ -35177,15 +34388,7 @@ func (c nodeMapint8uintptr) dir(key int8) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapint8uintptr) findCrit(key int8) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapint8uintptr) children() *[2]nodeMapint8uintptr {
@@ -35532,15 +34735,7 @@ func (c nodeMapuintbool) dir(key uint) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuintbool) findCrit(key uint) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuintbool) children() *[2]nodeMapuintbool {
@@ -35887,15 +35082,7 @@ func (c nodeMapuintbyte) dir(key uint) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuintbyte) findCrit(key uint) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuintbyte) children() *[2]nodeMapuintbyte {
@@ -36242,15 +35429,7 @@ func (c nodeMapuintcomplex128) dir(key uint) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuintcomplex128) findCrit(key uint) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuintcomplex128) children() *[2]nodeMapuintcomplex128 {
@@ -36597,15 +35776,7 @@ func (c nodeMapuintcomplex64) dir(key uint) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuintcomplex64) findCrit(key uint) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuintcomplex64) children() *[2]nodeMapuintcomplex64 {
@@ -36952,15 +36123,7 @@ func (c nodeMapuinterror) dir(key uint) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuinterror) findCrit(key uint) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuinterror) children() *[2]nodeMapuinterror {
@@ -37307,15 +36470,7 @@ func (c nodeMapuintfloat32) dir(key uint) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuintfloat32) findCrit(key uint) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuintfloat32) children() *[2]nodeMapuintfloat32 {
@@ -37662,15 +36817,7 @@ func (c nodeMapuintfloat64) dir(key uint) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuintfloat64) findCrit(key uint) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuintfloat64) children() *[2]nodeMapuintfloat64 {
@@ -38017,15 +37164,7 @@ func (c nodeMapuintint) dir(key uint) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuintint) findCrit(key uint) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuintint) children() *[2]nodeMapuintint {
@@ -38372,15 +37511,7 @@ func (c nodeMapuintint16) dir(key uint) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuintint16) findCrit(key uint) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuintint16) children() *[2]nodeMapuintint16 {
@@ -38727,15 +37858,7 @@ func (c nodeMapuintint32) dir(key uint) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuintint32) findCrit(key uint) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuintint32) children() *[2]nodeMapuintint32 {
@@ -39082,15 +38205,7 @@ func (c nodeMapuintint64) dir(key uint) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuintint64) findCrit(key uint) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuintint64) children() *[2]nodeMapuintint64 {
@@ -39437,15 +38552,7 @@ func (c nodeMapuintint8) dir(key uint) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuintint8) findCrit(key uint) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuintint8) children() *[2]nodeMapuintint8 {
@@ -39792,15 +38899,7 @@ func (c nodeMapuintrune) dir(key uint) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuintrune) findCrit(key uint) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuintrune) children() *[2]nodeMapuintrune {
@@ -40147,15 +39246,7 @@ func (c nodeMapuintstring) dir(key uint) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuintstring) findCrit(key uint) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuintstring) children() *[2]nodeMapuintstring {
@@ -40502,15 +39593,7 @@ func (c nodeMapuintuint) dir(key uint) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuintuint) findCrit(key uint) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuintuint) children() *[2]nodeMapuintuint {
@@ -40857,15 +39940,7 @@ func (c nodeMapuintuint16) dir(key uint) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuintuint16) findCrit(key uint) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuintuint16) children() *[2]nodeMapuintuint16 {
@@ -41212,15 +40287,7 @@ func (c nodeMapuintuint32) dir(key uint) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuintuint32) findCrit(key uint) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuintuint32) children() *[2]nodeMapuintuint32 {
@@ -41567,15 +40634,7 @@ func (c nodeMapuintuint64) dir(key uint) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuintuint64) findCrit(key uint) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuintuint64) children() *[2]nodeMapuintuint64 {
@@ -41922,15 +40981,7 @@ func (c nodeMapuintuint8) dir(key uint) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuintuint8) findCrit(key uint) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuintuint8) children() *[2]nodeMapuintuint8 {
@@ -42277,15 +41328,7 @@ func (c nodeMapuintuintptr) dir(key uint) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuintuintptr) findCrit(key uint) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuintuintptr) children() *[2]nodeMapuintuintptr {
@@ -42632,15 +41675,7 @@ func (c nodeMapuintptrbool) dir(key uintptr) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuintptrbool) findCrit(key uintptr) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuintptrbool) children() *[2]nodeMapuintptrbool {
@@ -42987,15 +42022,7 @@ func (c nodeMapuintptrbyte) dir(key uintptr) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuintptrbyte) findCrit(key uintptr) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuintptrbyte) children() *[2]nodeMapuintptrbyte {
@@ -43342,15 +42369,7 @@ func (c nodeMapuintptrcomplex128) dir(key uintptr) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuintptrcomplex128) findCrit(key uintptr) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuintptrcomplex128) children() *[2]nodeMapuintptrcomplex128 {
@@ -43697,15 +42716,7 @@ func (c nodeMapuintptrcomplex64) dir(key uintptr) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuintptrcomplex64) findCrit(key uintptr) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuintptrcomplex64) children() *[2]nodeMapuintptrcomplex64 {
@@ -44052,15 +43063,7 @@ func (c nodeMapuintptrerror) dir(key uintptr) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuintptrerror) findCrit(key uintptr) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuintptrerror) children() *[2]nodeMapuintptrerror {
@@ -44407,15 +43410,7 @@ func (c nodeMapuintptrfloat32) dir(key uintptr) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuintptrfloat32) findCrit(key uintptr) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuintptrfloat32) children() *[2]nodeMapuintptrfloat32 {
@@ -44762,15 +43757,7 @@ func (c nodeMapuintptrfloat64) dir(key uintptr) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuintptrfloat64) findCrit(key uintptr) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuintptrfloat64) children() *[2]nodeMapuintptrfloat64 {
@@ -45117,15 +44104,7 @@ func (c nodeMapuintptrint) dir(key uintptr) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuintptrint) findCrit(key uintptr) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuintptrint) children() *[2]nodeMapuintptrint {
@@ -45472,15 +44451,7 @@ func (c nodeMapuintptrint16) dir(key uintptr) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuintptrint16) findCrit(key uintptr) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuintptrint16) children() *[2]nodeMapuintptrint16 {
@@ -45827,15 +44798,7 @@ func (c nodeMapuintptrint32) dir(key uintptr) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuintptrint32) findCrit(key uintptr) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuintptrint32) children() *[2]nodeMapuintptrint32 {
@@ -46182,15 +45145,7 @@ func (c nodeMapuintptrint64) dir(key uintptr) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuintptrint64) findCrit(key uintptr) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuintptrint64) children() *[2]nodeMapuintptrint64 {
@@ -46537,15 +45492,7 @@ func (c nodeMapuintptrint8) dir(key uintptr) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuintptrint8) findCrit(key uintptr) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuintptrint8) children() *[2]nodeMapuintptrint8 {
@@ -46892,15 +45839,7 @@ func (c nodeMapuintptrrune) dir(key uintptr) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuintptrrune) findCrit(key uintptr) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuintptrrune) children() *[2]nodeMapuintptrrune {
@@ -47247,15 +46186,7 @@ func (c nodeMapuintptrstring) dir(key uintptr) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuintptrstring) findCrit(key uintptr) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuintptrstring) children() *[2]nodeMapuintptrstring {
@@ -47602,15 +46533,7 @@ func (c nodeMapuintptruint) dir(key uintptr) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuintptruint) findCrit(key uintptr) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuintptruint) children() *[2]nodeMapuintptruint {
@@ -47957,15 +46880,7 @@ func (c nodeMapuintptruint16) dir(key uintptr) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuintptruint16) findCrit(key uintptr) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuintptruint16) children() *[2]nodeMapuintptruint16 {
@@ -48312,15 +47227,7 @@ func (c nodeMapuintptruint32) dir(key uintptr) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuintptruint32) findCrit(key uintptr) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuintptruint32) children() *[2]nodeMapuintptruint32 {
@@ -48667,15 +47574,7 @@ func (c nodeMapuintptruint64) dir(key uintptr) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuintptruint64) findCrit(key uintptr) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuintptruint64) children() *[2]nodeMapuintptruint64 {
@@ -49022,15 +47921,7 @@ func (c nodeMapuintptruint8) dir(key uintptr) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuintptruint8) findCrit(key uintptr) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuintptruint8) children() *[2]nodeMapuintptruint8 {
@@ -49377,15 +48268,7 @@ func (c nodeMapuintptruintptr) dir(key uintptr) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuintptruintptr) findCrit(key uintptr) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuintptruintptr) children() *[2]nodeMapuintptruintptr {
@@ -49732,15 +48615,7 @@ func (c nodeMapuint64bool) dir(key uint64) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint64bool) findCrit(key uint64) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint64bool) children() *[2]nodeMapuint64bool {
@@ -50087,15 +48962,7 @@ func (c nodeMapuint64byte) dir(key uint64) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint64byte) findCrit(key uint64) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint64byte) children() *[2]nodeMapuint64byte {
@@ -50442,15 +49309,7 @@ func (c nodeMapuint64complex128) dir(key uint64) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint64complex128) findCrit(key uint64) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint64complex128) children() *[2]nodeMapuint64complex128 {
@@ -50797,15 +49656,7 @@ func (c nodeMapuint64complex64) dir(key uint64) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint64complex64) findCrit(key uint64) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint64complex64) children() *[2]nodeMapuint64complex64 {
@@ -51152,15 +50003,7 @@ func (c nodeMapuint64error) dir(key uint64) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint64error) findCrit(key uint64) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint64error) children() *[2]nodeMapuint64error {
@@ -51507,15 +50350,7 @@ func (c nodeMapuint64float32) dir(key uint64) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint64float32) findCrit(key uint64) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint64float32) children() *[2]nodeMapuint64float32 {
@@ -51862,15 +50697,7 @@ func (c nodeMapuint64float64) dir(key uint64) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint64float64) findCrit(key uint64) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint64float64) children() *[2]nodeMapuint64float64 {
@@ -52217,15 +51044,7 @@ func (c nodeMapuint64int) dir(key uint64) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint64int) findCrit(key uint64) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint64int) children() *[2]nodeMapuint64int {
@@ -52572,15 +51391,7 @@ func (c nodeMapuint64int16) dir(key uint64) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint64int16) findCrit(key uint64) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint64int16) children() *[2]nodeMapuint64int16 {
@@ -52927,15 +51738,7 @@ func (c nodeMapuint64int32) dir(key uint64) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint64int32) findCrit(key uint64) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint64int32) children() *[2]nodeMapuint64int32 {
@@ -53282,15 +52085,7 @@ func (c nodeMapuint64int64) dir(key uint64) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint64int64) findCrit(key uint64) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint64int64) children() *[2]nodeMapuint64int64 {
@@ -53637,15 +52432,7 @@ func (c nodeMapuint64int8) dir(key uint64) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint64int8) findCrit(key uint64) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint64int8) children() *[2]nodeMapuint64int8 {
@@ -53992,15 +52779,7 @@ func (c nodeMapuint64rune) dir(key uint64) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint64rune) findCrit(key uint64) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint64rune) children() *[2]nodeMapuint64rune {
@@ -54347,15 +53126,7 @@ func (c nodeMapuint64string) dir(key uint64) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint64string) findCrit(key uint64) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint64string) children() *[2]nodeMapuint64string {
@@ -54702,15 +53473,7 @@ func (c nodeMapuint64uint) dir(key uint64) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint64uint) findCrit(key uint64) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint64uint) children() *[2]nodeMapuint64uint {
@@ -55057,15 +53820,7 @@ func (c nodeMapuint64uint16) dir(key uint64) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint64uint16) findCrit(key uint64) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint64uint16) children() *[2]nodeMapuint64uint16 {
@@ -55412,15 +54167,7 @@ func (c nodeMapuint64uint32) dir(key uint64) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint64uint32) findCrit(key uint64) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint64uint32) children() *[2]nodeMapuint64uint32 {
@@ -55767,15 +54514,7 @@ func (c nodeMapuint64uint64) dir(key uint64) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint64uint64) findCrit(key uint64) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint64uint64) children() *[2]nodeMapuint64uint64 {
@@ -56122,15 +54861,7 @@ func (c nodeMapuint64uint8) dir(key uint64) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint64uint8) findCrit(key uint64) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint64uint8) children() *[2]nodeMapuint64uint8 {
@@ -56477,15 +55208,7 @@ func (c nodeMapuint64uintptr) dir(key uint64) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint64uintptr) findCrit(key uint64) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint64uintptr) children() *[2]nodeMapuint64uintptr {
@@ -56832,15 +55555,7 @@ func (c nodeMapuint32bool) dir(key uint32) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint32bool) findCrit(key uint32) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint32bool) children() *[2]nodeMapuint32bool {
@@ -57187,15 +55902,7 @@ func (c nodeMapuint32byte) dir(key uint32) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint32byte) findCrit(key uint32) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint32byte) children() *[2]nodeMapuint32byte {
@@ -57542,15 +56249,7 @@ func (c nodeMapuint32complex128) dir(key uint32) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint32complex128) findCrit(key uint32) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint32complex128) children() *[2]nodeMapuint32complex128 {
@@ -57897,15 +56596,7 @@ func (c nodeMapuint32complex64) dir(key uint32) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint32complex64) findCrit(key uint32) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint32complex64) children() *[2]nodeMapuint32complex64 {
@@ -58252,15 +56943,7 @@ func (c nodeMapuint32error) dir(key uint32) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint32error) findCrit(key uint32) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint32error) children() *[2]nodeMapuint32error {
@@ -58607,15 +57290,7 @@ func (c nodeMapuint32float32) dir(key uint32) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint32float32) findCrit(key uint32) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint32float32) children() *[2]nodeMapuint32float32 {
@@ -58962,15 +57637,7 @@ func (c nodeMapuint32float64) dir(key uint32) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint32float64) findCrit(key uint32) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint32float64) children() *[2]nodeMapuint32float64 {
@@ -59317,15 +57984,7 @@ func (c nodeMapuint32int) dir(key uint32) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint32int) findCrit(key uint32) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint32int) children() *[2]nodeMapuint32int {
@@ -59672,15 +58331,7 @@ func (c nodeMapuint32int16) dir(key uint32) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint32int16) findCrit(key uint32) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint32int16) children() *[2]nodeMapuint32int16 {
@@ -60027,15 +58678,7 @@ func (c nodeMapuint32int32) dir(key uint32) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint32int32) findCrit(key uint32) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint32int32) children() *[2]nodeMapuint32int32 {
@@ -60382,15 +59025,7 @@ func (c nodeMapuint32int64) dir(key uint32) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint32int64) findCrit(key uint32) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint32int64) children() *[2]nodeMapuint32int64 {
@@ -60737,15 +59372,7 @@ func (c nodeMapuint32int8) dir(key uint32) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint32int8) findCrit(key uint32) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint32int8) children() *[2]nodeMapuint32int8 {
@@ -61092,15 +59719,7 @@ func (c nodeMapuint32rune) dir(key uint32) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint32rune) findCrit(key uint32) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint32rune) children() *[2]nodeMapuint32rune {
@@ -61447,15 +60066,7 @@ func (c nodeMapuint32string) dir(key uint32) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint32string) findCrit(key uint32) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint32string) children() *[2]nodeMapuint32string {
@@ -61802,15 +60413,7 @@ func (c nodeMapuint32uint) dir(key uint32) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint32uint) findCrit(key uint32) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint32uint) children() *[2]nodeMapuint32uint {
@@ -62157,15 +60760,7 @@ func (c nodeMapuint32uint16) dir(key uint32) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint32uint16) findCrit(key uint32) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint32uint16) children() *[2]nodeMapuint32uint16 {
@@ -62512,15 +61107,7 @@ func (c nodeMapuint32uint32) dir(key uint32) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint32uint32) findCrit(key uint32) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint32uint32) children() *[2]nodeMapuint32uint32 {
@@ -62867,15 +61454,7 @@ func (c nodeMapuint32uint64) dir(key uint32) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint32uint64) findCrit(key uint32) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint32uint64) children() *[2]nodeMapuint32uint64 {
@@ -63222,15 +61801,7 @@ func (c nodeMapuint32uint8) dir(key uint32) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint32uint8) findCrit(key uint32) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint32uint8) children() *[2]nodeMapuint32uint8 {
@@ -63577,15 +62148,7 @@ func (c nodeMapuint32uintptr) dir(key uint32) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint32uintptr) findCrit(key uint32) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint32uintptr) children() *[2]nodeMapuint32uintptr {
@@ -63932,15 +62495,7 @@ func (c nodeMapuint16bool) dir(key uint16) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint16bool) findCrit(key uint16) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint16bool) children() *[2]nodeMapuint16bool {
@@ -64287,15 +62842,7 @@ func (c nodeMapuint16byte) dir(key uint16) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint16byte) findCrit(key uint16) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint16byte) children() *[2]nodeMapuint16byte {
@@ -64642,15 +63189,7 @@ func (c nodeMapuint16complex128) dir(key uint16) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint16complex128) findCrit(key uint16) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint16complex128) children() *[2]nodeMapuint16complex128 {
@@ -64997,15 +63536,7 @@ func (c nodeMapuint16complex64) dir(key uint16) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint16complex64) findCrit(key uint16) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint16complex64) children() *[2]nodeMapuint16complex64 {
@@ -65352,15 +63883,7 @@ func (c nodeMapuint16error) dir(key uint16) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint16error) findCrit(key uint16) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint16error) children() *[2]nodeMapuint16error {
@@ -65707,15 +64230,7 @@ func (c nodeMapuint16float32) dir(key uint16) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint16float32) findCrit(key uint16) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint16float32) children() *[2]nodeMapuint16float32 {
@@ -66062,15 +64577,7 @@ func (c nodeMapuint16float64) dir(key uint16) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint16float64) findCrit(key uint16) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint16float64) children() *[2]nodeMapuint16float64 {
@@ -66417,15 +64924,7 @@ func (c nodeMapuint16int) dir(key uint16) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint16int) findCrit(key uint16) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint16int) children() *[2]nodeMapuint16int {
@@ -66772,15 +65271,7 @@ func (c nodeMapuint16int16) dir(key uint16) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint16int16) findCrit(key uint16) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint16int16) children() *[2]nodeMapuint16int16 {
@@ -67127,15 +65618,7 @@ func (c nodeMapuint16int32) dir(key uint16) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint16int32) findCrit(key uint16) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint16int32) children() *[2]nodeMapuint16int32 {
@@ -67482,15 +65965,7 @@ func (c nodeMapuint16int64) dir(key uint16) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint16int64) findCrit(key uint16) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint16int64) children() *[2]nodeMapuint16int64 {
@@ -67837,15 +66312,7 @@ func (c nodeMapuint16int8) dir(key uint16) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint16int8) findCrit(key uint16) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint16int8) children() *[2]nodeMapuint16int8 {
@@ -68192,15 +66659,7 @@ func (c nodeMapuint16rune) dir(key uint16) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint16rune) findCrit(key uint16) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint16rune) children() *[2]nodeMapuint16rune {
@@ -68547,15 +67006,7 @@ func (c nodeMapuint16string) dir(key uint16) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint16string) findCrit(key uint16) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint16string) children() *[2]nodeMapuint16string {
@@ -68902,15 +67353,7 @@ func (c nodeMapuint16uint) dir(key uint16) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint16uint) findCrit(key uint16) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint16uint) children() *[2]nodeMapuint16uint {
@@ -69257,15 +67700,7 @@ func (c nodeMapuint16uint16) dir(key uint16) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint16uint16) findCrit(key uint16) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint16uint16) children() *[2]nodeMapuint16uint16 {
@@ -69612,15 +68047,7 @@ func (c nodeMapuint16uint32) dir(key uint16) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint16uint32) findCrit(key uint16) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint16uint32) children() *[2]nodeMapuint16uint32 {
@@ -69967,15 +68394,7 @@ func (c nodeMapuint16uint64) dir(key uint16) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint16uint64) findCrit(key uint16) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint16uint64) children() *[2]nodeMapuint16uint64 {
@@ -70322,15 +68741,7 @@ func (c nodeMapuint16uint8) dir(key uint16) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint16uint8) findCrit(key uint16) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint16uint8) children() *[2]nodeMapuint16uint8 {
@@ -70677,15 +69088,7 @@ func (c nodeMapuint16uintptr) dir(key uint16) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint16uintptr) findCrit(key uint16) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint16uintptr) children() *[2]nodeMapuint16uintptr {
@@ -71032,15 +69435,7 @@ func (c nodeMapuint8bool) dir(key uint8) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint8bool) findCrit(key uint8) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint8bool) children() *[2]nodeMapuint8bool {
@@ -71387,15 +69782,7 @@ func (c nodeMapuint8byte) dir(key uint8) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint8byte) findCrit(key uint8) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint8byte) children() *[2]nodeMapuint8byte {
@@ -71742,15 +70129,7 @@ func (c nodeMapuint8complex128) dir(key uint8) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint8complex128) findCrit(key uint8) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint8complex128) children() *[2]nodeMapuint8complex128 {
@@ -72097,15 +70476,7 @@ func (c nodeMapuint8complex64) dir(key uint8) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint8complex64) findCrit(key uint8) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint8complex64) children() *[2]nodeMapuint8complex64 {
@@ -72452,15 +70823,7 @@ func (c nodeMapuint8error) dir(key uint8) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint8error) findCrit(key uint8) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint8error) children() *[2]nodeMapuint8error {
@@ -72807,15 +71170,7 @@ func (c nodeMapuint8float32) dir(key uint8) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint8float32) findCrit(key uint8) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint8float32) children() *[2]nodeMapuint8float32 {
@@ -73162,15 +71517,7 @@ func (c nodeMapuint8float64) dir(key uint8) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint8float64) findCrit(key uint8) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint8float64) children() *[2]nodeMapuint8float64 {
@@ -73517,15 +71864,7 @@ func (c nodeMapuint8int) dir(key uint8) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint8int) findCrit(key uint8) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint8int) children() *[2]nodeMapuint8int {
@@ -73872,15 +72211,7 @@ func (c nodeMapuint8int16) dir(key uint8) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint8int16) findCrit(key uint8) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint8int16) children() *[2]nodeMapuint8int16 {
@@ -74227,15 +72558,7 @@ func (c nodeMapuint8int32) dir(key uint8) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint8int32) findCrit(key uint8) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint8int32) children() *[2]nodeMapuint8int32 {
@@ -74582,15 +72905,7 @@ func (c nodeMapuint8int64) dir(key uint8) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint8int64) findCrit(key uint8) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint8int64) children() *[2]nodeMapuint8int64 {
@@ -74937,15 +73252,7 @@ func (c nodeMapuint8int8) dir(key uint8) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint8int8) findCrit(key uint8) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint8int8) children() *[2]nodeMapuint8int8 {
@@ -75292,15 +73599,7 @@ func (c nodeMapuint8rune) dir(key uint8) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint8rune) findCrit(key uint8) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint8rune) children() *[2]nodeMapuint8rune {
@@ -75647,15 +73946,7 @@ func (c nodeMapuint8string) dir(key uint8) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint8string) findCrit(key uint8) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint8string) children() *[2]nodeMapuint8string {
@@ -76002,15 +74293,7 @@ func (c nodeMapuint8uint) dir(key uint8) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint8uint) findCrit(key uint8) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint8uint) children() *[2]nodeMapuint8uint {
@@ -76357,15 +74640,7 @@ func (c nodeMapuint8uint16) dir(key uint8) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint8uint16) findCrit(key uint8) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint8uint16) children() *[2]nodeMapuint8uint16 {
@@ -76712,15 +74987,7 @@ func (c nodeMapuint8uint32) dir(key uint8) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint8uint32) findCrit(key uint8) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint8uint32) children() *[2]nodeMapuint8uint32 {
@@ -77067,15 +75334,7 @@ func (c nodeMapuint8uint64) dir(key uint8) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint8uint64) findCrit(key uint8) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint8uint64) children() *[2]nodeMapuint8uint64 {
@@ -77422,15 +75681,7 @@ func (c nodeMapuint8uint8) dir(key uint8) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint8uint8) findCrit(key uint8) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint8uint8) children() *[2]nodeMapuint8uint8 {
@@ -77777,15 +76028,7 @@ func (c nodeMapuint8uintptr) dir(key uint8) int {
 // Return number of highest (first) bit that is different between child prefix and provided prefix.
 // If there are no differences within the prefix, the returned value is c.crit.
 func (c nodeMapuint8uintptr) findCrit(key uint8) uint {
-	// Isolate differences in prefix
-	key = ((key ^ c.key) >> (c.crit + 1)) << (c.crit + 1)
-	// Zero bits from lowest to highest until there are no differences left
-	var crit uint = c.crit
-	for key != 0 {
-		crit++
-		key = key &^ (1 << crit)
-	}
-	return crit
+	return uint(bits.Len64(uint64(key^c.key)|(1<<c.crit)) - 1)
 }
 
 func (c *nodeMapuint8uintptr) children() *[2]nodeMapuint8uintptr {
