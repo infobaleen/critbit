@@ -70,16 +70,17 @@ func (c *nodeMapKeyTypeValueType) find(key KeyType) (crit uint, child, parent *n
 	return
 }
 
-func (t *MapKeyTypeValueType) transformKey(key KeyType) KeyType {
+var maskTransformKeyTypeValueType = func() KeyType {
 	var mask KeyType = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapKeyTypeValueType) transformKey(key KeyType) KeyType {
+	return key ^ maskTransformKeyTypeValueType
 }
 
 // Rem removes the value associated with the specified key from the map.

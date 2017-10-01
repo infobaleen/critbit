@@ -67,16 +67,17 @@ func (c *nodeMapintbool) find(key int) (crit uint, child, parent *nodeMapintbool
 	return
 }
 
-func (t *MapIntBool) transformKey(key int) int {
+var maskTransformintbool = func() int {
 	var mask int = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapIntBool) transformKey(key int) int {
+	return key ^ maskTransformintbool
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -421,16 +422,17 @@ func (c *nodeMapintbyte) find(key int) (crit uint, child, parent *nodeMapintbyte
 	return
 }
 
-func (t *MapIntByte) transformKey(key int) int {
+var maskTransformintbyte = func() int {
 	var mask int = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapIntByte) transformKey(key int) int {
+	return key ^ maskTransformintbyte
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -775,16 +777,17 @@ func (c *nodeMapintcomplex128) find(key int) (crit uint, child, parent *nodeMapi
 	return
 }
 
-func (t *MapIntComplex128) transformKey(key int) int {
+var maskTransformintcomplex128 = func() int {
 	var mask int = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapIntComplex128) transformKey(key int) int {
+	return key ^ maskTransformintcomplex128
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -1129,16 +1132,17 @@ func (c *nodeMapintcomplex64) find(key int) (crit uint, child, parent *nodeMapin
 	return
 }
 
-func (t *MapIntComplex64) transformKey(key int) int {
+var maskTransformintcomplex64 = func() int {
 	var mask int = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapIntComplex64) transformKey(key int) int {
+	return key ^ maskTransformintcomplex64
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -1483,16 +1487,17 @@ func (c *nodeMapinterror) find(key int) (crit uint, child, parent *nodeMapinterr
 	return
 }
 
-func (t *MapIntError) transformKey(key int) int {
+var maskTransforminterror = func() int {
 	var mask int = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapIntError) transformKey(key int) int {
+	return key ^ maskTransforminterror
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -1837,16 +1842,17 @@ func (c *nodeMapintfloat32) find(key int) (crit uint, child, parent *nodeMapintf
 	return
 }
 
-func (t *MapIntFloat32) transformKey(key int) int {
+var maskTransformintfloat32 = func() int {
 	var mask int = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapIntFloat32) transformKey(key int) int {
+	return key ^ maskTransformintfloat32
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -2191,16 +2197,17 @@ func (c *nodeMapintfloat64) find(key int) (crit uint, child, parent *nodeMapintf
 	return
 }
 
-func (t *MapIntFloat64) transformKey(key int) int {
+var maskTransformintfloat64 = func() int {
 	var mask int = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapIntFloat64) transformKey(key int) int {
+	return key ^ maskTransformintfloat64
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -2545,16 +2552,17 @@ func (c *nodeMapintint) find(key int) (crit uint, child, parent *nodeMapintint) 
 	return
 }
 
-func (t *MapIntInt) transformKey(key int) int {
+var maskTransformintint = func() int {
 	var mask int = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapIntInt) transformKey(key int) int {
+	return key ^ maskTransformintint
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -2899,16 +2907,17 @@ func (c *nodeMapintint16) find(key int) (crit uint, child, parent *nodeMapintint
 	return
 }
 
-func (t *MapIntInt16) transformKey(key int) int {
+var maskTransformintint16 = func() int {
 	var mask int = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapIntInt16) transformKey(key int) int {
+	return key ^ maskTransformintint16
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -3253,16 +3262,17 @@ func (c *nodeMapintint32) find(key int) (crit uint, child, parent *nodeMapintint
 	return
 }
 
-func (t *MapIntInt32) transformKey(key int) int {
+var maskTransformintint32 = func() int {
 	var mask int = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapIntInt32) transformKey(key int) int {
+	return key ^ maskTransformintint32
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -3607,16 +3617,17 @@ func (c *nodeMapintint64) find(key int) (crit uint, child, parent *nodeMapintint
 	return
 }
 
-func (t *MapIntInt64) transformKey(key int) int {
+var maskTransformintint64 = func() int {
 	var mask int = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapIntInt64) transformKey(key int) int {
+	return key ^ maskTransformintint64
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -3961,16 +3972,17 @@ func (c *nodeMapintint8) find(key int) (crit uint, child, parent *nodeMapintint8
 	return
 }
 
-func (t *MapIntInt8) transformKey(key int) int {
+var maskTransformintint8 = func() int {
 	var mask int = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapIntInt8) transformKey(key int) int {
+	return key ^ maskTransformintint8
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -4315,16 +4327,17 @@ func (c *nodeMapintrune) find(key int) (crit uint, child, parent *nodeMapintrune
 	return
 }
 
-func (t *MapIntRune) transformKey(key int) int {
+var maskTransformintrune = func() int {
 	var mask int = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapIntRune) transformKey(key int) int {
+	return key ^ maskTransformintrune
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -4669,16 +4682,17 @@ func (c *nodeMapintstring) find(key int) (crit uint, child, parent *nodeMapintst
 	return
 }
 
-func (t *MapIntString) transformKey(key int) int {
+var maskTransformintstring = func() int {
 	var mask int = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapIntString) transformKey(key int) int {
+	return key ^ maskTransformintstring
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -5023,16 +5037,17 @@ func (c *nodeMapintuint) find(key int) (crit uint, child, parent *nodeMapintuint
 	return
 }
 
-func (t *MapIntUint) transformKey(key int) int {
+var maskTransformintuint = func() int {
 	var mask int = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapIntUint) transformKey(key int) int {
+	return key ^ maskTransformintuint
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -5377,16 +5392,17 @@ func (c *nodeMapintuint16) find(key int) (crit uint, child, parent *nodeMapintui
 	return
 }
 
-func (t *MapIntUint16) transformKey(key int) int {
+var maskTransformintuint16 = func() int {
 	var mask int = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapIntUint16) transformKey(key int) int {
+	return key ^ maskTransformintuint16
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -5731,16 +5747,17 @@ func (c *nodeMapintuint32) find(key int) (crit uint, child, parent *nodeMapintui
 	return
 }
 
-func (t *MapIntUint32) transformKey(key int) int {
+var maskTransformintuint32 = func() int {
 	var mask int = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapIntUint32) transformKey(key int) int {
+	return key ^ maskTransformintuint32
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -6085,16 +6102,17 @@ func (c *nodeMapintuint64) find(key int) (crit uint, child, parent *nodeMapintui
 	return
 }
 
-func (t *MapIntUint64) transformKey(key int) int {
+var maskTransformintuint64 = func() int {
 	var mask int = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapIntUint64) transformKey(key int) int {
+	return key ^ maskTransformintuint64
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -6439,16 +6457,17 @@ func (c *nodeMapintuint8) find(key int) (crit uint, child, parent *nodeMapintuin
 	return
 }
 
-func (t *MapIntUint8) transformKey(key int) int {
+var maskTransformintuint8 = func() int {
 	var mask int = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapIntUint8) transformKey(key int) int {
+	return key ^ maskTransformintuint8
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -6793,16 +6812,17 @@ func (c *nodeMapintuintptr) find(key int) (crit uint, child, parent *nodeMapintu
 	return
 }
 
-func (t *MapIntUintptr) transformKey(key int) int {
+var maskTransformintuintptr = func() int {
 	var mask int = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapIntUintptr) transformKey(key int) int {
+	return key ^ maskTransformintuintptr
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -7147,16 +7167,17 @@ func (c *nodeMapint64bool) find(key int64) (crit uint, child, parent *nodeMapint
 	return
 }
 
-func (t *MapInt64Bool) transformKey(key int64) int64 {
+var maskTransformint64bool = func() int64 {
 	var mask int64 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt64Bool) transformKey(key int64) int64 {
+	return key ^ maskTransformint64bool
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -7501,16 +7522,17 @@ func (c *nodeMapint64byte) find(key int64) (crit uint, child, parent *nodeMapint
 	return
 }
 
-func (t *MapInt64Byte) transformKey(key int64) int64 {
+var maskTransformint64byte = func() int64 {
 	var mask int64 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt64Byte) transformKey(key int64) int64 {
+	return key ^ maskTransformint64byte
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -7855,16 +7877,17 @@ func (c *nodeMapint64complex128) find(key int64) (crit uint, child, parent *node
 	return
 }
 
-func (t *MapInt64Complex128) transformKey(key int64) int64 {
+var maskTransformint64complex128 = func() int64 {
 	var mask int64 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt64Complex128) transformKey(key int64) int64 {
+	return key ^ maskTransformint64complex128
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -8209,16 +8232,17 @@ func (c *nodeMapint64complex64) find(key int64) (crit uint, child, parent *nodeM
 	return
 }
 
-func (t *MapInt64Complex64) transformKey(key int64) int64 {
+var maskTransformint64complex64 = func() int64 {
 	var mask int64 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt64Complex64) transformKey(key int64) int64 {
+	return key ^ maskTransformint64complex64
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -8563,16 +8587,17 @@ func (c *nodeMapint64error) find(key int64) (crit uint, child, parent *nodeMapin
 	return
 }
 
-func (t *MapInt64Error) transformKey(key int64) int64 {
+var maskTransformint64error = func() int64 {
 	var mask int64 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt64Error) transformKey(key int64) int64 {
+	return key ^ maskTransformint64error
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -8917,16 +8942,17 @@ func (c *nodeMapint64float32) find(key int64) (crit uint, child, parent *nodeMap
 	return
 }
 
-func (t *MapInt64Float32) transformKey(key int64) int64 {
+var maskTransformint64float32 = func() int64 {
 	var mask int64 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt64Float32) transformKey(key int64) int64 {
+	return key ^ maskTransformint64float32
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -9271,16 +9297,17 @@ func (c *nodeMapint64float64) find(key int64) (crit uint, child, parent *nodeMap
 	return
 }
 
-func (t *MapInt64Float64) transformKey(key int64) int64 {
+var maskTransformint64float64 = func() int64 {
 	var mask int64 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt64Float64) transformKey(key int64) int64 {
+	return key ^ maskTransformint64float64
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -9625,16 +9652,17 @@ func (c *nodeMapint64int) find(key int64) (crit uint, child, parent *nodeMapint6
 	return
 }
 
-func (t *MapInt64Int) transformKey(key int64) int64 {
+var maskTransformint64int = func() int64 {
 	var mask int64 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt64Int) transformKey(key int64) int64 {
+	return key ^ maskTransformint64int
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -9979,16 +10007,17 @@ func (c *nodeMapint64int16) find(key int64) (crit uint, child, parent *nodeMapin
 	return
 }
 
-func (t *MapInt64Int16) transformKey(key int64) int64 {
+var maskTransformint64int16 = func() int64 {
 	var mask int64 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt64Int16) transformKey(key int64) int64 {
+	return key ^ maskTransformint64int16
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -10333,16 +10362,17 @@ func (c *nodeMapint64int32) find(key int64) (crit uint, child, parent *nodeMapin
 	return
 }
 
-func (t *MapInt64Int32) transformKey(key int64) int64 {
+var maskTransformint64int32 = func() int64 {
 	var mask int64 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt64Int32) transformKey(key int64) int64 {
+	return key ^ maskTransformint64int32
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -10687,16 +10717,17 @@ func (c *nodeMapint64int64) find(key int64) (crit uint, child, parent *nodeMapin
 	return
 }
 
-func (t *MapInt64Int64) transformKey(key int64) int64 {
+var maskTransformint64int64 = func() int64 {
 	var mask int64 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt64Int64) transformKey(key int64) int64 {
+	return key ^ maskTransformint64int64
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -11041,16 +11072,17 @@ func (c *nodeMapint64int8) find(key int64) (crit uint, child, parent *nodeMapint
 	return
 }
 
-func (t *MapInt64Int8) transformKey(key int64) int64 {
+var maskTransformint64int8 = func() int64 {
 	var mask int64 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt64Int8) transformKey(key int64) int64 {
+	return key ^ maskTransformint64int8
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -11395,16 +11427,17 @@ func (c *nodeMapint64rune) find(key int64) (crit uint, child, parent *nodeMapint
 	return
 }
 
-func (t *MapInt64Rune) transformKey(key int64) int64 {
+var maskTransformint64rune = func() int64 {
 	var mask int64 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt64Rune) transformKey(key int64) int64 {
+	return key ^ maskTransformint64rune
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -11749,16 +11782,17 @@ func (c *nodeMapint64string) find(key int64) (crit uint, child, parent *nodeMapi
 	return
 }
 
-func (t *MapInt64String) transformKey(key int64) int64 {
+var maskTransformint64string = func() int64 {
 	var mask int64 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt64String) transformKey(key int64) int64 {
+	return key ^ maskTransformint64string
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -12103,16 +12137,17 @@ func (c *nodeMapint64uint) find(key int64) (crit uint, child, parent *nodeMapint
 	return
 }
 
-func (t *MapInt64Uint) transformKey(key int64) int64 {
+var maskTransformint64uint = func() int64 {
 	var mask int64 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt64Uint) transformKey(key int64) int64 {
+	return key ^ maskTransformint64uint
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -12457,16 +12492,17 @@ func (c *nodeMapint64uint16) find(key int64) (crit uint, child, parent *nodeMapi
 	return
 }
 
-func (t *MapInt64Uint16) transformKey(key int64) int64 {
+var maskTransformint64uint16 = func() int64 {
 	var mask int64 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt64Uint16) transformKey(key int64) int64 {
+	return key ^ maskTransformint64uint16
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -12811,16 +12847,17 @@ func (c *nodeMapint64uint32) find(key int64) (crit uint, child, parent *nodeMapi
 	return
 }
 
-func (t *MapInt64Uint32) transformKey(key int64) int64 {
+var maskTransformint64uint32 = func() int64 {
 	var mask int64 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt64Uint32) transformKey(key int64) int64 {
+	return key ^ maskTransformint64uint32
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -13165,16 +13202,17 @@ func (c *nodeMapint64uint64) find(key int64) (crit uint, child, parent *nodeMapi
 	return
 }
 
-func (t *MapInt64Uint64) transformKey(key int64) int64 {
+var maskTransformint64uint64 = func() int64 {
 	var mask int64 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt64Uint64) transformKey(key int64) int64 {
+	return key ^ maskTransformint64uint64
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -13519,16 +13557,17 @@ func (c *nodeMapint64uint8) find(key int64) (crit uint, child, parent *nodeMapin
 	return
 }
 
-func (t *MapInt64Uint8) transformKey(key int64) int64 {
+var maskTransformint64uint8 = func() int64 {
 	var mask int64 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt64Uint8) transformKey(key int64) int64 {
+	return key ^ maskTransformint64uint8
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -13873,16 +13912,17 @@ func (c *nodeMapint64uintptr) find(key int64) (crit uint, child, parent *nodeMap
 	return
 }
 
-func (t *MapInt64Uintptr) transformKey(key int64) int64 {
+var maskTransformint64uintptr = func() int64 {
 	var mask int64 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt64Uintptr) transformKey(key int64) int64 {
+	return key ^ maskTransformint64uintptr
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -14227,16 +14267,17 @@ func (c *nodeMapint32bool) find(key int32) (crit uint, child, parent *nodeMapint
 	return
 }
 
-func (t *MapInt32Bool) transformKey(key int32) int32 {
+var maskTransformint32bool = func() int32 {
 	var mask int32 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt32Bool) transformKey(key int32) int32 {
+	return key ^ maskTransformint32bool
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -14581,16 +14622,17 @@ func (c *nodeMapint32byte) find(key int32) (crit uint, child, parent *nodeMapint
 	return
 }
 
-func (t *MapInt32Byte) transformKey(key int32) int32 {
+var maskTransformint32byte = func() int32 {
 	var mask int32 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt32Byte) transformKey(key int32) int32 {
+	return key ^ maskTransformint32byte
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -14935,16 +14977,17 @@ func (c *nodeMapint32complex128) find(key int32) (crit uint, child, parent *node
 	return
 }
 
-func (t *MapInt32Complex128) transformKey(key int32) int32 {
+var maskTransformint32complex128 = func() int32 {
 	var mask int32 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt32Complex128) transformKey(key int32) int32 {
+	return key ^ maskTransformint32complex128
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -15289,16 +15332,17 @@ func (c *nodeMapint32complex64) find(key int32) (crit uint, child, parent *nodeM
 	return
 }
 
-func (t *MapInt32Complex64) transformKey(key int32) int32 {
+var maskTransformint32complex64 = func() int32 {
 	var mask int32 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt32Complex64) transformKey(key int32) int32 {
+	return key ^ maskTransformint32complex64
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -15643,16 +15687,17 @@ func (c *nodeMapint32error) find(key int32) (crit uint, child, parent *nodeMapin
 	return
 }
 
-func (t *MapInt32Error) transformKey(key int32) int32 {
+var maskTransformint32error = func() int32 {
 	var mask int32 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt32Error) transformKey(key int32) int32 {
+	return key ^ maskTransformint32error
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -15997,16 +16042,17 @@ func (c *nodeMapint32float32) find(key int32) (crit uint, child, parent *nodeMap
 	return
 }
 
-func (t *MapInt32Float32) transformKey(key int32) int32 {
+var maskTransformint32float32 = func() int32 {
 	var mask int32 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt32Float32) transformKey(key int32) int32 {
+	return key ^ maskTransformint32float32
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -16351,16 +16397,17 @@ func (c *nodeMapint32float64) find(key int32) (crit uint, child, parent *nodeMap
 	return
 }
 
-func (t *MapInt32Float64) transformKey(key int32) int32 {
+var maskTransformint32float64 = func() int32 {
 	var mask int32 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt32Float64) transformKey(key int32) int32 {
+	return key ^ maskTransformint32float64
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -16705,16 +16752,17 @@ func (c *nodeMapint32int) find(key int32) (crit uint, child, parent *nodeMapint3
 	return
 }
 
-func (t *MapInt32Int) transformKey(key int32) int32 {
+var maskTransformint32int = func() int32 {
 	var mask int32 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt32Int) transformKey(key int32) int32 {
+	return key ^ maskTransformint32int
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -17059,16 +17107,17 @@ func (c *nodeMapint32int16) find(key int32) (crit uint, child, parent *nodeMapin
 	return
 }
 
-func (t *MapInt32Int16) transformKey(key int32) int32 {
+var maskTransformint32int16 = func() int32 {
 	var mask int32 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt32Int16) transformKey(key int32) int32 {
+	return key ^ maskTransformint32int16
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -17413,16 +17462,17 @@ func (c *nodeMapint32int32) find(key int32) (crit uint, child, parent *nodeMapin
 	return
 }
 
-func (t *MapInt32Int32) transformKey(key int32) int32 {
+var maskTransformint32int32 = func() int32 {
 	var mask int32 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt32Int32) transformKey(key int32) int32 {
+	return key ^ maskTransformint32int32
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -17767,16 +17817,17 @@ func (c *nodeMapint32int64) find(key int32) (crit uint, child, parent *nodeMapin
 	return
 }
 
-func (t *MapInt32Int64) transformKey(key int32) int32 {
+var maskTransformint32int64 = func() int32 {
 	var mask int32 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt32Int64) transformKey(key int32) int32 {
+	return key ^ maskTransformint32int64
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -18121,16 +18172,17 @@ func (c *nodeMapint32int8) find(key int32) (crit uint, child, parent *nodeMapint
 	return
 }
 
-func (t *MapInt32Int8) transformKey(key int32) int32 {
+var maskTransformint32int8 = func() int32 {
 	var mask int32 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt32Int8) transformKey(key int32) int32 {
+	return key ^ maskTransformint32int8
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -18475,16 +18527,17 @@ func (c *nodeMapint32rune) find(key int32) (crit uint, child, parent *nodeMapint
 	return
 }
 
-func (t *MapInt32Rune) transformKey(key int32) int32 {
+var maskTransformint32rune = func() int32 {
 	var mask int32 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt32Rune) transformKey(key int32) int32 {
+	return key ^ maskTransformint32rune
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -18829,16 +18882,17 @@ func (c *nodeMapint32string) find(key int32) (crit uint, child, parent *nodeMapi
 	return
 }
 
-func (t *MapInt32String) transformKey(key int32) int32 {
+var maskTransformint32string = func() int32 {
 	var mask int32 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt32String) transformKey(key int32) int32 {
+	return key ^ maskTransformint32string
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -19183,16 +19237,17 @@ func (c *nodeMapint32uint) find(key int32) (crit uint, child, parent *nodeMapint
 	return
 }
 
-func (t *MapInt32Uint) transformKey(key int32) int32 {
+var maskTransformint32uint = func() int32 {
 	var mask int32 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt32Uint) transformKey(key int32) int32 {
+	return key ^ maskTransformint32uint
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -19537,16 +19592,17 @@ func (c *nodeMapint32uint16) find(key int32) (crit uint, child, parent *nodeMapi
 	return
 }
 
-func (t *MapInt32Uint16) transformKey(key int32) int32 {
+var maskTransformint32uint16 = func() int32 {
 	var mask int32 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt32Uint16) transformKey(key int32) int32 {
+	return key ^ maskTransformint32uint16
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -19891,16 +19947,17 @@ func (c *nodeMapint32uint32) find(key int32) (crit uint, child, parent *nodeMapi
 	return
 }
 
-func (t *MapInt32Uint32) transformKey(key int32) int32 {
+var maskTransformint32uint32 = func() int32 {
 	var mask int32 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt32Uint32) transformKey(key int32) int32 {
+	return key ^ maskTransformint32uint32
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -20245,16 +20302,17 @@ func (c *nodeMapint32uint64) find(key int32) (crit uint, child, parent *nodeMapi
 	return
 }
 
-func (t *MapInt32Uint64) transformKey(key int32) int32 {
+var maskTransformint32uint64 = func() int32 {
 	var mask int32 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt32Uint64) transformKey(key int32) int32 {
+	return key ^ maskTransformint32uint64
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -20599,16 +20657,17 @@ func (c *nodeMapint32uint8) find(key int32) (crit uint, child, parent *nodeMapin
 	return
 }
 
-func (t *MapInt32Uint8) transformKey(key int32) int32 {
+var maskTransformint32uint8 = func() int32 {
 	var mask int32 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt32Uint8) transformKey(key int32) int32 {
+	return key ^ maskTransformint32uint8
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -20953,16 +21012,17 @@ func (c *nodeMapint32uintptr) find(key int32) (crit uint, child, parent *nodeMap
 	return
 }
 
-func (t *MapInt32Uintptr) transformKey(key int32) int32 {
+var maskTransformint32uintptr = func() int32 {
 	var mask int32 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt32Uintptr) transformKey(key int32) int32 {
+	return key ^ maskTransformint32uintptr
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -21307,16 +21367,17 @@ func (c *nodeMapint16bool) find(key int16) (crit uint, child, parent *nodeMapint
 	return
 }
 
-func (t *MapInt16Bool) transformKey(key int16) int16 {
+var maskTransformint16bool = func() int16 {
 	var mask int16 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt16Bool) transformKey(key int16) int16 {
+	return key ^ maskTransformint16bool
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -21661,16 +21722,17 @@ func (c *nodeMapint16byte) find(key int16) (crit uint, child, parent *nodeMapint
 	return
 }
 
-func (t *MapInt16Byte) transformKey(key int16) int16 {
+var maskTransformint16byte = func() int16 {
 	var mask int16 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt16Byte) transformKey(key int16) int16 {
+	return key ^ maskTransformint16byte
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -22015,16 +22077,17 @@ func (c *nodeMapint16complex128) find(key int16) (crit uint, child, parent *node
 	return
 }
 
-func (t *MapInt16Complex128) transformKey(key int16) int16 {
+var maskTransformint16complex128 = func() int16 {
 	var mask int16 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt16Complex128) transformKey(key int16) int16 {
+	return key ^ maskTransformint16complex128
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -22369,16 +22432,17 @@ func (c *nodeMapint16complex64) find(key int16) (crit uint, child, parent *nodeM
 	return
 }
 
-func (t *MapInt16Complex64) transformKey(key int16) int16 {
+var maskTransformint16complex64 = func() int16 {
 	var mask int16 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt16Complex64) transformKey(key int16) int16 {
+	return key ^ maskTransformint16complex64
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -22723,16 +22787,17 @@ func (c *nodeMapint16error) find(key int16) (crit uint, child, parent *nodeMapin
 	return
 }
 
-func (t *MapInt16Error) transformKey(key int16) int16 {
+var maskTransformint16error = func() int16 {
 	var mask int16 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt16Error) transformKey(key int16) int16 {
+	return key ^ maskTransformint16error
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -23077,16 +23142,17 @@ func (c *nodeMapint16float32) find(key int16) (crit uint, child, parent *nodeMap
 	return
 }
 
-func (t *MapInt16Float32) transformKey(key int16) int16 {
+var maskTransformint16float32 = func() int16 {
 	var mask int16 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt16Float32) transformKey(key int16) int16 {
+	return key ^ maskTransformint16float32
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -23431,16 +23497,17 @@ func (c *nodeMapint16float64) find(key int16) (crit uint, child, parent *nodeMap
 	return
 }
 
-func (t *MapInt16Float64) transformKey(key int16) int16 {
+var maskTransformint16float64 = func() int16 {
 	var mask int16 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt16Float64) transformKey(key int16) int16 {
+	return key ^ maskTransformint16float64
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -23785,16 +23852,17 @@ func (c *nodeMapint16int) find(key int16) (crit uint, child, parent *nodeMapint1
 	return
 }
 
-func (t *MapInt16Int) transformKey(key int16) int16 {
+var maskTransformint16int = func() int16 {
 	var mask int16 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt16Int) transformKey(key int16) int16 {
+	return key ^ maskTransformint16int
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -24139,16 +24207,17 @@ func (c *nodeMapint16int16) find(key int16) (crit uint, child, parent *nodeMapin
 	return
 }
 
-func (t *MapInt16Int16) transformKey(key int16) int16 {
+var maskTransformint16int16 = func() int16 {
 	var mask int16 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt16Int16) transformKey(key int16) int16 {
+	return key ^ maskTransformint16int16
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -24493,16 +24562,17 @@ func (c *nodeMapint16int32) find(key int16) (crit uint, child, parent *nodeMapin
 	return
 }
 
-func (t *MapInt16Int32) transformKey(key int16) int16 {
+var maskTransformint16int32 = func() int16 {
 	var mask int16 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt16Int32) transformKey(key int16) int16 {
+	return key ^ maskTransformint16int32
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -24847,16 +24917,17 @@ func (c *nodeMapint16int64) find(key int16) (crit uint, child, parent *nodeMapin
 	return
 }
 
-func (t *MapInt16Int64) transformKey(key int16) int16 {
+var maskTransformint16int64 = func() int16 {
 	var mask int16 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt16Int64) transformKey(key int16) int16 {
+	return key ^ maskTransformint16int64
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -25201,16 +25272,17 @@ func (c *nodeMapint16int8) find(key int16) (crit uint, child, parent *nodeMapint
 	return
 }
 
-func (t *MapInt16Int8) transformKey(key int16) int16 {
+var maskTransformint16int8 = func() int16 {
 	var mask int16 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt16Int8) transformKey(key int16) int16 {
+	return key ^ maskTransformint16int8
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -25555,16 +25627,17 @@ func (c *nodeMapint16rune) find(key int16) (crit uint, child, parent *nodeMapint
 	return
 }
 
-func (t *MapInt16Rune) transformKey(key int16) int16 {
+var maskTransformint16rune = func() int16 {
 	var mask int16 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt16Rune) transformKey(key int16) int16 {
+	return key ^ maskTransformint16rune
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -25909,16 +25982,17 @@ func (c *nodeMapint16string) find(key int16) (crit uint, child, parent *nodeMapi
 	return
 }
 
-func (t *MapInt16String) transformKey(key int16) int16 {
+var maskTransformint16string = func() int16 {
 	var mask int16 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt16String) transformKey(key int16) int16 {
+	return key ^ maskTransformint16string
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -26263,16 +26337,17 @@ func (c *nodeMapint16uint) find(key int16) (crit uint, child, parent *nodeMapint
 	return
 }
 
-func (t *MapInt16Uint) transformKey(key int16) int16 {
+var maskTransformint16uint = func() int16 {
 	var mask int16 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt16Uint) transformKey(key int16) int16 {
+	return key ^ maskTransformint16uint
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -26617,16 +26692,17 @@ func (c *nodeMapint16uint16) find(key int16) (crit uint, child, parent *nodeMapi
 	return
 }
 
-func (t *MapInt16Uint16) transformKey(key int16) int16 {
+var maskTransformint16uint16 = func() int16 {
 	var mask int16 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt16Uint16) transformKey(key int16) int16 {
+	return key ^ maskTransformint16uint16
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -26971,16 +27047,17 @@ func (c *nodeMapint16uint32) find(key int16) (crit uint, child, parent *nodeMapi
 	return
 }
 
-func (t *MapInt16Uint32) transformKey(key int16) int16 {
+var maskTransformint16uint32 = func() int16 {
 	var mask int16 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt16Uint32) transformKey(key int16) int16 {
+	return key ^ maskTransformint16uint32
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -27325,16 +27402,17 @@ func (c *nodeMapint16uint64) find(key int16) (crit uint, child, parent *nodeMapi
 	return
 }
 
-func (t *MapInt16Uint64) transformKey(key int16) int16 {
+var maskTransformint16uint64 = func() int16 {
 	var mask int16 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt16Uint64) transformKey(key int16) int16 {
+	return key ^ maskTransformint16uint64
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -27679,16 +27757,17 @@ func (c *nodeMapint16uint8) find(key int16) (crit uint, child, parent *nodeMapin
 	return
 }
 
-func (t *MapInt16Uint8) transformKey(key int16) int16 {
+var maskTransformint16uint8 = func() int16 {
 	var mask int16 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt16Uint8) transformKey(key int16) int16 {
+	return key ^ maskTransformint16uint8
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -28033,16 +28112,17 @@ func (c *nodeMapint16uintptr) find(key int16) (crit uint, child, parent *nodeMap
 	return
 }
 
-func (t *MapInt16Uintptr) transformKey(key int16) int16 {
+var maskTransformint16uintptr = func() int16 {
 	var mask int16 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt16Uintptr) transformKey(key int16) int16 {
+	return key ^ maskTransformint16uintptr
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -28387,16 +28467,17 @@ func (c *nodeMapint8bool) find(key int8) (crit uint, child, parent *nodeMapint8b
 	return
 }
 
-func (t *MapInt8Bool) transformKey(key int8) int8 {
+var maskTransformint8bool = func() int8 {
 	var mask int8 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt8Bool) transformKey(key int8) int8 {
+	return key ^ maskTransformint8bool
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -28741,16 +28822,17 @@ func (c *nodeMapint8byte) find(key int8) (crit uint, child, parent *nodeMapint8b
 	return
 }
 
-func (t *MapInt8Byte) transformKey(key int8) int8 {
+var maskTransformint8byte = func() int8 {
 	var mask int8 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt8Byte) transformKey(key int8) int8 {
+	return key ^ maskTransformint8byte
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -29095,16 +29177,17 @@ func (c *nodeMapint8complex128) find(key int8) (crit uint, child, parent *nodeMa
 	return
 }
 
-func (t *MapInt8Complex128) transformKey(key int8) int8 {
+var maskTransformint8complex128 = func() int8 {
 	var mask int8 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt8Complex128) transformKey(key int8) int8 {
+	return key ^ maskTransformint8complex128
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -29449,16 +29532,17 @@ func (c *nodeMapint8complex64) find(key int8) (crit uint, child, parent *nodeMap
 	return
 }
 
-func (t *MapInt8Complex64) transformKey(key int8) int8 {
+var maskTransformint8complex64 = func() int8 {
 	var mask int8 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt8Complex64) transformKey(key int8) int8 {
+	return key ^ maskTransformint8complex64
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -29803,16 +29887,17 @@ func (c *nodeMapint8error) find(key int8) (crit uint, child, parent *nodeMapint8
 	return
 }
 
-func (t *MapInt8Error) transformKey(key int8) int8 {
+var maskTransformint8error = func() int8 {
 	var mask int8 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt8Error) transformKey(key int8) int8 {
+	return key ^ maskTransformint8error
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -30157,16 +30242,17 @@ func (c *nodeMapint8float32) find(key int8) (crit uint, child, parent *nodeMapin
 	return
 }
 
-func (t *MapInt8Float32) transformKey(key int8) int8 {
+var maskTransformint8float32 = func() int8 {
 	var mask int8 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt8Float32) transformKey(key int8) int8 {
+	return key ^ maskTransformint8float32
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -30511,16 +30597,17 @@ func (c *nodeMapint8float64) find(key int8) (crit uint, child, parent *nodeMapin
 	return
 }
 
-func (t *MapInt8Float64) transformKey(key int8) int8 {
+var maskTransformint8float64 = func() int8 {
 	var mask int8 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt8Float64) transformKey(key int8) int8 {
+	return key ^ maskTransformint8float64
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -30865,16 +30952,17 @@ func (c *nodeMapint8int) find(key int8) (crit uint, child, parent *nodeMapint8in
 	return
 }
 
-func (t *MapInt8Int) transformKey(key int8) int8 {
+var maskTransformint8int = func() int8 {
 	var mask int8 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt8Int) transformKey(key int8) int8 {
+	return key ^ maskTransformint8int
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -31219,16 +31307,17 @@ func (c *nodeMapint8int16) find(key int8) (crit uint, child, parent *nodeMapint8
 	return
 }
 
-func (t *MapInt8Int16) transformKey(key int8) int8 {
+var maskTransformint8int16 = func() int8 {
 	var mask int8 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt8Int16) transformKey(key int8) int8 {
+	return key ^ maskTransformint8int16
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -31573,16 +31662,17 @@ func (c *nodeMapint8int32) find(key int8) (crit uint, child, parent *nodeMapint8
 	return
 }
 
-func (t *MapInt8Int32) transformKey(key int8) int8 {
+var maskTransformint8int32 = func() int8 {
 	var mask int8 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt8Int32) transformKey(key int8) int8 {
+	return key ^ maskTransformint8int32
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -31927,16 +32017,17 @@ func (c *nodeMapint8int64) find(key int8) (crit uint, child, parent *nodeMapint8
 	return
 }
 
-func (t *MapInt8Int64) transformKey(key int8) int8 {
+var maskTransformint8int64 = func() int8 {
 	var mask int8 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt8Int64) transformKey(key int8) int8 {
+	return key ^ maskTransformint8int64
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -32281,16 +32372,17 @@ func (c *nodeMapint8int8) find(key int8) (crit uint, child, parent *nodeMapint8i
 	return
 }
 
-func (t *MapInt8Int8) transformKey(key int8) int8 {
+var maskTransformint8int8 = func() int8 {
 	var mask int8 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt8Int8) transformKey(key int8) int8 {
+	return key ^ maskTransformint8int8
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -32635,16 +32727,17 @@ func (c *nodeMapint8rune) find(key int8) (crit uint, child, parent *nodeMapint8r
 	return
 }
 
-func (t *MapInt8Rune) transformKey(key int8) int8 {
+var maskTransformint8rune = func() int8 {
 	var mask int8 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt8Rune) transformKey(key int8) int8 {
+	return key ^ maskTransformint8rune
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -32989,16 +33082,17 @@ func (c *nodeMapint8string) find(key int8) (crit uint, child, parent *nodeMapint
 	return
 }
 
-func (t *MapInt8String) transformKey(key int8) int8 {
+var maskTransformint8string = func() int8 {
 	var mask int8 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt8String) transformKey(key int8) int8 {
+	return key ^ maskTransformint8string
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -33343,16 +33437,17 @@ func (c *nodeMapint8uint) find(key int8) (crit uint, child, parent *nodeMapint8u
 	return
 }
 
-func (t *MapInt8Uint) transformKey(key int8) int8 {
+var maskTransformint8uint = func() int8 {
 	var mask int8 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt8Uint) transformKey(key int8) int8 {
+	return key ^ maskTransformint8uint
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -33697,16 +33792,17 @@ func (c *nodeMapint8uint16) find(key int8) (crit uint, child, parent *nodeMapint
 	return
 }
 
-func (t *MapInt8Uint16) transformKey(key int8) int8 {
+var maskTransformint8uint16 = func() int8 {
 	var mask int8 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt8Uint16) transformKey(key int8) int8 {
+	return key ^ maskTransformint8uint16
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -34051,16 +34147,17 @@ func (c *nodeMapint8uint32) find(key int8) (crit uint, child, parent *nodeMapint
 	return
 }
 
-func (t *MapInt8Uint32) transformKey(key int8) int8 {
+var maskTransformint8uint32 = func() int8 {
 	var mask int8 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt8Uint32) transformKey(key int8) int8 {
+	return key ^ maskTransformint8uint32
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -34405,16 +34502,17 @@ func (c *nodeMapint8uint64) find(key int8) (crit uint, child, parent *nodeMapint
 	return
 }
 
-func (t *MapInt8Uint64) transformKey(key int8) int8 {
+var maskTransformint8uint64 = func() int8 {
 	var mask int8 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt8Uint64) transformKey(key int8) int8 {
+	return key ^ maskTransformint8uint64
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -34759,16 +34857,17 @@ func (c *nodeMapint8uint8) find(key int8) (crit uint, child, parent *nodeMapint8
 	return
 }
 
-func (t *MapInt8Uint8) transformKey(key int8) int8 {
+var maskTransformint8uint8 = func() int8 {
 	var mask int8 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt8Uint8) transformKey(key int8) int8 {
+	return key ^ maskTransformint8uint8
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -35113,16 +35212,17 @@ func (c *nodeMapint8uintptr) find(key int8) (crit uint, child, parent *nodeMapin
 	return
 }
 
-func (t *MapInt8Uintptr) transformKey(key int8) int8 {
+var maskTransformint8uintptr = func() int8 {
 	var mask int8 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapInt8Uintptr) transformKey(key int8) int8 {
+	return key ^ maskTransformint8uintptr
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -35467,16 +35567,17 @@ func (c *nodeMapuintbool) find(key uint) (crit uint, child, parent *nodeMapuintb
 	return
 }
 
-func (t *MapUintBool) transformKey(key uint) uint {
+var maskTransformuintbool = func() uint {
 	var mask uint = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUintBool) transformKey(key uint) uint {
+	return key ^ maskTransformuintbool
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -35821,16 +35922,17 @@ func (c *nodeMapuintbyte) find(key uint) (crit uint, child, parent *nodeMapuintb
 	return
 }
 
-func (t *MapUintByte) transformKey(key uint) uint {
+var maskTransformuintbyte = func() uint {
 	var mask uint = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUintByte) transformKey(key uint) uint {
+	return key ^ maskTransformuintbyte
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -36175,16 +36277,17 @@ func (c *nodeMapuintcomplex128) find(key uint) (crit uint, child, parent *nodeMa
 	return
 }
 
-func (t *MapUintComplex128) transformKey(key uint) uint {
+var maskTransformuintcomplex128 = func() uint {
 	var mask uint = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUintComplex128) transformKey(key uint) uint {
+	return key ^ maskTransformuintcomplex128
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -36529,16 +36632,17 @@ func (c *nodeMapuintcomplex64) find(key uint) (crit uint, child, parent *nodeMap
 	return
 }
 
-func (t *MapUintComplex64) transformKey(key uint) uint {
+var maskTransformuintcomplex64 = func() uint {
 	var mask uint = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUintComplex64) transformKey(key uint) uint {
+	return key ^ maskTransformuintcomplex64
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -36883,16 +36987,17 @@ func (c *nodeMapuinterror) find(key uint) (crit uint, child, parent *nodeMapuint
 	return
 }
 
-func (t *MapUintError) transformKey(key uint) uint {
+var maskTransformuinterror = func() uint {
 	var mask uint = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUintError) transformKey(key uint) uint {
+	return key ^ maskTransformuinterror
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -37237,16 +37342,17 @@ func (c *nodeMapuintfloat32) find(key uint) (crit uint, child, parent *nodeMapui
 	return
 }
 
-func (t *MapUintFloat32) transformKey(key uint) uint {
+var maskTransformuintfloat32 = func() uint {
 	var mask uint = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUintFloat32) transformKey(key uint) uint {
+	return key ^ maskTransformuintfloat32
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -37591,16 +37697,17 @@ func (c *nodeMapuintfloat64) find(key uint) (crit uint, child, parent *nodeMapui
 	return
 }
 
-func (t *MapUintFloat64) transformKey(key uint) uint {
+var maskTransformuintfloat64 = func() uint {
 	var mask uint = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUintFloat64) transformKey(key uint) uint {
+	return key ^ maskTransformuintfloat64
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -37945,16 +38052,17 @@ func (c *nodeMapuintint) find(key uint) (crit uint, child, parent *nodeMapuintin
 	return
 }
 
-func (t *MapUintInt) transformKey(key uint) uint {
+var maskTransformuintint = func() uint {
 	var mask uint = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUintInt) transformKey(key uint) uint {
+	return key ^ maskTransformuintint
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -38299,16 +38407,17 @@ func (c *nodeMapuintint16) find(key uint) (crit uint, child, parent *nodeMapuint
 	return
 }
 
-func (t *MapUintInt16) transformKey(key uint) uint {
+var maskTransformuintint16 = func() uint {
 	var mask uint = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUintInt16) transformKey(key uint) uint {
+	return key ^ maskTransformuintint16
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -38653,16 +38762,17 @@ func (c *nodeMapuintint32) find(key uint) (crit uint, child, parent *nodeMapuint
 	return
 }
 
-func (t *MapUintInt32) transformKey(key uint) uint {
+var maskTransformuintint32 = func() uint {
 	var mask uint = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUintInt32) transformKey(key uint) uint {
+	return key ^ maskTransformuintint32
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -39007,16 +39117,17 @@ func (c *nodeMapuintint64) find(key uint) (crit uint, child, parent *nodeMapuint
 	return
 }
 
-func (t *MapUintInt64) transformKey(key uint) uint {
+var maskTransformuintint64 = func() uint {
 	var mask uint = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUintInt64) transformKey(key uint) uint {
+	return key ^ maskTransformuintint64
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -39361,16 +39472,17 @@ func (c *nodeMapuintint8) find(key uint) (crit uint, child, parent *nodeMapuinti
 	return
 }
 
-func (t *MapUintInt8) transformKey(key uint) uint {
+var maskTransformuintint8 = func() uint {
 	var mask uint = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUintInt8) transformKey(key uint) uint {
+	return key ^ maskTransformuintint8
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -39715,16 +39827,17 @@ func (c *nodeMapuintrune) find(key uint) (crit uint, child, parent *nodeMapuintr
 	return
 }
 
-func (t *MapUintRune) transformKey(key uint) uint {
+var maskTransformuintrune = func() uint {
 	var mask uint = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUintRune) transformKey(key uint) uint {
+	return key ^ maskTransformuintrune
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -40069,16 +40182,17 @@ func (c *nodeMapuintstring) find(key uint) (crit uint, child, parent *nodeMapuin
 	return
 }
 
-func (t *MapUintString) transformKey(key uint) uint {
+var maskTransformuintstring = func() uint {
 	var mask uint = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUintString) transformKey(key uint) uint {
+	return key ^ maskTransformuintstring
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -40423,16 +40537,17 @@ func (c *nodeMapuintuint) find(key uint) (crit uint, child, parent *nodeMapuintu
 	return
 }
 
-func (t *MapUintUint) transformKey(key uint) uint {
+var maskTransformuintuint = func() uint {
 	var mask uint = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUintUint) transformKey(key uint) uint {
+	return key ^ maskTransformuintuint
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -40777,16 +40892,17 @@ func (c *nodeMapuintuint16) find(key uint) (crit uint, child, parent *nodeMapuin
 	return
 }
 
-func (t *MapUintUint16) transformKey(key uint) uint {
+var maskTransformuintuint16 = func() uint {
 	var mask uint = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUintUint16) transformKey(key uint) uint {
+	return key ^ maskTransformuintuint16
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -41131,16 +41247,17 @@ func (c *nodeMapuintuint32) find(key uint) (crit uint, child, parent *nodeMapuin
 	return
 }
 
-func (t *MapUintUint32) transformKey(key uint) uint {
+var maskTransformuintuint32 = func() uint {
 	var mask uint = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUintUint32) transformKey(key uint) uint {
+	return key ^ maskTransformuintuint32
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -41485,16 +41602,17 @@ func (c *nodeMapuintuint64) find(key uint) (crit uint, child, parent *nodeMapuin
 	return
 }
 
-func (t *MapUintUint64) transformKey(key uint) uint {
+var maskTransformuintuint64 = func() uint {
 	var mask uint = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUintUint64) transformKey(key uint) uint {
+	return key ^ maskTransformuintuint64
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -41839,16 +41957,17 @@ func (c *nodeMapuintuint8) find(key uint) (crit uint, child, parent *nodeMapuint
 	return
 }
 
-func (t *MapUintUint8) transformKey(key uint) uint {
+var maskTransformuintuint8 = func() uint {
 	var mask uint = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUintUint8) transformKey(key uint) uint {
+	return key ^ maskTransformuintuint8
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -42193,16 +42312,17 @@ func (c *nodeMapuintuintptr) find(key uint) (crit uint, child, parent *nodeMapui
 	return
 }
 
-func (t *MapUintUintptr) transformKey(key uint) uint {
+var maskTransformuintuintptr = func() uint {
 	var mask uint = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUintUintptr) transformKey(key uint) uint {
+	return key ^ maskTransformuintuintptr
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -42547,16 +42667,17 @@ func (c *nodeMapuintptrbool) find(key uintptr) (crit uint, child, parent *nodeMa
 	return
 }
 
-func (t *MapUintptrBool) transformKey(key uintptr) uintptr {
+var maskTransformuintptrbool = func() uintptr {
 	var mask uintptr = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUintptrBool) transformKey(key uintptr) uintptr {
+	return key ^ maskTransformuintptrbool
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -42901,16 +43022,17 @@ func (c *nodeMapuintptrbyte) find(key uintptr) (crit uint, child, parent *nodeMa
 	return
 }
 
-func (t *MapUintptrByte) transformKey(key uintptr) uintptr {
+var maskTransformuintptrbyte = func() uintptr {
 	var mask uintptr = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUintptrByte) transformKey(key uintptr) uintptr {
+	return key ^ maskTransformuintptrbyte
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -43255,16 +43377,17 @@ func (c *nodeMapuintptrcomplex128) find(key uintptr) (crit uint, child, parent *
 	return
 }
 
-func (t *MapUintptrComplex128) transformKey(key uintptr) uintptr {
+var maskTransformuintptrcomplex128 = func() uintptr {
 	var mask uintptr = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUintptrComplex128) transformKey(key uintptr) uintptr {
+	return key ^ maskTransformuintptrcomplex128
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -43609,16 +43732,17 @@ func (c *nodeMapuintptrcomplex64) find(key uintptr) (crit uint, child, parent *n
 	return
 }
 
-func (t *MapUintptrComplex64) transformKey(key uintptr) uintptr {
+var maskTransformuintptrcomplex64 = func() uintptr {
 	var mask uintptr = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUintptrComplex64) transformKey(key uintptr) uintptr {
+	return key ^ maskTransformuintptrcomplex64
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -43963,16 +44087,17 @@ func (c *nodeMapuintptrerror) find(key uintptr) (crit uint, child, parent *nodeM
 	return
 }
 
-func (t *MapUintptrError) transformKey(key uintptr) uintptr {
+var maskTransformuintptrerror = func() uintptr {
 	var mask uintptr = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUintptrError) transformKey(key uintptr) uintptr {
+	return key ^ maskTransformuintptrerror
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -44317,16 +44442,17 @@ func (c *nodeMapuintptrfloat32) find(key uintptr) (crit uint, child, parent *nod
 	return
 }
 
-func (t *MapUintptrFloat32) transformKey(key uintptr) uintptr {
+var maskTransformuintptrfloat32 = func() uintptr {
 	var mask uintptr = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUintptrFloat32) transformKey(key uintptr) uintptr {
+	return key ^ maskTransformuintptrfloat32
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -44671,16 +44797,17 @@ func (c *nodeMapuintptrfloat64) find(key uintptr) (crit uint, child, parent *nod
 	return
 }
 
-func (t *MapUintptrFloat64) transformKey(key uintptr) uintptr {
+var maskTransformuintptrfloat64 = func() uintptr {
 	var mask uintptr = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUintptrFloat64) transformKey(key uintptr) uintptr {
+	return key ^ maskTransformuintptrfloat64
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -45025,16 +45152,17 @@ func (c *nodeMapuintptrint) find(key uintptr) (crit uint, child, parent *nodeMap
 	return
 }
 
-func (t *MapUintptrInt) transformKey(key uintptr) uintptr {
+var maskTransformuintptrint = func() uintptr {
 	var mask uintptr = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUintptrInt) transformKey(key uintptr) uintptr {
+	return key ^ maskTransformuintptrint
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -45379,16 +45507,17 @@ func (c *nodeMapuintptrint16) find(key uintptr) (crit uint, child, parent *nodeM
 	return
 }
 
-func (t *MapUintptrInt16) transformKey(key uintptr) uintptr {
+var maskTransformuintptrint16 = func() uintptr {
 	var mask uintptr = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUintptrInt16) transformKey(key uintptr) uintptr {
+	return key ^ maskTransformuintptrint16
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -45733,16 +45862,17 @@ func (c *nodeMapuintptrint32) find(key uintptr) (crit uint, child, parent *nodeM
 	return
 }
 
-func (t *MapUintptrInt32) transformKey(key uintptr) uintptr {
+var maskTransformuintptrint32 = func() uintptr {
 	var mask uintptr = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUintptrInt32) transformKey(key uintptr) uintptr {
+	return key ^ maskTransformuintptrint32
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -46087,16 +46217,17 @@ func (c *nodeMapuintptrint64) find(key uintptr) (crit uint, child, parent *nodeM
 	return
 }
 
-func (t *MapUintptrInt64) transformKey(key uintptr) uintptr {
+var maskTransformuintptrint64 = func() uintptr {
 	var mask uintptr = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUintptrInt64) transformKey(key uintptr) uintptr {
+	return key ^ maskTransformuintptrint64
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -46441,16 +46572,17 @@ func (c *nodeMapuintptrint8) find(key uintptr) (crit uint, child, parent *nodeMa
 	return
 }
 
-func (t *MapUintptrInt8) transformKey(key uintptr) uintptr {
+var maskTransformuintptrint8 = func() uintptr {
 	var mask uintptr = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUintptrInt8) transformKey(key uintptr) uintptr {
+	return key ^ maskTransformuintptrint8
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -46795,16 +46927,17 @@ func (c *nodeMapuintptrrune) find(key uintptr) (crit uint, child, parent *nodeMa
 	return
 }
 
-func (t *MapUintptrRune) transformKey(key uintptr) uintptr {
+var maskTransformuintptrrune = func() uintptr {
 	var mask uintptr = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUintptrRune) transformKey(key uintptr) uintptr {
+	return key ^ maskTransformuintptrrune
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -47149,16 +47282,17 @@ func (c *nodeMapuintptrstring) find(key uintptr) (crit uint, child, parent *node
 	return
 }
 
-func (t *MapUintptrString) transformKey(key uintptr) uintptr {
+var maskTransformuintptrstring = func() uintptr {
 	var mask uintptr = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUintptrString) transformKey(key uintptr) uintptr {
+	return key ^ maskTransformuintptrstring
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -47503,16 +47637,17 @@ func (c *nodeMapuintptruint) find(key uintptr) (crit uint, child, parent *nodeMa
 	return
 }
 
-func (t *MapUintptrUint) transformKey(key uintptr) uintptr {
+var maskTransformuintptruint = func() uintptr {
 	var mask uintptr = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUintptrUint) transformKey(key uintptr) uintptr {
+	return key ^ maskTransformuintptruint
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -47857,16 +47992,17 @@ func (c *nodeMapuintptruint16) find(key uintptr) (crit uint, child, parent *node
 	return
 }
 
-func (t *MapUintptrUint16) transformKey(key uintptr) uintptr {
+var maskTransformuintptruint16 = func() uintptr {
 	var mask uintptr = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUintptrUint16) transformKey(key uintptr) uintptr {
+	return key ^ maskTransformuintptruint16
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -48211,16 +48347,17 @@ func (c *nodeMapuintptruint32) find(key uintptr) (crit uint, child, parent *node
 	return
 }
 
-func (t *MapUintptrUint32) transformKey(key uintptr) uintptr {
+var maskTransformuintptruint32 = func() uintptr {
 	var mask uintptr = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUintptrUint32) transformKey(key uintptr) uintptr {
+	return key ^ maskTransformuintptruint32
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -48565,16 +48702,17 @@ func (c *nodeMapuintptruint64) find(key uintptr) (crit uint, child, parent *node
 	return
 }
 
-func (t *MapUintptrUint64) transformKey(key uintptr) uintptr {
+var maskTransformuintptruint64 = func() uintptr {
 	var mask uintptr = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUintptrUint64) transformKey(key uintptr) uintptr {
+	return key ^ maskTransformuintptruint64
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -48919,16 +49057,17 @@ func (c *nodeMapuintptruint8) find(key uintptr) (crit uint, child, parent *nodeM
 	return
 }
 
-func (t *MapUintptrUint8) transformKey(key uintptr) uintptr {
+var maskTransformuintptruint8 = func() uintptr {
 	var mask uintptr = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUintptrUint8) transformKey(key uintptr) uintptr {
+	return key ^ maskTransformuintptruint8
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -49273,16 +49412,17 @@ func (c *nodeMapuintptruintptr) find(key uintptr) (crit uint, child, parent *nod
 	return
 }
 
-func (t *MapUintptrUintptr) transformKey(key uintptr) uintptr {
+var maskTransformuintptruintptr = func() uintptr {
 	var mask uintptr = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUintptrUintptr) transformKey(key uintptr) uintptr {
+	return key ^ maskTransformuintptruintptr
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -49627,16 +49767,17 @@ func (c *nodeMapuint64bool) find(key uint64) (crit uint, child, parent *nodeMapu
 	return
 }
 
-func (t *MapUint64Bool) transformKey(key uint64) uint64 {
+var maskTransformuint64bool = func() uint64 {
 	var mask uint64 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint64Bool) transformKey(key uint64) uint64 {
+	return key ^ maskTransformuint64bool
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -49981,16 +50122,17 @@ func (c *nodeMapuint64byte) find(key uint64) (crit uint, child, parent *nodeMapu
 	return
 }
 
-func (t *MapUint64Byte) transformKey(key uint64) uint64 {
+var maskTransformuint64byte = func() uint64 {
 	var mask uint64 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint64Byte) transformKey(key uint64) uint64 {
+	return key ^ maskTransformuint64byte
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -50335,16 +50477,17 @@ func (c *nodeMapuint64complex128) find(key uint64) (crit uint, child, parent *no
 	return
 }
 
-func (t *MapUint64Complex128) transformKey(key uint64) uint64 {
+var maskTransformuint64complex128 = func() uint64 {
 	var mask uint64 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint64Complex128) transformKey(key uint64) uint64 {
+	return key ^ maskTransformuint64complex128
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -50689,16 +50832,17 @@ func (c *nodeMapuint64complex64) find(key uint64) (crit uint, child, parent *nod
 	return
 }
 
-func (t *MapUint64Complex64) transformKey(key uint64) uint64 {
+var maskTransformuint64complex64 = func() uint64 {
 	var mask uint64 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint64Complex64) transformKey(key uint64) uint64 {
+	return key ^ maskTransformuint64complex64
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -51043,16 +51187,17 @@ func (c *nodeMapuint64error) find(key uint64) (crit uint, child, parent *nodeMap
 	return
 }
 
-func (t *MapUint64Error) transformKey(key uint64) uint64 {
+var maskTransformuint64error = func() uint64 {
 	var mask uint64 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint64Error) transformKey(key uint64) uint64 {
+	return key ^ maskTransformuint64error
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -51397,16 +51542,17 @@ func (c *nodeMapuint64float32) find(key uint64) (crit uint, child, parent *nodeM
 	return
 }
 
-func (t *MapUint64Float32) transformKey(key uint64) uint64 {
+var maskTransformuint64float32 = func() uint64 {
 	var mask uint64 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint64Float32) transformKey(key uint64) uint64 {
+	return key ^ maskTransformuint64float32
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -51751,16 +51897,17 @@ func (c *nodeMapuint64float64) find(key uint64) (crit uint, child, parent *nodeM
 	return
 }
 
-func (t *MapUint64Float64) transformKey(key uint64) uint64 {
+var maskTransformuint64float64 = func() uint64 {
 	var mask uint64 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint64Float64) transformKey(key uint64) uint64 {
+	return key ^ maskTransformuint64float64
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -52105,16 +52252,17 @@ func (c *nodeMapuint64int) find(key uint64) (crit uint, child, parent *nodeMapui
 	return
 }
 
-func (t *MapUint64Int) transformKey(key uint64) uint64 {
+var maskTransformuint64int = func() uint64 {
 	var mask uint64 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint64Int) transformKey(key uint64) uint64 {
+	return key ^ maskTransformuint64int
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -52459,16 +52607,17 @@ func (c *nodeMapuint64int16) find(key uint64) (crit uint, child, parent *nodeMap
 	return
 }
 
-func (t *MapUint64Int16) transformKey(key uint64) uint64 {
+var maskTransformuint64int16 = func() uint64 {
 	var mask uint64 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint64Int16) transformKey(key uint64) uint64 {
+	return key ^ maskTransformuint64int16
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -52813,16 +52962,17 @@ func (c *nodeMapuint64int32) find(key uint64) (crit uint, child, parent *nodeMap
 	return
 }
 
-func (t *MapUint64Int32) transformKey(key uint64) uint64 {
+var maskTransformuint64int32 = func() uint64 {
 	var mask uint64 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint64Int32) transformKey(key uint64) uint64 {
+	return key ^ maskTransformuint64int32
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -53167,16 +53317,17 @@ func (c *nodeMapuint64int64) find(key uint64) (crit uint, child, parent *nodeMap
 	return
 }
 
-func (t *MapUint64Int64) transformKey(key uint64) uint64 {
+var maskTransformuint64int64 = func() uint64 {
 	var mask uint64 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint64Int64) transformKey(key uint64) uint64 {
+	return key ^ maskTransformuint64int64
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -53521,16 +53672,17 @@ func (c *nodeMapuint64int8) find(key uint64) (crit uint, child, parent *nodeMapu
 	return
 }
 
-func (t *MapUint64Int8) transformKey(key uint64) uint64 {
+var maskTransformuint64int8 = func() uint64 {
 	var mask uint64 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint64Int8) transformKey(key uint64) uint64 {
+	return key ^ maskTransformuint64int8
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -53875,16 +54027,17 @@ func (c *nodeMapuint64rune) find(key uint64) (crit uint, child, parent *nodeMapu
 	return
 }
 
-func (t *MapUint64Rune) transformKey(key uint64) uint64 {
+var maskTransformuint64rune = func() uint64 {
 	var mask uint64 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint64Rune) transformKey(key uint64) uint64 {
+	return key ^ maskTransformuint64rune
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -54229,16 +54382,17 @@ func (c *nodeMapuint64string) find(key uint64) (crit uint, child, parent *nodeMa
 	return
 }
 
-func (t *MapUint64String) transformKey(key uint64) uint64 {
+var maskTransformuint64string = func() uint64 {
 	var mask uint64 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint64String) transformKey(key uint64) uint64 {
+	return key ^ maskTransformuint64string
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -54583,16 +54737,17 @@ func (c *nodeMapuint64uint) find(key uint64) (crit uint, child, parent *nodeMapu
 	return
 }
 
-func (t *MapUint64Uint) transformKey(key uint64) uint64 {
+var maskTransformuint64uint = func() uint64 {
 	var mask uint64 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint64Uint) transformKey(key uint64) uint64 {
+	return key ^ maskTransformuint64uint
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -54937,16 +55092,17 @@ func (c *nodeMapuint64uint16) find(key uint64) (crit uint, child, parent *nodeMa
 	return
 }
 
-func (t *MapUint64Uint16) transformKey(key uint64) uint64 {
+var maskTransformuint64uint16 = func() uint64 {
 	var mask uint64 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint64Uint16) transformKey(key uint64) uint64 {
+	return key ^ maskTransformuint64uint16
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -55291,16 +55447,17 @@ func (c *nodeMapuint64uint32) find(key uint64) (crit uint, child, parent *nodeMa
 	return
 }
 
-func (t *MapUint64Uint32) transformKey(key uint64) uint64 {
+var maskTransformuint64uint32 = func() uint64 {
 	var mask uint64 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint64Uint32) transformKey(key uint64) uint64 {
+	return key ^ maskTransformuint64uint32
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -55645,16 +55802,17 @@ func (c *nodeMapuint64uint64) find(key uint64) (crit uint, child, parent *nodeMa
 	return
 }
 
-func (t *MapUint64Uint64) transformKey(key uint64) uint64 {
+var maskTransformuint64uint64 = func() uint64 {
 	var mask uint64 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint64Uint64) transformKey(key uint64) uint64 {
+	return key ^ maskTransformuint64uint64
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -55999,16 +56157,17 @@ func (c *nodeMapuint64uint8) find(key uint64) (crit uint, child, parent *nodeMap
 	return
 }
 
-func (t *MapUint64Uint8) transformKey(key uint64) uint64 {
+var maskTransformuint64uint8 = func() uint64 {
 	var mask uint64 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint64Uint8) transformKey(key uint64) uint64 {
+	return key ^ maskTransformuint64uint8
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -56353,16 +56512,17 @@ func (c *nodeMapuint64uintptr) find(key uint64) (crit uint, child, parent *nodeM
 	return
 }
 
-func (t *MapUint64Uintptr) transformKey(key uint64) uint64 {
+var maskTransformuint64uintptr = func() uint64 {
 	var mask uint64 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint64Uintptr) transformKey(key uint64) uint64 {
+	return key ^ maskTransformuint64uintptr
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -56707,16 +56867,17 @@ func (c *nodeMapuint32bool) find(key uint32) (crit uint, child, parent *nodeMapu
 	return
 }
 
-func (t *MapUint32Bool) transformKey(key uint32) uint32 {
+var maskTransformuint32bool = func() uint32 {
 	var mask uint32 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint32Bool) transformKey(key uint32) uint32 {
+	return key ^ maskTransformuint32bool
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -57061,16 +57222,17 @@ func (c *nodeMapuint32byte) find(key uint32) (crit uint, child, parent *nodeMapu
 	return
 }
 
-func (t *MapUint32Byte) transformKey(key uint32) uint32 {
+var maskTransformuint32byte = func() uint32 {
 	var mask uint32 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint32Byte) transformKey(key uint32) uint32 {
+	return key ^ maskTransformuint32byte
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -57415,16 +57577,17 @@ func (c *nodeMapuint32complex128) find(key uint32) (crit uint, child, parent *no
 	return
 }
 
-func (t *MapUint32Complex128) transformKey(key uint32) uint32 {
+var maskTransformuint32complex128 = func() uint32 {
 	var mask uint32 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint32Complex128) transformKey(key uint32) uint32 {
+	return key ^ maskTransformuint32complex128
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -57769,16 +57932,17 @@ func (c *nodeMapuint32complex64) find(key uint32) (crit uint, child, parent *nod
 	return
 }
 
-func (t *MapUint32Complex64) transformKey(key uint32) uint32 {
+var maskTransformuint32complex64 = func() uint32 {
 	var mask uint32 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint32Complex64) transformKey(key uint32) uint32 {
+	return key ^ maskTransformuint32complex64
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -58123,16 +58287,17 @@ func (c *nodeMapuint32error) find(key uint32) (crit uint, child, parent *nodeMap
 	return
 }
 
-func (t *MapUint32Error) transformKey(key uint32) uint32 {
+var maskTransformuint32error = func() uint32 {
 	var mask uint32 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint32Error) transformKey(key uint32) uint32 {
+	return key ^ maskTransformuint32error
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -58477,16 +58642,17 @@ func (c *nodeMapuint32float32) find(key uint32) (crit uint, child, parent *nodeM
 	return
 }
 
-func (t *MapUint32Float32) transformKey(key uint32) uint32 {
+var maskTransformuint32float32 = func() uint32 {
 	var mask uint32 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint32Float32) transformKey(key uint32) uint32 {
+	return key ^ maskTransformuint32float32
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -58831,16 +58997,17 @@ func (c *nodeMapuint32float64) find(key uint32) (crit uint, child, parent *nodeM
 	return
 }
 
-func (t *MapUint32Float64) transformKey(key uint32) uint32 {
+var maskTransformuint32float64 = func() uint32 {
 	var mask uint32 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint32Float64) transformKey(key uint32) uint32 {
+	return key ^ maskTransformuint32float64
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -59185,16 +59352,17 @@ func (c *nodeMapuint32int) find(key uint32) (crit uint, child, parent *nodeMapui
 	return
 }
 
-func (t *MapUint32Int) transformKey(key uint32) uint32 {
+var maskTransformuint32int = func() uint32 {
 	var mask uint32 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint32Int) transformKey(key uint32) uint32 {
+	return key ^ maskTransformuint32int
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -59539,16 +59707,17 @@ func (c *nodeMapuint32int16) find(key uint32) (crit uint, child, parent *nodeMap
 	return
 }
 
-func (t *MapUint32Int16) transformKey(key uint32) uint32 {
+var maskTransformuint32int16 = func() uint32 {
 	var mask uint32 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint32Int16) transformKey(key uint32) uint32 {
+	return key ^ maskTransformuint32int16
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -59893,16 +60062,17 @@ func (c *nodeMapuint32int32) find(key uint32) (crit uint, child, parent *nodeMap
 	return
 }
 
-func (t *MapUint32Int32) transformKey(key uint32) uint32 {
+var maskTransformuint32int32 = func() uint32 {
 	var mask uint32 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint32Int32) transformKey(key uint32) uint32 {
+	return key ^ maskTransformuint32int32
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -60247,16 +60417,17 @@ func (c *nodeMapuint32int64) find(key uint32) (crit uint, child, parent *nodeMap
 	return
 }
 
-func (t *MapUint32Int64) transformKey(key uint32) uint32 {
+var maskTransformuint32int64 = func() uint32 {
 	var mask uint32 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint32Int64) transformKey(key uint32) uint32 {
+	return key ^ maskTransformuint32int64
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -60601,16 +60772,17 @@ func (c *nodeMapuint32int8) find(key uint32) (crit uint, child, parent *nodeMapu
 	return
 }
 
-func (t *MapUint32Int8) transformKey(key uint32) uint32 {
+var maskTransformuint32int8 = func() uint32 {
 	var mask uint32 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint32Int8) transformKey(key uint32) uint32 {
+	return key ^ maskTransformuint32int8
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -60955,16 +61127,17 @@ func (c *nodeMapuint32rune) find(key uint32) (crit uint, child, parent *nodeMapu
 	return
 }
 
-func (t *MapUint32Rune) transformKey(key uint32) uint32 {
+var maskTransformuint32rune = func() uint32 {
 	var mask uint32 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint32Rune) transformKey(key uint32) uint32 {
+	return key ^ maskTransformuint32rune
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -61309,16 +61482,17 @@ func (c *nodeMapuint32string) find(key uint32) (crit uint, child, parent *nodeMa
 	return
 }
 
-func (t *MapUint32String) transformKey(key uint32) uint32 {
+var maskTransformuint32string = func() uint32 {
 	var mask uint32 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint32String) transformKey(key uint32) uint32 {
+	return key ^ maskTransformuint32string
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -61663,16 +61837,17 @@ func (c *nodeMapuint32uint) find(key uint32) (crit uint, child, parent *nodeMapu
 	return
 }
 
-func (t *MapUint32Uint) transformKey(key uint32) uint32 {
+var maskTransformuint32uint = func() uint32 {
 	var mask uint32 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint32Uint) transformKey(key uint32) uint32 {
+	return key ^ maskTransformuint32uint
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -62017,16 +62192,17 @@ func (c *nodeMapuint32uint16) find(key uint32) (crit uint, child, parent *nodeMa
 	return
 }
 
-func (t *MapUint32Uint16) transformKey(key uint32) uint32 {
+var maskTransformuint32uint16 = func() uint32 {
 	var mask uint32 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint32Uint16) transformKey(key uint32) uint32 {
+	return key ^ maskTransformuint32uint16
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -62371,16 +62547,17 @@ func (c *nodeMapuint32uint32) find(key uint32) (crit uint, child, parent *nodeMa
 	return
 }
 
-func (t *MapUint32Uint32) transformKey(key uint32) uint32 {
+var maskTransformuint32uint32 = func() uint32 {
 	var mask uint32 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint32Uint32) transformKey(key uint32) uint32 {
+	return key ^ maskTransformuint32uint32
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -62725,16 +62902,17 @@ func (c *nodeMapuint32uint64) find(key uint32) (crit uint, child, parent *nodeMa
 	return
 }
 
-func (t *MapUint32Uint64) transformKey(key uint32) uint32 {
+var maskTransformuint32uint64 = func() uint32 {
 	var mask uint32 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint32Uint64) transformKey(key uint32) uint32 {
+	return key ^ maskTransformuint32uint64
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -63079,16 +63257,17 @@ func (c *nodeMapuint32uint8) find(key uint32) (crit uint, child, parent *nodeMap
 	return
 }
 
-func (t *MapUint32Uint8) transformKey(key uint32) uint32 {
+var maskTransformuint32uint8 = func() uint32 {
 	var mask uint32 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint32Uint8) transformKey(key uint32) uint32 {
+	return key ^ maskTransformuint32uint8
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -63433,16 +63612,17 @@ func (c *nodeMapuint32uintptr) find(key uint32) (crit uint, child, parent *nodeM
 	return
 }
 
-func (t *MapUint32Uintptr) transformKey(key uint32) uint32 {
+var maskTransformuint32uintptr = func() uint32 {
 	var mask uint32 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint32Uintptr) transformKey(key uint32) uint32 {
+	return key ^ maskTransformuint32uintptr
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -63787,16 +63967,17 @@ func (c *nodeMapuint16bool) find(key uint16) (crit uint, child, parent *nodeMapu
 	return
 }
 
-func (t *MapUint16Bool) transformKey(key uint16) uint16 {
+var maskTransformuint16bool = func() uint16 {
 	var mask uint16 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint16Bool) transformKey(key uint16) uint16 {
+	return key ^ maskTransformuint16bool
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -64141,16 +64322,17 @@ func (c *nodeMapuint16byte) find(key uint16) (crit uint, child, parent *nodeMapu
 	return
 }
 
-func (t *MapUint16Byte) transformKey(key uint16) uint16 {
+var maskTransformuint16byte = func() uint16 {
 	var mask uint16 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint16Byte) transformKey(key uint16) uint16 {
+	return key ^ maskTransformuint16byte
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -64495,16 +64677,17 @@ func (c *nodeMapuint16complex128) find(key uint16) (crit uint, child, parent *no
 	return
 }
 
-func (t *MapUint16Complex128) transformKey(key uint16) uint16 {
+var maskTransformuint16complex128 = func() uint16 {
 	var mask uint16 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint16Complex128) transformKey(key uint16) uint16 {
+	return key ^ maskTransformuint16complex128
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -64849,16 +65032,17 @@ func (c *nodeMapuint16complex64) find(key uint16) (crit uint, child, parent *nod
 	return
 }
 
-func (t *MapUint16Complex64) transformKey(key uint16) uint16 {
+var maskTransformuint16complex64 = func() uint16 {
 	var mask uint16 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint16Complex64) transformKey(key uint16) uint16 {
+	return key ^ maskTransformuint16complex64
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -65203,16 +65387,17 @@ func (c *nodeMapuint16error) find(key uint16) (crit uint, child, parent *nodeMap
 	return
 }
 
-func (t *MapUint16Error) transformKey(key uint16) uint16 {
+var maskTransformuint16error = func() uint16 {
 	var mask uint16 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint16Error) transformKey(key uint16) uint16 {
+	return key ^ maskTransformuint16error
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -65557,16 +65742,17 @@ func (c *nodeMapuint16float32) find(key uint16) (crit uint, child, parent *nodeM
 	return
 }
 
-func (t *MapUint16Float32) transformKey(key uint16) uint16 {
+var maskTransformuint16float32 = func() uint16 {
 	var mask uint16 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint16Float32) transformKey(key uint16) uint16 {
+	return key ^ maskTransformuint16float32
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -65911,16 +66097,17 @@ func (c *nodeMapuint16float64) find(key uint16) (crit uint, child, parent *nodeM
 	return
 }
 
-func (t *MapUint16Float64) transformKey(key uint16) uint16 {
+var maskTransformuint16float64 = func() uint16 {
 	var mask uint16 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint16Float64) transformKey(key uint16) uint16 {
+	return key ^ maskTransformuint16float64
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -66265,16 +66452,17 @@ func (c *nodeMapuint16int) find(key uint16) (crit uint, child, parent *nodeMapui
 	return
 }
 
-func (t *MapUint16Int) transformKey(key uint16) uint16 {
+var maskTransformuint16int = func() uint16 {
 	var mask uint16 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint16Int) transformKey(key uint16) uint16 {
+	return key ^ maskTransformuint16int
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -66619,16 +66807,17 @@ func (c *nodeMapuint16int16) find(key uint16) (crit uint, child, parent *nodeMap
 	return
 }
 
-func (t *MapUint16Int16) transformKey(key uint16) uint16 {
+var maskTransformuint16int16 = func() uint16 {
 	var mask uint16 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint16Int16) transformKey(key uint16) uint16 {
+	return key ^ maskTransformuint16int16
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -66973,16 +67162,17 @@ func (c *nodeMapuint16int32) find(key uint16) (crit uint, child, parent *nodeMap
 	return
 }
 
-func (t *MapUint16Int32) transformKey(key uint16) uint16 {
+var maskTransformuint16int32 = func() uint16 {
 	var mask uint16 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint16Int32) transformKey(key uint16) uint16 {
+	return key ^ maskTransformuint16int32
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -67327,16 +67517,17 @@ func (c *nodeMapuint16int64) find(key uint16) (crit uint, child, parent *nodeMap
 	return
 }
 
-func (t *MapUint16Int64) transformKey(key uint16) uint16 {
+var maskTransformuint16int64 = func() uint16 {
 	var mask uint16 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint16Int64) transformKey(key uint16) uint16 {
+	return key ^ maskTransformuint16int64
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -67681,16 +67872,17 @@ func (c *nodeMapuint16int8) find(key uint16) (crit uint, child, parent *nodeMapu
 	return
 }
 
-func (t *MapUint16Int8) transformKey(key uint16) uint16 {
+var maskTransformuint16int8 = func() uint16 {
 	var mask uint16 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint16Int8) transformKey(key uint16) uint16 {
+	return key ^ maskTransformuint16int8
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -68035,16 +68227,17 @@ func (c *nodeMapuint16rune) find(key uint16) (crit uint, child, parent *nodeMapu
 	return
 }
 
-func (t *MapUint16Rune) transformKey(key uint16) uint16 {
+var maskTransformuint16rune = func() uint16 {
 	var mask uint16 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint16Rune) transformKey(key uint16) uint16 {
+	return key ^ maskTransformuint16rune
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -68389,16 +68582,17 @@ func (c *nodeMapuint16string) find(key uint16) (crit uint, child, parent *nodeMa
 	return
 }
 
-func (t *MapUint16String) transformKey(key uint16) uint16 {
+var maskTransformuint16string = func() uint16 {
 	var mask uint16 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint16String) transformKey(key uint16) uint16 {
+	return key ^ maskTransformuint16string
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -68743,16 +68937,17 @@ func (c *nodeMapuint16uint) find(key uint16) (crit uint, child, parent *nodeMapu
 	return
 }
 
-func (t *MapUint16Uint) transformKey(key uint16) uint16 {
+var maskTransformuint16uint = func() uint16 {
 	var mask uint16 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint16Uint) transformKey(key uint16) uint16 {
+	return key ^ maskTransformuint16uint
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -69097,16 +69292,17 @@ func (c *nodeMapuint16uint16) find(key uint16) (crit uint, child, parent *nodeMa
 	return
 }
 
-func (t *MapUint16Uint16) transformKey(key uint16) uint16 {
+var maskTransformuint16uint16 = func() uint16 {
 	var mask uint16 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint16Uint16) transformKey(key uint16) uint16 {
+	return key ^ maskTransformuint16uint16
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -69451,16 +69647,17 @@ func (c *nodeMapuint16uint32) find(key uint16) (crit uint, child, parent *nodeMa
 	return
 }
 
-func (t *MapUint16Uint32) transformKey(key uint16) uint16 {
+var maskTransformuint16uint32 = func() uint16 {
 	var mask uint16 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint16Uint32) transformKey(key uint16) uint16 {
+	return key ^ maskTransformuint16uint32
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -69805,16 +70002,17 @@ func (c *nodeMapuint16uint64) find(key uint16) (crit uint, child, parent *nodeMa
 	return
 }
 
-func (t *MapUint16Uint64) transformKey(key uint16) uint16 {
+var maskTransformuint16uint64 = func() uint16 {
 	var mask uint16 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint16Uint64) transformKey(key uint16) uint16 {
+	return key ^ maskTransformuint16uint64
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -70159,16 +70357,17 @@ func (c *nodeMapuint16uint8) find(key uint16) (crit uint, child, parent *nodeMap
 	return
 }
 
-func (t *MapUint16Uint8) transformKey(key uint16) uint16 {
+var maskTransformuint16uint8 = func() uint16 {
 	var mask uint16 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint16Uint8) transformKey(key uint16) uint16 {
+	return key ^ maskTransformuint16uint8
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -70513,16 +70712,17 @@ func (c *nodeMapuint16uintptr) find(key uint16) (crit uint, child, parent *nodeM
 	return
 }
 
-func (t *MapUint16Uintptr) transformKey(key uint16) uint16 {
+var maskTransformuint16uintptr = func() uint16 {
 	var mask uint16 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint16Uintptr) transformKey(key uint16) uint16 {
+	return key ^ maskTransformuint16uintptr
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -70867,16 +71067,17 @@ func (c *nodeMapuint8bool) find(key uint8) (crit uint, child, parent *nodeMapuin
 	return
 }
 
-func (t *MapUint8Bool) transformKey(key uint8) uint8 {
+var maskTransformuint8bool = func() uint8 {
 	var mask uint8 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint8Bool) transformKey(key uint8) uint8 {
+	return key ^ maskTransformuint8bool
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -71221,16 +71422,17 @@ func (c *nodeMapuint8byte) find(key uint8) (crit uint, child, parent *nodeMapuin
 	return
 }
 
-func (t *MapUint8Byte) transformKey(key uint8) uint8 {
+var maskTransformuint8byte = func() uint8 {
 	var mask uint8 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint8Byte) transformKey(key uint8) uint8 {
+	return key ^ maskTransformuint8byte
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -71575,16 +71777,17 @@ func (c *nodeMapuint8complex128) find(key uint8) (crit uint, child, parent *node
 	return
 }
 
-func (t *MapUint8Complex128) transformKey(key uint8) uint8 {
+var maskTransformuint8complex128 = func() uint8 {
 	var mask uint8 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint8Complex128) transformKey(key uint8) uint8 {
+	return key ^ maskTransformuint8complex128
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -71929,16 +72132,17 @@ func (c *nodeMapuint8complex64) find(key uint8) (crit uint, child, parent *nodeM
 	return
 }
 
-func (t *MapUint8Complex64) transformKey(key uint8) uint8 {
+var maskTransformuint8complex64 = func() uint8 {
 	var mask uint8 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint8Complex64) transformKey(key uint8) uint8 {
+	return key ^ maskTransformuint8complex64
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -72283,16 +72487,17 @@ func (c *nodeMapuint8error) find(key uint8) (crit uint, child, parent *nodeMapui
 	return
 }
 
-func (t *MapUint8Error) transformKey(key uint8) uint8 {
+var maskTransformuint8error = func() uint8 {
 	var mask uint8 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint8Error) transformKey(key uint8) uint8 {
+	return key ^ maskTransformuint8error
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -72637,16 +72842,17 @@ func (c *nodeMapuint8float32) find(key uint8) (crit uint, child, parent *nodeMap
 	return
 }
 
-func (t *MapUint8Float32) transformKey(key uint8) uint8 {
+var maskTransformuint8float32 = func() uint8 {
 	var mask uint8 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint8Float32) transformKey(key uint8) uint8 {
+	return key ^ maskTransformuint8float32
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -72991,16 +73197,17 @@ func (c *nodeMapuint8float64) find(key uint8) (crit uint, child, parent *nodeMap
 	return
 }
 
-func (t *MapUint8Float64) transformKey(key uint8) uint8 {
+var maskTransformuint8float64 = func() uint8 {
 	var mask uint8 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint8Float64) transformKey(key uint8) uint8 {
+	return key ^ maskTransformuint8float64
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -73345,16 +73552,17 @@ func (c *nodeMapuint8int) find(key uint8) (crit uint, child, parent *nodeMapuint
 	return
 }
 
-func (t *MapUint8Int) transformKey(key uint8) uint8 {
+var maskTransformuint8int = func() uint8 {
 	var mask uint8 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint8Int) transformKey(key uint8) uint8 {
+	return key ^ maskTransformuint8int
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -73699,16 +73907,17 @@ func (c *nodeMapuint8int16) find(key uint8) (crit uint, child, parent *nodeMapui
 	return
 }
 
-func (t *MapUint8Int16) transformKey(key uint8) uint8 {
+var maskTransformuint8int16 = func() uint8 {
 	var mask uint8 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint8Int16) transformKey(key uint8) uint8 {
+	return key ^ maskTransformuint8int16
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -74053,16 +74262,17 @@ func (c *nodeMapuint8int32) find(key uint8) (crit uint, child, parent *nodeMapui
 	return
 }
 
-func (t *MapUint8Int32) transformKey(key uint8) uint8 {
+var maskTransformuint8int32 = func() uint8 {
 	var mask uint8 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint8Int32) transformKey(key uint8) uint8 {
+	return key ^ maskTransformuint8int32
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -74407,16 +74617,17 @@ func (c *nodeMapuint8int64) find(key uint8) (crit uint, child, parent *nodeMapui
 	return
 }
 
-func (t *MapUint8Int64) transformKey(key uint8) uint8 {
+var maskTransformuint8int64 = func() uint8 {
 	var mask uint8 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint8Int64) transformKey(key uint8) uint8 {
+	return key ^ maskTransformuint8int64
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -74761,16 +74972,17 @@ func (c *nodeMapuint8int8) find(key uint8) (crit uint, child, parent *nodeMapuin
 	return
 }
 
-func (t *MapUint8Int8) transformKey(key uint8) uint8 {
+var maskTransformuint8int8 = func() uint8 {
 	var mask uint8 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint8Int8) transformKey(key uint8) uint8 {
+	return key ^ maskTransformuint8int8
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -75115,16 +75327,17 @@ func (c *nodeMapuint8rune) find(key uint8) (crit uint, child, parent *nodeMapuin
 	return
 }
 
-func (t *MapUint8Rune) transformKey(key uint8) uint8 {
+var maskTransformuint8rune = func() uint8 {
 	var mask uint8 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint8Rune) transformKey(key uint8) uint8 {
+	return key ^ maskTransformuint8rune
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -75469,16 +75682,17 @@ func (c *nodeMapuint8string) find(key uint8) (crit uint, child, parent *nodeMapu
 	return
 }
 
-func (t *MapUint8String) transformKey(key uint8) uint8 {
+var maskTransformuint8string = func() uint8 {
 	var mask uint8 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint8String) transformKey(key uint8) uint8 {
+	return key ^ maskTransformuint8string
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -75823,16 +76037,17 @@ func (c *nodeMapuint8uint) find(key uint8) (crit uint, child, parent *nodeMapuin
 	return
 }
 
-func (t *MapUint8Uint) transformKey(key uint8) uint8 {
+var maskTransformuint8uint = func() uint8 {
 	var mask uint8 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint8Uint) transformKey(key uint8) uint8 {
+	return key ^ maskTransformuint8uint
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -76177,16 +76392,17 @@ func (c *nodeMapuint8uint16) find(key uint8) (crit uint, child, parent *nodeMapu
 	return
 }
 
-func (t *MapUint8Uint16) transformKey(key uint8) uint8 {
+var maskTransformuint8uint16 = func() uint8 {
 	var mask uint8 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint8Uint16) transformKey(key uint8) uint8 {
+	return key ^ maskTransformuint8uint16
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -76531,16 +76747,17 @@ func (c *nodeMapuint8uint32) find(key uint8) (crit uint, child, parent *nodeMapu
 	return
 }
 
-func (t *MapUint8Uint32) transformKey(key uint8) uint8 {
+var maskTransformuint8uint32 = func() uint8 {
 	var mask uint8 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint8Uint32) transformKey(key uint8) uint8 {
+	return key ^ maskTransformuint8uint32
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -76885,16 +77102,17 @@ func (c *nodeMapuint8uint64) find(key uint8) (crit uint, child, parent *nodeMapu
 	return
 }
 
-func (t *MapUint8Uint64) transformKey(key uint8) uint8 {
+var maskTransformuint8uint64 = func() uint8 {
 	var mask uint8 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint8Uint64) transformKey(key uint8) uint8 {
+	return key ^ maskTransformuint8uint64
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -77239,16 +77457,17 @@ func (c *nodeMapuint8uint8) find(key uint8) (crit uint, child, parent *nodeMapui
 	return
 }
 
-func (t *MapUint8Uint8) transformKey(key uint8) uint8 {
+var maskTransformuint8uint8 = func() uint8 {
 	var mask uint8 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint8Uint8) transformKey(key uint8) uint8 {
+	return key ^ maskTransformuint8uint8
 }
 
 // Rem removes the value associated with the specified key from the map.
@@ -77593,16 +77812,17 @@ func (c *nodeMapuint8uintptr) find(key uint8) (crit uint, child, parent *nodeMap
 	return
 }
 
-func (t *MapUint8Uintptr) transformKey(key uint8) uint8 {
+var maskTransformuint8uintptr = func() uint8 {
 	var mask uint8 = 1
-	if mask-2 < 0 {
-		mask = mask << 7
-		for mask > 0 {
-			mask = mask << 8
-		}
-		return key ^ mask
+	mask = mask << 7
+	for mask > 0 {
+		mask = mask << 8
 	}
-	return key
+	return mask
+}()
+
+func (t *MapUint8Uintptr) transformKey(key uint8) uint8 {
+	return key ^ maskTransformuint8uintptr
 }
 
 // Rem removes the value associated with the specified key from the map.
