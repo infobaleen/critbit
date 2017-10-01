@@ -111,3 +111,46 @@ func TestSeek(t *testing.T) {
 		t.Fatal("Wrong key or value from second Prev after Seek with non-existent key", 0, it.Key, it.Value)
 	}
 }
+
+func benchmarkInitMap() *MapIntInt {
+	var rnd = rand.New(rand.NewSource(0))
+	var m = NewMapIntInt()
+	for i := 0; i < 10000; i++ {
+		var v = rnd.Intn(10000)
+		m.Set(v, v)
+	}
+	return m
+}
+
+var benchmarkSetGlobal *MapIntInt
+
+func BenchmarkSet(b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		benchmarkSetGlobal = benchmarkInitMap()
+	}
+}
+
+var benchmarkGetGlobal *int
+
+func BenchmarkGet(b *testing.B) {
+	var m = benchmarkInitMap()
+	b.ResetTimer()
+	for n := 0; n < b.N; n++ {
+		for i := 0; i < 10000; i++ {
+			benchmarkGetGlobal = m.GetP(i)
+		}
+	}
+}
+
+var benchmarkIterGlobal *int
+
+func BenchmarkIter(b *testing.B) {
+	var m = benchmarkInitMap()
+	b.ResetTimer()
+	for n := 0; n < b.N; n++ {
+		var i = m.Iterator()
+		for i.Next() {
+			benchmarkIterGlobal = i.Value
+		}
+	}
+}
